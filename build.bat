@@ -64,7 +64,8 @@ goto:eof
 :build_lua
     echo build_lua
     pushd dependencies\lua-5.3.0\src
-    call build_lua.bat
+    call build_lua.bat clean
+    call build_lua.bat compile
     popd
     goto:eof
 

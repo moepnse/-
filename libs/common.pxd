@@ -1,0 +1,1 @@
+cdef unicode un_camel(unicode str)

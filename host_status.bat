@@ -1,0 +1,1 @@
+%windir%\system32\cmd.exe /K %HOMEDRIVE%\Python27\python.exe %~dp0\host_status.py

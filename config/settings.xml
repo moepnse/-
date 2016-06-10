@@ -1,0 +1,21 @@
+<?xml version="1.0" ?>
+<settings>
+    <!--
+    <install_list path="C:\pi\install_list.xml" />
+    <package_list path="C:\pi\packages.xml" />
+    <connection_list path="C:\pi\connections.xml" />
+    -->
+    <target_source src="host_list" />
+    <installed_list path="C:\pi\config\installed.xml" />
+    <!--<install_list path="smb://\\10.0.19.10\software\install_list.xml" />
+    <package_list path="smb://\\10.0.19.10\software\packages.xml" />-->
+    <package_list path="C:\pi\config\packages.xml" />
+    <connection_list path="C:\pi\config\connections.xml" />
+    <log_list path="C:\pi\config\log.xml" />
+    <profile_list path="C:\pi\config\profiles.xml" />
+    <host_list path="C:\pi\config\hosts.xml" />
+    <status_gui cmd="C:\pi\pi_status_gui.exe" />
+    <!-- <status_gui cmd="C:\Python27\python.exe C:\pi_cython\pi_status_gui.py" />-->
+    <!-- <status_gui cmd="C:\Python27\python.exe C:\pi_cython\http_transmission.py" />-->
+    <!-- <status_gui cmd="C:\Python27\python.exe C:\pi_cython\pi_status_test.py" />-->
+</settings>

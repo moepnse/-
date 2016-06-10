@@ -1,0 +1,34 @@
+Windows Registry Editor Version 5.00    
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Group Policy\Scripts]
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Group Policy\Scripts\Shutdown]
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Group Policy\Scripts\Shutdown\0]
+"GPO-ID"="LocalGPO"
+"SOM-ID"="Local"
+"FileSysPath"="C:\\Windows\\System32\\GroupPolicy\\Machine"
+"DisplayName"="Richtlinien der lokalen Gruppe"
+"GPOName"="Richtlinien der lokalen Gruppe"
+"PSScriptOrder"=dword:00000001
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Group Policy\Scripts\Startup]
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Group Policy\State\Machine\Scripts]    
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Group Policy\State\Machine\Scripts\Shutdown]    
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Group Policy\State\Machine\Scripts\Startup]    
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Group Policy\State\Machine\Scripts\Startup\0]    
+"GPO-ID"="LocalGPO"    
+"SOM-ID"="Local"    
+"FileSysPath"="C:\\Windows\\System32\\GroupPolicy\\Machine"    
+"DisplayName"="Local Group Policy"    
+"GPOName"="Local Group Policy"    
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Group Policy\State\Machine\Scripts\Shutdown\0]    
+"GPO-ID"="LocalGPO"    
+"SOM-ID"="Local"    
+"FileSysPath"="C:\\Windows\\System32\\GroupPolicy\\Machine"    
+"DisplayName"="Local Group Policy"    
+"GPOName"="Local Group Policy"

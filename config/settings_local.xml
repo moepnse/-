@@ -1,0 +1,6 @@
+<?xml version="1.0" ?>
+<settings>
+    <install_list path="C:\pi\config\install_list.xml" />
+    <package_list path="C:\pi\config\packages.xml" />
+    <connection_list path="C:\pi\config\connections.xml" />
+</settings>

@@ -1,0 +1,1 @@
+sc create "pi_service" binPath= "%~dp0pi_service.exe" type= interact type= own

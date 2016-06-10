@@ -1,0 +1,9 @@
+<?xml version="1.0" ?>
+<settings>
+    <target_source src="install_list" />
+    <installed_list path="C:\pi\config\installed.xml" />
+    <install_list path="smb://\\10.0.19.10\software\install_list.xml" />
+    <package_list path="C:\pi\config\packages.xml" />
+    <connection_list path="C:\pi\config\connections.xml" />
+    <log_list path="C:\pi\config\pi\log.xml" />
+</settings>

@@ -1,0 +1,1 @@
+%windir%\system32\cmd.exe /K %~dp0pi_service.exe install

@@ -1,0 +1,6 @@
+<?xml version="1.0" ?>
+<install_list>
+    <package package_id="firefox" />
+    <package package_id="gimp" />
+    <package package_id="nx" />
+</install_list>

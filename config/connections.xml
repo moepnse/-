@@ -1,0 +1,9 @@
+<?xml version="1.0" ?>
+<!DOCTYPE connections [
+    <!ENTITY qout "&#34;">
+]>
+<connections>
+    <connection protocol="smb" url="smb://\\10.0.19.10\software" username="sds\sc" password="test" />
+    <connection protocol="http" url="http://" />
+    <connection protocol="file" url="file://" />
+</connections>

@@ -1,0 +1,6 @@
+<?xml version="1.0" ?>
+<profiles>
+    <profile id="default">
+        <package id="msofficepp2013" />
+    </profile>
+</profiles>

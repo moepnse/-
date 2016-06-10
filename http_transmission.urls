@@ -1,0 +1,4 @@
+start_url = http://10.19.0.10/rg.php?action=start
+stop_url = http://10.19.0.10/rg.php?action=stop
+pronounce_steps_url = http://10.19.0.10/rg.php?action=pronounce_steps&steps=%(steps)d
+status_url = http://10.19.0.10/rg.php?action=%(action)s&package_id=%(package_id)s

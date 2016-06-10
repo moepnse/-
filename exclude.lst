@@ -1,0 +1,8 @@
+.pyx
+.pxd
+build.bat
+.c
+.h
+.lib
+.obj
+.exp

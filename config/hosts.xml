@@ -1,0 +1,15 @@
+<hosts>
+    <!-- matches any host -->
+    <host name="[.]*">
+    <!-- matches only the host with hostname adp_w7_testsys -->
+    <!-- <host name="adp_w7_testsys"> -->
+        <package package_id="msofficepp2013" action="install" />
+        <!-- <package package_id="msofficepp2013" action="uninstall" />
+        <package package_id="firefox_esr" action="uninstall" />
+        <package package_id="msofficepp2013" action="uninstall" />
+        <package package_id="firefox_esr" action="uninstall" />
+        <package package_id="msofficepp2013" action="install" />-->
+        <package package_id="firefox_esr" action="install"/>
+        <profile profile_id="default" />
+    </host>
+</hosts>

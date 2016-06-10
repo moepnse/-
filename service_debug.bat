@@ -1,0 +1,1 @@
+%windir%\system32\cmd.exe /K %~dp0\pi_service.exe debug

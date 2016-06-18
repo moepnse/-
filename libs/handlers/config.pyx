@@ -34,13 +34,13 @@ RET_CODE_PACKAGE_NOT_FOUND = 5
 class ChecksumViolation(Exception):
     def __init__(self, path):
         self._path = path
-    
+
 
 cdef class StatusHandler:
-        
+
     def __cinit__(self):
         self._status_id_count = 0
-        
+
     def __init__(self):
         pass
 
@@ -48,12 +48,12 @@ cdef class StatusHandler:
     def set_status(self, int source_id, int status_type, unicode status_source_name, int status_id, unicode description):
         self._status_id_count += 1
         return self._status_id_count
-        
+
     #def update_status(self, unsigned int status_id, unsigned char status_type, unsigned int status_id, unicode description):
     def update_status(self, int old_status_id, int status_type, int status_id, unicode description):
         pass
 
-        
+
 cdef class BaseCmd:
     #def __init__(self, str md5sum, str hash, str hash_algorithm, object status_handler):
     def __init__(self, unicode md5sum, unicode hash, unicode hash_algorithm, bint break_on_md5_violation, bint break_on_hash_violation, object status_handler):
@@ -64,11 +64,11 @@ cdef class BaseCmd:
         self._status_handler = status_handler
         self.break_on_md5_violation
         self.break_on_hash_violation
-        
+
     def open(self, path, mode):
         self._get_connection_handler()
         return self._connection_handler.open(path, mode)
-        
+
     def check_hash(self):
         hash_algorithm = hashlib.new(self._hash_algorithm)
         f = self.open(self._path, 'rb')
@@ -81,7 +81,7 @@ cdef class BaseCmd:
 
     def hash_available(self):
         return self._hash != "" and self._hash is not None and self._hash_algorithm in hashlib.algorithms
-        
+
     # legacy
     def check_md5(self):
         md5 = hashlib.md5()
@@ -93,7 +93,7 @@ cdef class BaseCmd:
             md5.update(data)
         print self._md5sum, md5.hexdigest()
         return self._md5sum == md5.hexdigest()
-        
+
     def md5_available(self):
         return self._md5sum != "" and self._md5sum is not None
 
@@ -112,7 +112,7 @@ cdef class BaseCmd:
         if self._status_handler is not None:
             self._status_handler.set_status(ss__cmd, st__warn, u"cmd_parameter_value", 0, u"No Connection Handler available!")
         return False
-        
+
     property path:
 
         "A doc string can go here."
@@ -137,7 +137,7 @@ class CmdParameterValue(BaseCmd):
         self._connection_handlers = connection_handlers
         self._allow_connection_handler = allow_connection_handler 
         self.value = value
-        
+
     @property
     def value(self):
         cdef:
@@ -148,7 +148,7 @@ class CmdParameterValue(BaseCmd):
         else:
             value = self._value
         return (u'"%s"' if ' ' in value else u'%s') % value
- 
+
     @value.setter
     def value(self, unicode value):
         self._value = value
@@ -157,7 +157,7 @@ class CmdParameterValue(BaseCmd):
 
     def __repr__(self):
         return self._value
- 
+
     def __unicode__(self):
         return self.value
 
@@ -179,7 +179,7 @@ class CmdParameter(object):
             str hash_algorithm
             bint break_on_md5_violation
             bint break_on_hash_violation,
-            
+
 
         self._argument = argument
         self._values = []
@@ -231,7 +231,7 @@ class CmdParameter(object):
                 return "%s%s" % (self._argument, u_values)
             else:
                 return "%s %s"  % (self._argument, u_values)
-        
+
     def __unicode__(self):
         cdef:
             unicode u_values
@@ -285,7 +285,7 @@ cdef class Cmd(BaseCmd):
         """
         self._error_codes = error_codes
         self._ret_code_type = RET_CODE_UNKNOWN
-        
+
         for parameter in parameters:
             if not 'argument' in parameter:
                 #print "argument is missing!"
@@ -311,7 +311,7 @@ cdef class Cmd(BaseCmd):
     @property
     def ret_code(self):
         return self._ret_code
-        
+
     # WON'T WORK IN CDEF CLASSES:    
     #@property
     #def success_codes(self):
@@ -320,7 +320,7 @@ cdef class Cmd(BaseCmd):
     #@success_codes.setter
     #def success_codes(self, success_codes):
     #    self._success_codes = success_codes
-        
+
     property success_codes:
 
         "A doc string can go here."
@@ -339,7 +339,7 @@ cdef class Cmd(BaseCmd):
     #@error_codes.setter
     #def error_codes(self, error_codes):
     #    self._error_codes = error_codes
-        
+
     property error_codes:
 
         "A doc string can go here."
@@ -415,10 +415,10 @@ cdef class BaseVersion:
 
     def get_config_version(self):
         return self._get_version(self._config_version)
-        
+
     def get_api_version(self):
         return self._get_version(self._api_version)
-        
+
     cdef bint _get_flag(self, unsigned char offset):
         return (1 << offset) & self._flags != 0
 
@@ -438,7 +438,7 @@ cdef class Base(BaseVersion):
         self._config_path = config_path
 
 
-        
+
 cdef class Package(BaseVersion):
 
     def __init__(self, package_id, name, version, rev, installed, install_cmds, upgrade_available, upgrade_cmds, uninstall_cmds, description, keywords, icon, icon_type, connection_list, dependencies_list, log, object status_handler):
@@ -527,7 +527,7 @@ cdef class Package(BaseVersion):
                     continue
                 status = ret_code_type
         return status, cmd_list
-                
+
     def install(self, force=False):
         return self._execute_cmds(self.install_cmds)
 
@@ -536,7 +536,7 @@ cdef class Package(BaseVersion):
 
     def uninstall(self):
         return self._execute_cmds(self.uninstall_cmds)
-        
+
     @property
     def installed(self):
         return self._installed
@@ -560,20 +560,20 @@ cdef class Package(BaseVersion):
     @property
     def description(self):
         return self._description
-        
+
     @property
     def keywords(self):
         return self._keywords
-        
+
     @property
     def icon(self):
         return self._icon
-        
+
     @property
     def icon_type(self):
         return self._icon_type
-        
-        
+
+
 cdef class Settings(Base):
 
     def __init__(self, settings_path):
@@ -582,7 +582,7 @@ cdef class Settings(Base):
     @property
     def path(self):
         return self._settings_path
-        
+
     @property
     def installed_list(self):
         return self._installed_list
@@ -608,6 +608,14 @@ cdef class Settings(Base):
         self._package_list = value
 
     @property
+    def package_lists(self):
+        return self._package_lists
+
+    @package_lists.setter
+    def package_lists(self, value):
+        self._package_lists = value
+
+    @property
     def profile_list(self):
         return self._profile_list
 
@@ -622,7 +630,7 @@ cdef class Settings(Base):
     @connection_list.setter
     def connection_list(self, value):
         self._connection_list = value
-        
+
     @property
     def host_list(self):
         return self._host_list
@@ -630,7 +638,7 @@ cdef class Settings(Base):
     @host_list.setter
     def host_list(self, value):
         self._host_list = value
-        
+
     @property
     def log_list(self):
         return self._log_list
@@ -646,7 +654,7 @@ cdef class Settings(Base):
     @target_source.setter
     def target_source(self, value):
         self._target_source = value
- 
+
     @property
     def status_gui_cmd(self):
         return self._status_gui_cmd
@@ -658,15 +666,15 @@ cdef class Settings(Base):
     @property
     def interval(self):
         return self._interval
-        
+
     @property
     def run(self):
         return self._run
-        
+
     @property
     def display_target(self):
         return self._display_target
-        
+
     def save(self):
         pass
 
@@ -677,8 +685,8 @@ class InstalledList(Base):
         Base.__init__(self, installed_path, log=log)
         # for legacy reason
         self._installed_list_path = self._config_path
-        
-        
+
+
 cdef class Host(BaseVersion):
 
     #def __init__(self, str ip4, str ipv6, unicode hostname, unicode workgroup, unicode domain_name, unicode forest_name, list packages, list profiles):
@@ -698,7 +706,7 @@ cdef class Host(BaseVersion):
         """
         self._packages = packages
         self._profiles = profiles
-        
+
     #cpdef bint ipv4_is(self, str ip):
     cpdef bint ipv4_is(self, unicode ip):
         """ip parameter could be a string, or a regex pattern"""
@@ -706,7 +714,7 @@ cdef class Host(BaseVersion):
         if not ip or not self._ipv4:
             return False
         return False if re.match(self._ipv4,ip) is None else True
-        
+
     #cpdef bint ipv6_is(self, str ip):
     cpdef bint ipv6_is(self, unicode ip):
         """ip parameter could be a string, or a regex pattern"""
@@ -714,14 +722,14 @@ cdef class Host(BaseVersion):
         if not ip or not self._ipv6:
             return False
         return False if re.match(self._ipv6, ip) is None else True
-        
+
     cpdef bint hostname_is(self, unicode hostname):
         """hostname parameter could be a unicode string, or a regex pattern"""
         #result = re.match(pattern, string)
         if not hostname or not self._hostname:
             return False
         return False if re.match(self._hostname, hostname) is None else True
-        
+
     cpdef bint workgroup_is(self, unicode workgroup):
         """workgroup parameter could be a unicode string, or a regex pattern"""
         if not workgroup or not self._workgroup:
@@ -742,7 +750,7 @@ cdef class Host(BaseVersion):
 
     def next(self):
         return self._all_packages.next()
-        
+
     def __iter__(self):
         self._all_packages = []
         for package in self._packages:
@@ -764,34 +772,34 @@ cdef class Host(BaseVersion):
 
     cpdef get_packages(self):
         return self._packages
-        
+
     cpdef get_profiles(self):
         return self._profiles
 
     @property
     def packages(self):
         return self._packages
-        
+
     @property
     def profiles(self):
         return self._profiles
 
-        
+
 cdef class HostList(Base):
 
     def __init__(self, host_list_path, log):
         Base.__init__(self, host_list_path, log=log)
         # for legacy reason
         self._host_list_path = self._config_path
- 
- 
+
+
 cdef class Profile(BaseVersion):
 
     def __init__(self, unicode id, list packages, object profile_list):
         self._id = id
         self._packages = packages
         self._profile_list = profile_list
-        
+
     @property
     def packages(self):
         return self._packages
@@ -799,7 +807,7 @@ cdef class Profile(BaseVersion):
     @packages.setter
     def packages(self, value):
         self._packages = value
-        
+
     @property
     def id(self):
         return self._id
@@ -807,17 +815,17 @@ cdef class Profile(BaseVersion):
     @id.setter
     def packages(self, value):
         self._id = value
-        
+
     def __len__(self):
         return self._packages.__len__()
-        
+
     def __iter__(self):
         return self._packages.__iter__()
 
     def next(self):
         return self._packages.next()
 
-        
+
 cdef class ProfileList(Base):
 
     def __init__(self, profile_list_path, log):
@@ -825,32 +833,32 @@ cdef class ProfileList(Base):
         # for legacy reason
         self._profile_list_path = self._config_path
         self._profiles = {}
-        
+
     def __getitem__(self, key):
         return self._profiles[key]
-    
-        
+
+
 cdef class InstallList(Base):
 
     def __init__(self, install_list_path, connection_list, log):
         Base.__init__(self, install_list_path, connection_list, log)
         # for legacy reason
         self._install_list_path = self._config_path
-       
+
     cpdef get_packages(self):
         return self._packages
-        
+
     cpdef get_profiles(self):
         return self._profiles
-       
+
     @property
     def packages(self):
         return self._packages
-        
+
     @property
     def profiles(self):
         return self._profiles
-        
+
 
 cdef class PackageList(Base):
 

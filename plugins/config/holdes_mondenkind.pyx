@@ -1908,7 +1908,7 @@ cdef int l_register_package (lua_State *L):
     get_cmds(L, 8, package_list, upgrade_cmds, package_list._status_handler)
     get_cmds(L, 9, package_list, uninstall_cmds, package_list._status_handler)
     get_table_as_list(L, 11, keywords)
-    package_list[package_id] = Package(package_id, name, version, rev, installed, install_cmds, upgrade_available, upgrade_cmds, uninstall_cmds, description, keywords, icon, icon_type, package_list._connection_list, [], package_list._log, package_list._status_handler)
+    package_list[package_id] = Package(package_id, name, version, rev, installed, install_cmds, upgrade_available, upgrade_cmds, uninstall_cmds, description, keywords, icon, icon_type, package_list, package_list._connection_list, [], package_list._log, package_list._status_handler)
     return 1
 
 
@@ -2491,10 +2491,10 @@ cdef class Package(BasePackage):
         cmd* _function_is_upgrade_available
         lua_State* _l
 
-    def __init__(self, package_id, name, version, rev, installed, install_cmds, upgrade_available, upgrade_cmds, uninstall_cmds, description, keywords, icon,icon_type, connection_list, dependencies_list, log, status_handler, l=None, function_is_installed = None, function_is_upgrade_available = None):
-        BasePackage.__init__(self, package_id, name, version, rev, installed, install_cmds, upgrade_available, upgrade_cmds, uninstall_cmds, description, keywords, icon, icon_type, connection_list, dependencies_list, log, status_handler)
+    def __init__(self, package_id, name, version, rev, installed, install_cmds, upgrade_available, upgrade_cmds, uninstall_cmds, description, keywords, icon,icon_type, package_list, connection_list, dependencies_list, log, status_handler, l=None, function_is_installed = None, function_is_upgrade_available = None):
+        BasePackage.__init__(self, package_id, name, version, rev, installed, install_cmds, upgrade_available, upgrade_cmds, uninstall_cmds, description, keywords, icon, icon_type, package_list, connection_list, dependencies_list, log, status_handler)
 
-    def __cinit__(self, package_id, name, version, rev, installed, install_cmds, upgrade_available, upgrade_cmds, uninstall_cmds, description, keywords, icon, icon_type, connection_list, dependencies_list, log, status_handler, l=None, function_is_installed = None, function_is_upgrade_available = None):
+    def __cinit__(self, package_id, name, version, rev, installed, install_cmds, upgrade_available, upgrade_cmds, uninstall_cmds, description, keywords, icon, icon_type, package_list, connection_list, dependencies_list, log, status_handler, l=None, function_is_installed = None, function_is_upgrade_available = None):
         if isinstance(l, int):
             self._l = <lua_State*>PyLong_AsVoidPtr(l)
             if function_is_installed is None:
@@ -3106,7 +3106,7 @@ cdef class PackageList(BasePackageList):
                 self.__handle_cmds(uninstall_cmds)
                 self.__handle_cmds(upgrade_cmds)
 
-                self[package_id] = Package(package_id, name, version, rev, installed, install_cmds, upgrade_available, upgrade_cmds, uninstall_cmds, description, keywords, icon, icon_type, self._connection_list, dependencies, self._log, self._status_handler, <int>self._l, function_is_installed = <int>p_func_installed, function_is_upgrade_available = <int>p_func_upgrade_available)
+                self[package_id] = Package(package_id, name, version, rev, installed, install_cmds, upgrade_available, upgrade_cmds, uninstall_cmds, description, keywords, icon, icon_type, self, self._connection_list, dependencies, self._log, self._status_handler, <int>self._l, function_is_installed = <int>p_func_installed, function_is_upgrade_available = <int>p_func_upgrade_available)
                 #self[package_id] = Package(package_id, name, version, rev, installed, install_cmds, upgrade_available, upgrade_cmds, uninstall_cmds, description, keywords, self._connection_list, dependencies, self._log, function_is_installed = installed_function, function_is_upgrade_available = upgrade_available_function)
 
 

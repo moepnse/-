@@ -1274,7 +1274,7 @@ class PackageList(libs.handlers.config.PackageList, XMLNode):
                     uninstall_cmds += self._handle_action_node(node.childNodes, cmds, variables)
                     self._log.log_debug(u"[xml_md] [%d] %s - uninstall cmds: %s " % (libs.common.get_current_line_nr(), package_id, uninstall_cmds))
 
-        return libs.handlers.config.Package(package_id, name, version, rev, installed, install_cmds, upgrade_available, upgrade_cmds, uninstall_cmds, description, keywords, icon, icon_type, self._connection_list, dependencies_list, self._log, self._status_handler)
+        return libs.handlers.config.Package(package_id, name, version, rev, installed, install_cmds, upgrade_available, upgrade_cmds, uninstall_cmds, description, keywords, icon, icon_type, self, self._connection_list, dependencies_list, self._log, self._status_handler)
 
     def _handle_action_node(self, child_nodes, pattern_cmds, variables):
         cmds = []

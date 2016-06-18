@@ -441,7 +441,7 @@ cdef class Base(BaseVersion):
 
 cdef class Package(BaseVersion):
 
-    def __init__(self, package_id, name, version, rev, installed, install_cmds, upgrade_available, upgrade_cmds, uninstall_cmds, description, keywords, icon, icon_type, connection_list, dependencies_list, log, object status_handler):
+    def __init__(self, package_id, name, version, rev, installed, install_cmds, upgrade_available, upgrade_cmds, uninstall_cmds, description, keywords, icon, icon_type, package_list, connection_list, dependencies_list, log, object status_handler):
         self.package_id = package_id
         self.name = name
         self.version = version
@@ -455,6 +455,7 @@ cdef class Package(BaseVersion):
         self._keywords = keywords
         self._icon = icon
         self._icon_type = icon_type
+        self._package_list = package_list
         self._connection_list = connection_list
         self.dependencies_list = dependencies_list
         self._log = log
@@ -572,6 +573,10 @@ cdef class Package(BaseVersion):
     @property
     def icon_type(self):
         return self._icon_type
+
+    @property
+    def package_list(self):
+        return self._package_list
 
 
 cdef class Settings(Base):

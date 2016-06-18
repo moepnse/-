@@ -91,6 +91,7 @@ cdef class Package(BaseVersion):
         public object _upgrade_available
         public object upgrade_cmds
         public object uninstall_cmds
+        public object _package_list
         public object _connection_list
         public object dependencies_list
         public object _log

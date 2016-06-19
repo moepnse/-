@@ -2641,6 +2641,9 @@ cdef class Settings(BaseSettings):
         self._host_list = get_absolute_config_path(self._settings_path, self._lua_get_string("host_list"))
         self._installed_list = get_absolute_config_path(self._settings_path, self._lua_get_string("installed_list"))
         self._package_list = get_absolute_config_path(self._settings_path, self._lua_get_string("package_list"))
+        lua_getglobal(self._l, "package_lists")
+        if lua_istable(self._l, -1):
+            get_table_as_list(self._l, -1, self._package_lists)
         self._connection_list = get_absolute_config_path(self._settings_path, self._lua_get_string("connection_list"))
         self._log_list = get_absolute_config_path(self._settings_path, self._lua_get_string("log_list"))
         self._profile_list = get_absolute_config_path(self._settings_path, self._lua_get_string("profile_list"))

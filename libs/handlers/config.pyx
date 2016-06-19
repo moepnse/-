@@ -583,6 +583,7 @@ cdef class Settings(Base):
 
     def __init__(self, settings_path):
         self._settings_path = settings_path
+        self._package_lists = []
 
     @property
     def path(self):

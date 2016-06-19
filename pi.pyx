@@ -18,7 +18,7 @@ import traceback
 # third party imports
 
 # application/library imports
-from package_installer import get_application_path, settings_factory, install_list_factory, installed_list_factory, package_list_factory, host_list_factory, connection_list_factory, log_list_factory, Log, get_ph_plugins, get_log_plugins, get_settings_config_path
+from package_installer import get_application_path, settings_factory, install_list_factory, installed_list_factory, package_list_factory, package_lists_factory, host_list_factory, connection_list_factory, log_list_factory, Log, get_ph_plugins, get_log_plugins, get_settings_config_path
 import libs
 
 
@@ -145,6 +145,12 @@ try:
             sys.exit(1)
     try:
         package_list = package_list_factory(settings.package_list, connection_list, installed_list, log, status_hanlder)
+    except IOError as e:
+        if e.errno == 2:
+            print >>stderr, "[PackageList] File not found: %s" % e.filename
+            sys.exit(1)
+    try:
+        package_lists = package_lists_factory(settings.package_lists, connection_list, installed_list, log, status_hanlder)
     except IOError as e:
         if e.errno == 2:
             print >>stderr, "[PackageList] File not found: %s" % e.filename
@@ -301,7 +307,7 @@ def _get_packages(self):
         #package_id, action,  =
 
 
-cdef list_packages():
+cdef _list_packages(package_list):
     cdef:
         object package_id
         object package
@@ -309,30 +315,49 @@ cdef list_packages():
         object rev
         object date
         object out
+    """
+    local_hostname = platform.node()
+    for hostname in host_list:
+        host = host_list[hostname]
+        if host == local_hostname:
+            break
+    packages = host.get_packages()
+    for package in packages:
+        package_id = package['package_id']
+        action = package['action']
+        print action, package_id
+    """
+    for package_id, package in package_list.iteritems():
+        if package_id in installed_list:
+            version, rev, date = installed_list[package_id]
+            out = "%s (%s) [I: %s (%s) | U: %s (%s)]:\n\t%s" % (package_id, package.name, package.installed, version, package.upgrade_available, package.version, package.description)
+        else:
+            out = "%s %s %s [I: %s | U: %s]\n%s\n" % (package.package_id, package.name, package.version, package.installed, package.upgrade_available, package.description)
+        print out
+
+
+cdef list_packages():
+    cdef:
+        object package_id
+        object _package_list
+
     print "list packages..."
     if settings.target_source == 'install_list':
         for package_id in install_list:
             print package_id
     else:
-        """
-        local_hostname = platform.node()
-        for hostname in host_list:
-            host = host_list[hostname]
-            if host == local_hostname:
-                break
-        packages = host.get_packages()
-        for package in packages:
-            package_id = package['package_id']
-            action = package['action']
-            print action, package_id
-        """
-        for package_id, package in package_list.iteritems():
-            if package_id in installed_list:
-                version, rev, date = installed_list[package_id]
-                out = "%s (%s) [I: %s (%s) | U: %s (%s)]:\n\t%s" % (package_id, package.name, package.installed, version, package.upgrade_available, package.version, package.description)
-            else:
-                out = "%s %s %s [I: %s | U: %s]\n%s\n" % (package.package_id, package.name, package.version, package.installed, package.upgrade_available, package.description)
-            print out
+        _list_packages(package_list)
+        for _package_list in package_lists:
+            _list_packages(_package_list)
+
+
+cdef bint _info(package_list, package_id):
+    cdef:
+        bint found = False
+    if package_id in package_list:
+        package = package_list[package_id]
+        print >>sys.stdout, "ID: %s\r\nName: %s\r\nInstall Cmds: %s\r\nUpgrade Cmds: %s\r\nUinstall Cmds: %s\r\nInstalled: %s" % (package_id, package.name, repr(package.install_cmds), repr(package.upgrade_cmds), repr(package.uninstall_cmds), INSTALLED[package.installed])
+    return found
 
 
 cdef info(packages=[]):
@@ -340,30 +365,23 @@ cdef info(packages=[]):
         object package_id
         object package
         list install_cmds
+        bint found
+
     for package_id in packages:
-        if package_id in package_list:
-            package = package_list[package_id]
-            print >>sys.stdout, "ID: %s\r\nName: %s\r\nInstall Cmds: %s\r\nUpgrade Cmds: %s\r\nUinstall Cmds: %s\r\nInstalled: %s" % (package_id, package.name, repr(package.install_cmds), repr(package.upgrade_cmds), repr(package.uninstall_cmds), INSTALLED[package.installed])
-        else:
+        found = _info(package_id, package_list)
+        for _package_list in package_lists:
+            found = _info(package_id, _package_list)
+        if not found:
             print >>sys.stdout, "Package %s could not be found!" % package_id
 
 
-cdef _handle_dependencies(package_id, action_list):
-    """
-    action_list = {
-        [   
-            {   package_id:"winrar",
-                action: "install",
-            }
-        ]      
-    }
-    """
+cdef __handle_dependencies(package_list, package_id, action_list):
     cdef:
         object package
         dict dependency
         unicode dep_package_id
     if package_id in package_list:
-        package = package_list[package_id]
+        package = _get_package(package_id)
         for dependency in package.dependencies:
             if not "package_id" in dependency:
                 #self._log.log_err(u"Error: package_id attribute is missing in dependency!")
@@ -381,6 +399,23 @@ cdef _handle_dependencies(package_id, action_list):
             action_list.append({"package_id": dep_package_id, "action": dep_action})
 
 
+cdef _handle_dependencies(package_id, action_list):
+    """
+    action_list = {
+        [   
+            {   package_id:"winrar",
+                action: "install",
+            }
+        ]      
+    }
+    """
+    cdef:
+        object _package_list
+    __handle_dependencies(package_list, package_id, action_list)
+    for _package_list in package_lists:
+        __handle_dependencies(_package_list, package_id, action_list)
+
+
 cdef _remove_packages_with_conflicting_dependencies(unicode package_id, unicode action, action_list):
     cdef:
         dict dict_package
@@ -389,7 +424,7 @@ cdef _remove_packages_with_conflicting_dependencies(unicode package_id, unicode 
         int index
         dict a_entry
     for dict_package in action_list:
-        package = package_list[dict_package['package_id']]
+        package = _get_package(dict_package['package_id'])
         for dependency in package.dependencies:
             if package_id == dependency['package_id'] and dependency["installed"] == {u"install": False, u"uninstall": True}[action]:
                 for index in range(0, len(action_list)):
@@ -425,6 +460,18 @@ cdef search(search_patterns=[]):
             print out
     else:
         print >>sys.stdout, "Nothing found!"
+
+
+cdef object _get_package(package_id):
+    cdef:
+        object _package_list
+    if package_id in package_list:
+        return package_list[package_id]
+
+    for _package_list in package_lists:
+        if package_id in _package_list:
+            return _package_list[package_id]
+    return None
 
 
 cdef _handle_actions(action_list):
@@ -469,65 +516,118 @@ cdef _handle_actions(action_list):
     print "Done"
 
 
+cdef _install(package_list, package_id):
+    cdef:
+        object package
+        list action_list = []
+    if package_id in package_list.keys():
+        _handle_dependencies(package_id, action_list)
+        action_list.append({'action': u'install', 'package_id': package_id})
+    else:
+        print "Package with id: %s not found!" % package_id
+    _handle_actions(action_list)
+
+
 cdef install(packages=[]):
     cdef:
         object package_id
         object package
         list action_list = []
     for package_id in packages:
-        if package_id in package_list.keys():
-            _handle_dependencies(package_id, action_list)
-            action_list.append({'action': u'install', 'package_id': package_id})
-        else:
+        found = _install(package_list, package_id)
+        if found:
+            continue
+        for _package_list in package_lists:
+            found = _install(_package_list, package_id)
+            if found:
+                break
+        if not found:
             print "Package with id: %s not found!" % package_id
-    _handle_actions(action_list)
+
+
+cdef _upgrade(package_list, package_id):
+    cdef:
+        object package
+        int status
+        list cmd_list
+    if package_id in package_list.keys():
+        package = package_list[package_id]
+        if not package.upgrade_available:
+            print "Nothing todo, %s (%s) is up2date!" % (package_id, package.name)
+            return True
+        print "Upgrading package: %s" % package_id
+        status, cmd_list = package_list.upgrade(package_id)
+        print "status: %d, executed cmds: %s" % (status, cmd_list)
+        return True
+        return False
 
 
 cdef upgrade(packages=[]):
     cdef:
         object package_id
+        object _package_list
+        bint found
+    for package_id in packages:
+        found = _upgrade(package_list, package_id)
+        if found:
+            continue
+        for _package_list in package_lists:
+            found = _upgrade(package_list, package_id)
+            if found:
+                break
+        if not found:
+            print >>sys.stdout, "Could not found package %s!" % package_id
+
+
+cdef _uninstall(package_list, package_id):
+    cdef:
         object package
         int status
         list cmd_list
-    for package_id in packages:
-        if package_id in package_list.keys():
-            package = package_list[package_id]
-            if not package.upgrade_available:
-                print "Nothing todo, %s (%s) is up2date!" % (package_id, package.name)
-                continue
-            print "Upgrading package: %s" % package_id
-            status, cmd_list = package_list.upgrade(package_id)
-            print "status: %d, executed cmds: %s" % (status, cmd_list)
-        else:
-            print >>sys.stdout, "Could not found package %s!" % package_id
+    if package_id in package_list.keys():
+        package = package_list[package_id]
+        if not package.installed:
+            print "Nothing todo, %s (%s) is not installed!" % (package_id, package.name)
+        print "Uninstalling package: %s" % package_id
+        status, cmd_list = package_list.uninstall(package_id)
+        print "status: %d, executed cmds: %s" % (status, cmd_list)
+        print "Done"
+        return True
+    return False
 
 
 cdef uninstall(packages=[]):
     cdef:
         object package_id
-        object package
-        int status
-        list cmd_list
+        bint found
+        object _package_list
     for package_id in packages:
-        if package_id in package_list.keys():
-            package = package_list[package_id]
-            if not package.installed:
-                print "Nothing todo, %s (%s) is not installed!" % (package_id, package.name)
-            print "Uninstalling package: %s" % package_id
-            status, cmd_list = package_list.uninstall(package_id)
-            print "status: %d, executed cmds: %s" % (status, cmd_list)
-            print "Done"
-        else:
+        found = _uninstall(package_list, package_id)
+        if found:
+            continue
+        for _package_list in package_lists:
+            found = _uninstall(package_list, package_id)
+            if found:
+                break
+        if not found:
             print >>sys.stdout, "Could not found package %s!" % package_id
 
 
-cdef show_installed():
+cdef _show_installed(package_list):
     cdef:
         object package_id
         object package
     for package_id, package in package_list.iteritems():
         if package.installed:
             print package.package_id
+
+
+cdef show_installed():
+    cdef:
+        object _package_list
+    _show_installed(package_list)
+    for _package_list in package_lists:
+        _show_installed(_package_list)
 
 
 cdef show_packages_in_installed_list():

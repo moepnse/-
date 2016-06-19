@@ -108,6 +108,7 @@ cdef class Settings(Base):
         public object _installed_list
         public object _install_list
         public object _package_list
+        public object _package_lists
         public object _profile_list
         public object _host_list
         public object _log_list

@@ -154,6 +154,16 @@ def package_list_factory(package_list_path, connection_list, installed_list, log
     return get_config_plugin(package_list_path).PackageList(package_list_path, connection_list, installed_list, log, status_handler)
 
 
+def package_lists_factory(package_lists, connection_list, installed_list, log, status_handler):
+    cdef:
+        list package_list_plugins = []
+
+    for package_list_path in package_lists:
+        package_list_plugins.append(get_config_plugin(package_list_path).PackageList(package_list_path, connection_list, installed_list, log, status_handler))
+
+    return package_list_plugins
+
+
 def profile_list_factory(profile_list_path, log):
     return get_config_plugin(profile_list_path).ProfileList(profile_list_path, log)
 

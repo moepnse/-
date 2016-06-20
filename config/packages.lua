@@ -327,16 +327,6 @@ do
     register_package("7zip", "7zip", "9.20", "1", is_in_software_list([[^7-Zip\s9\.2]]), false, install_cmds, upgrade_cmds, uninstall_cmds, "", {})
 end
 
-function firefox_esr_is_installed ()
-    return is_in_software_list([[Mozilla Firefox [0-9\.]+]])
-end
-
-function firefox_esr_is_upgrade_avalaible ()
-    return is_in_software_list([[Mozilla Firefox [0-9\.]+]])
-end
-
-set_package_check_functions('firefox_esr', 'firefox_esr_is_installed', 'firefox_esr_is_upgrade_avalaible')
-
 function msofficepp2013_is_installed ()
     return is_in_software_list([[Microsoft Office Professional Plus 2013]])
 end

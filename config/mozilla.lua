@@ -70,3 +70,13 @@ do
 
     register_package('firefox_esr', [[Mozilla Firefox]], "38.2.0", "1", is_in_software_list([[Mozilla Firefox [0-9\.]+]]), is_in_software_list([[Mozilla Firefox [0-9\.]+]]), install_cmds, upgrade_cmds, uninstall_cmds, "", {})
 end
+
+function firefox_esr_is_installed ()
+    return is_in_software_list([[Mozilla Firefox [0-9\.]+]])
+end
+
+function firefox_esr_is_upgrade_avalaible ()
+    return is_in_software_list([[Mozilla Firefox [0-9\.]+]])
+end
+
+set_package_check_functions('firefox_esr', 'firefox_esr_is_installed', 'firefox_esr_is_upgrade_avalaible')

@@ -17,6 +17,7 @@ firefox_esr.install = function(l)
 end
 
 include([[C:\pi\config\mozilla.lua]])
+include([[C:\pi\config\microsoft.lua]])
 
 do
     local UNINSTALL_CMD = 

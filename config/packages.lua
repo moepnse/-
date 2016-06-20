@@ -16,6 +16,8 @@ firefox_esr.install = function(l)
     register_package('package_installer', install_cmds, upgrade_cmds, uninstall_cmds)
 end
 
+include([[C:\pi\config\mozilla.lua]])
+
 do
     local UNINSTALL_CMD = 
     {

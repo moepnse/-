@@ -1287,6 +1287,51 @@ cdef int l_set_upgrade_cmds(lua_State *L):
     return 0
 
 
+cdef int l_include(lua_State *L):
+    """
+    Includes another lua-file, using a connection handler
+    """
+    cdef:
+        #const char* path = luaL_checkstring(L, 1)
+        bint status = True
+        int ret_code
+        unicode path = lua_string_to_python_unicode(L, 1)
+        object url
+        PyObject* p_connection_list
+        ConnectionList connection_list
+        object protocol_handler
+
+    lua_getglobal(L, 'p_connection_list')
+    p_connection_list = <PyObject*>lua_touserdata (L, -1)
+    connection_list = <object>p_connection_list
+
+    for url in connection_list:
+        connection = connection_list[url]
+        protocol_handler = connection['protocol_handler']
+        if protocol_handler.is_responsible(path):
+            path = protocol_handler.get_path(path)
+
+    ret_code = luaL_loadfile(L, path)
+
+    if ret_code:
+        err_msg = lua_tostring(L, -1)
+        print >>lua_log_err, err_msg
+        if ret_code ==  LUA_ERRFILE:
+            raise IOError(2, "File not found!", path)
+        status = False
+    else:
+        # Run the lua
+        ret_code = lua_pcall(L, 0, 0, 0)
+        if ret_code == 2:
+            err_msg = lua_tostring(L, -1)
+            print >>lua_log_err, err_msg
+        if ret_code != 0:
+            #print "lua_pcall() failed!"
+            status = False
+    lua_pushboolean(L, status)
+    return 1
+
+
 cdef int get_paramters(lua_State *L):
     pass
 
@@ -2775,6 +2820,9 @@ cdef class PackageList(BasePackageList):
         lua_pushcfunction(self._l, l_execute)
         lua_setglobal(self._l, "execute")
 
+        lua_pushcfunction(self._l, l_include)
+        lua_setglobal(self._l, "include")
+
         # SHARE TYPE 
         lua_pushinteger(self._l, STYPE_DISKTREE)
         lua_setglobal(self._l, "STYPE_DISKTREE")
@@ -2886,6 +2934,8 @@ cdef class PackageList(BasePackageList):
         lua_push_is_array(self._l)
         lua_pushlightuserdata(self._l, <PyObject *>self)
         lua_setglobal(self._l, 'p_package_list')
+        lua_pushlightuserdata(self._l, <PyObject *>self._connection_list)
+        lua_setglobal(self._l, 'p_connection_list')
         lua_pushlightuserdata(self._l, <PyObject *>self._installed_list)
         lua_setglobal(self._l, 'p_installed_list')
         lua_sethook(self._l, lua_hook, LUA_MASKLINE, 0)

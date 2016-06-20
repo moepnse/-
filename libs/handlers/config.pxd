@@ -11,7 +11,7 @@ cdef:
         ss__cmd,
         ss__connection_handler,
         ss__protocol
-        
+
     enum STATUS_TYPES:
         st__info,
         st__success,
@@ -51,21 +51,21 @@ cdef class Cmd(BaseCmd):
         public object _error_codes
         public object _ret_code_type
         public object _ret_code_description
-        
+
     cdef unsigned long _execute(self, object parameters=*)
 
-    
+
 cdef class BaseVersion:
     cdef:
         WORD _config_version
         WORD _api_version
         DWORD _flags
-        
+
     cdef list _get_version(self, WORD version)
-    
+
     cdef bint _get_flag(self, unsigned char offset)
 
-        
+
 cdef class Base(BaseVersion):
     cdef:
         public object _log
@@ -128,7 +128,7 @@ cdef class LogList(BaseVersion):
         public object protocol_plugins
         public object _config_path
 
-        
+
 cdef class Host(BaseVersion):
     cdef:
         #public str _ipv4
@@ -145,32 +145,32 @@ cdef class Host(BaseVersion):
         public int _len
 
     #cpdef bint ipv4_is(self, str ip)
-        
+
     #cpdef bint ipv6_is(self, str ip)
-        
+
     cpdef bint ipv4_is(self, unicode ip)
-        
+
     cpdef bint ipv6_is(self, unicode ip)
-        
+
     cpdef bint hostname_is(self, unicode hostname)
 
     cpdef bint workgroup_is(self, unicode workgroup)
-    
+
     cpdef bint domain_name_is(self, unicode domain_name)
-     
+
     cpdef bint forest_name_is(self, unicode forest_name)
-     
+
     cpdef get_packages(self)
-        
+
     cpdef get_profiles(self)
 
-     
+
 cdef class Profile(BaseVersion):
     cdef:
         public unicode _id
         public list _packages
         public object _profile_list
-     
+
 
 cdef class HostList(Base):
     cdef public object _host_list_path
@@ -179,17 +179,17 @@ cdef class HostList(Base):
 cdef class ProfileList(Base):
     cdef:
         public object _profile_list_path
-        
-    
+
+
 cdef class InstallList(Base):
     cdef:
         public object _install_list_path
         public list _install_list
         public list _packages
         public list _profiles
-        
+
     cpdef get_packages(self)
-        
+
     cpdef get_profiles(self)
 
 

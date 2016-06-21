@@ -575,7 +575,7 @@ cdef _upgrade(package_list, package_id):
         status, cmd_list = package_list.upgrade(package_id)
         print "status: %d, executed cmds: %s" % (status, cmd_list)
         return True
-        return False
+    return False
 
 
 cdef upgrade(packages=[]):

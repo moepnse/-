@@ -33,6 +33,7 @@ from c_windows cimport SetConsoleTextAttribute, GetStdHandle, STD_OUTPUT_HANDLE,
 from libs.handlers.config cimport StatusHandler as BaseStatusHandler, STATUS_SOURCE, ss__cmd, ss__connection_handler, ss__protocol, STATUS_TYPES, st__info, st__success, st__warn, st__error
 from libs.handlers.config import ChecksumViolation
 from libs.handlers.protocol import FileNotFound, ConnectionError, AuthenticationError
+from libs.win.software cimport SoftwareList
 
 
 INSTALL = "install"
@@ -42,6 +43,7 @@ UNINSTALL = "uninstall"
 SEARCH = "search"
 INFO = "info"
 LIST = "list"
+LIST_SOFTWARE = "list_software"
 SHOW_INSTALLED = "show_installed"
 
 #INSTALLED = {True: "installiert", False: "nicht installiert"}
@@ -199,6 +201,8 @@ cdef main():
         info(sys.argv[2:])
     elif action == LIST:
         list_packages()
+    elif action == LIST_SOFTWARE:
+        list_software()
     elif action == SHOW_INSTALLED:
         show_installed()
     elif action == "show_packages_in_installed_list":
@@ -349,6 +353,18 @@ cdef list_packages():
         _list_packages(package_list)
         for _package_list in package_lists:
             _list_packages(_package_list)
+
+
+cdef list_software():
+    cdef:
+        object product
+        SoftwareList software_list
+
+    print "list software..."
+    software_list = SoftwareList()
+    for key in software_list:
+        product = software_list[key]
+        print >>sys.stdout, u"%s %s %s %s %s"% (product.display_name, product.display_version, product.version_major, product.version_minor, product.version)
 
 
 cdef bint _info(package_list, package_id):

@@ -12,8 +12,12 @@ UNINSTALL_PATHS = [r"Software\Microsoft\Windows\CurrentVersion\Uninstall", r"Sof
 
 class Product(object):
 
-    def __init__(self, display_name, uninstall_string, parent_display_name="", parent_key_name=""):
+    def __init__(self, display_name, uninstall_string, parent_display_name="", parent_key_name="", display_version="", version=0, version_major=0, version_minor=0):
         self._display_name = display_name
+        self._display_version = display_version
+        self._version = version
+        self._version_major = version_major
+        self._version_minor = version_minor
         self._uninstall_string = uninstall_string
         self._has_parent = (parent_display_name != "" or parent_key_name != "")
         self._parent_display_name = parent_display_name
@@ -30,6 +34,22 @@ class Product(object):
     @property
     def display_name(self):
         return self._display_name
+
+    @property
+    def display_version(self):
+        return self._display_version
+
+    @property
+    def version(self):
+        return self._version
+
+    @property
+    def version_major(self):
+        return self._version_major
+
+    @property
+    def version_minor(self):
+        return self._version_minor
 
     @property
     def product_name(self):
@@ -82,6 +102,15 @@ cdef class SoftwareList:
                         kwargs['parent_display_name'] = winreg.get_value(r"HKEY_LOCAL_MACHINE", uninstall_path + '\\' + product.name, 'ParentDisplayName').data
                     if winreg.value_exists(r"HKEY_LOCAL_MACHINE", uninstall_path + '\\' + product.name, 'ParentKeyName'):
                         kwargs['parent_key_name'] = winreg.get_value(r"HKEY_LOCAL_MACHINE", uninstall_path + '\\' + product.name, 'ParentKeyName').data
+
+                    if winreg.value_exists(r"HKEY_LOCAL_MACHINE", uninstall_path + '\\' + product.name, 'DisplayVersion'):
+                        kwargs['display_version'] = winreg.get_value(r"HKEY_LOCAL_MACHINE", uninstall_path + '\\' + product.name, 'DisplayVersion').data
+                    if winreg.value_exists(r"HKEY_LOCAL_MACHINE", uninstall_path + '\\' + product.name, 'Version'):
+                        kwargs['version'] = winreg.get_value(r"HKEY_LOCAL_MACHINE", uninstall_path + '\\' + product.name, 'Version').data
+                    if winreg.value_exists(r"HKEY_LOCAL_MACHINE", uninstall_path + '\\' + product.name, 'VersionMajor'):
+                        kwargs['version_major'] = winreg.get_value(r"HKEY_LOCAL_MACHINE", uninstall_path + '\\' + product.name, 'VersionMajor').data
+                    if winreg.value_exists(r"HKEY_LOCAL_MACHINE", uninstall_path + '\\' + product.name, 'VersionMinor'):
+                        kwargs['version_minor'] = winreg.get_value(r"HKEY_LOCAL_MACHINE", uninstall_path + '\\' + product.name, 'VersionMinor').data
                     self._sw_list[product_name] = Product(product_name, uninstall_string, **kwargs)
 
     def __iter__(self):

@@ -2375,7 +2375,7 @@ cdef bint get_table_as_dict(lua_State *L, int table, dict d, structure=None):
                 if structure1 is not None and not FUNCTION in structure1:
                     print >>lua_log_err, "[%d] [gtad] Function (%s) as value is not allowed here!" % (current_line, key)
                     lua_pop(L, 1)
-                    continue    
+                    continue
             """
             Creates and returns a reference, in the table at index t, for the object at the top of the stack (and pops the object).
 
@@ -3512,8 +3512,8 @@ cdef class LogList(BaseLogList):
         # Load but don't run the Lua script 
         ret_code = luaL_loadfile(self._l, self._config_path)
         if ret_code:
-            # Error out if file can't be read  
-            #bail(L, "luaL_loadfile() failed")     
+            # Error out if file can't be read
+            #bail(L, "luaL_loadfile() failed")
             #print "%s: luaL_loadfile() failed!" % "LogList"
             err_msg = lua_tostring(self._l, -1)
             #print >>sys.stderr, err_msg
@@ -4042,14 +4042,14 @@ cdef class InstallList(BaseInstallList):
                                                 }
                                             }
                                         )
-                                    }        
+                                    }
                                 )
                             },
                             "profiles":
                             {   ARRAY:
-                                (   
+                                (
                                     {
-                                        STRING: ""    
+                                        STRING: ""
                                     }
                                 )
                             }

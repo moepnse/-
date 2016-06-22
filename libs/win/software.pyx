@@ -106,11 +106,11 @@ cdef class SoftwareList:
                     if winreg.value_exists(r"HKEY_LOCAL_MACHINE", uninstall_path + '\\' + product.name, 'DisplayVersion'):
                         kwargs['display_version'] = winreg.get_value(r"HKEY_LOCAL_MACHINE", uninstall_path + '\\' + product.name, 'DisplayVersion').data
                     if winreg.value_exists(r"HKEY_LOCAL_MACHINE", uninstall_path + '\\' + product.name, 'Version'):
-                        kwargs['version'] = winreg.get_value(r"HKEY_LOCAL_MACHINE", uninstall_path + '\\' + product.name, 'Version').data
+                        kwargs['version'] = int(winreg.get_value(r"HKEY_LOCAL_MACHINE", uninstall_path + '\\' + product.name, 'Version').data)
                     if winreg.value_exists(r"HKEY_LOCAL_MACHINE", uninstall_path + '\\' + product.name, 'VersionMajor'):
-                        kwargs['version_major'] = winreg.get_value(r"HKEY_LOCAL_MACHINE", uninstall_path + '\\' + product.name, 'VersionMajor').data
+                        kwargs['version_major'] = int(winreg.get_value(r"HKEY_LOCAL_MACHINE", uninstall_path + '\\' + product.name, 'VersionMajor').data)
                     if winreg.value_exists(r"HKEY_LOCAL_MACHINE", uninstall_path + '\\' + product.name, 'VersionMinor'):
-                        kwargs['version_minor'] = winreg.get_value(r"HKEY_LOCAL_MACHINE", uninstall_path + '\\' + product.name, 'VersionMinor').data
+                        kwargs['version_minor'] = int(winreg.get_value(r"HKEY_LOCAL_MACHINE", uninstall_path + '\\' + product.name, 'VersionMinor').data)
                     self._sw_list[product_name] = Product(product_name, uninstall_string, **kwargs)
 
     def __iter__(self):

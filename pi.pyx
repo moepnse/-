@@ -68,8 +68,14 @@ cdef class Out:
         # we can change it back to the default dos console color
         self._default_attr = FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE | FOREGROUND_INTENSITY
 
+    def _encode_msg(self, unicode msg):
+        # CP850 Encoding is important for Text Output in the Windows Console
+        return msg.encode("CP850", errors='replace')
+
     def write(self, msg):
         SetConsoleTextAttribute(self._h_stdout, self._color)
+        if isinstance(msg, unicode):
+            msg = self._encode_msg(msg)
         self._fh.write(msg)
         SetConsoleTextAttribute(self._h_stdout, self._default_attr)
 
@@ -364,7 +370,7 @@ cdef list_software():
     software_list = SoftwareList()
     for key in software_list:
         product = software_list[key]
-        print >>sys.stdout, u"%s %s %s %s %s"% (product.display_name, product.display_version, product.version_major, product.version_minor, product.version)
+        print >>stdout, u"%s %s %s %s %s"% (product.display_name, product.display_version, product.version_major, product.version_minor, product.version)
 
 
 cdef bint _info(package_list, package_id):
@@ -372,7 +378,7 @@ cdef bint _info(package_list, package_id):
         bint found = False
     if package_id in package_list:
         package = package_list[package_id]
-        print >>sys.stdout, "ID: %s\r\nName: %s\r\nInstall Cmds: %s\r\nUpgrade Cmds: %s\r\nUinstall Cmds: %s\r\nInstalled: %s" % (package_id, package.name, repr(package.install_cmds), repr(package.upgrade_cmds), repr(package.uninstall_cmds), INSTALLED[package.installed])
+        print >>stdout, "ID: %s\r\nName: %s\r\nInstall Cmds: %s\r\nUpgrade Cmds: %s\r\nUinstall Cmds: %s\r\nInstalled: %s" % (package_id, package.name, repr(package.install_cmds), repr(package.upgrade_cmds), repr(package.uninstall_cmds), INSTALLED[package.installed])
     return found
 
 
@@ -388,7 +394,7 @@ cdef info(packages=[]):
         for _package_list in package_lists:
             found = _info(package_id, _package_list)
         if not found:
-            print >>sys.stdout, "Package %s could not be found!" % package_id
+            print >>stdout, "Package %s could not be found!" % package_id
 
 
 cdef __handle_dependencies(package_list, package_id, action_list):
@@ -475,7 +481,7 @@ cdef search(search_patterns=[]):
                 out = "%s (%s) [I: %s | U: %s]:\n\t%s" % (package_id, package.name, package.installed,  package.upgrade_available, package.description)
             print out
     else:
-        print >>sys.stdout, "Nothing found!"
+        print >>stdout, "Nothing found!"
 
 
 cdef object _get_package(package_id):
@@ -592,7 +598,7 @@ cdef upgrade(packages=[]):
             if found:
                 break
         if not found:
-            print >>sys.stdout, "Could not found package %s!" % package_id
+            print >>stdout, "Could not found package %s!" % package_id
 
 
 cdef _uninstall(package_list, package_id):
@@ -626,7 +632,7 @@ cdef uninstall(packages=[]):
             if found:
                 break
         if not found:
-            print >>sys.stdout, "Could not found package %s!" % package_id
+            print >>stdout, "Could not found package %s!" % package_id
 
 
 cdef _show_installed(package_list):

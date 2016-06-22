@@ -22,7 +22,7 @@ cdef extern from "lua.h":
     int LUA_TFUNCTION           = 6
     int LUA_TUSERDATA           = 7
     int LUA_TTHREAD             = 8
-    
+
     #
     # Event codes
     #
@@ -31,7 +31,7 @@ cdef extern from "lua.h":
     int LUA_HOOKLINE	= 2
     int LUA_HOOKCOUNT	= 3
     int LUA_HOOKTAILRET = 4
-    
+
     #
     # Event masks
     #
@@ -39,18 +39,18 @@ cdef extern from "lua.h":
     int LUA_MASKRET	    = (1 << LUA_HOOKRET)
     int LUA_MASKLINE	= (1 << LUA_HOOKLINE)
     int LUA_MASKCOUNT	= (1 << LUA_HOOKCOUNT)
-    
+
     # Functions to be called by the debuger in specific events
     ctypedef void (*lua_Hook) (lua_State *L, lua_Debug *ar)
-    
+
     int lua_sethook (lua_State *L, lua_Hook func, int mask, int count)
     lua_Hook lua_gethook (lua_State *L)
     int lua_gethookmask (lua_State *L)
     int lua_gethookcount (lua_State *L)
-    
+
 cdef extern from "luaconf.h":
     pass
-    
+
 cdef extern from "lvm.h":
     pass
 
@@ -81,12 +81,12 @@ cdef extern from "lualib.h":
     ctypedef int (*lua_CFunction) (lua_State *L)
 
     ctypedef int luai_jmpbuf
-    
+
     struct stringtable:
         TString **hash
         int nuse
         int size
-    
+
     union Value:
         GCObject *gc
         void *p
@@ -94,7 +94,7 @@ cdef extern from "lualib.h":
         lua_CFunction f
         lua_Integer i
         lua_Number n
-        
+
     struct lua_TValue:
         Value value_
         int tt_
@@ -109,7 +109,7 @@ cdef extern from "lualib.h":
     union TKey:
         TKey_nk nk
         TValue tvk
-    
+
     enum TMS:
         TM_INDEX,
         TM_NEWINDEX,
@@ -138,11 +138,11 @@ cdef extern from "lualib.h":
         TM_N
 
     DEF TM_N = 24
-        
+
     struct Node:
         TValue i_val
         TKey i_key
-        
+
     struct Mbuffer:
         char *buffer
         size_t n
@@ -153,7 +153,7 @@ cdef extern from "lualib.h":
         Value value
 
     ctypedef lua_TObject TObject
-  
+
     struct global_State:
         stringtable strt
         GCObject *rootgc
@@ -168,7 +168,7 @@ cdef extern from "lualib.h":
         lua_State *mainthread
         Node dummynode[1]
         TString *tmname[TM_N]
-            
+
     struct lua_longjmp:
         lua_longjmp *previous
         luai_jmpbuf b
@@ -213,7 +213,7 @@ cdef extern from "lualib.h":
     struct lua_TValue:
         Value value_
         int tt_
-        
+
     struct TString:
         GCObject *next
         lu_byte tt
@@ -232,11 +232,11 @@ cdef extern from "lualib.h":
     struct UpVal_open:
         UpVal *next
         int touched
-        
+
     union UpVal_u:
         UpVal_open open
         TValue value
-        
+
     struct UpVal:
         TValue *v
         lu_mem refcount
@@ -264,7 +264,7 @@ cdef extern from "lualib.h":
         ptrdiff_t extra
         short nresults
         lu_byte callstatus
-          
+
     struct lua_State:
         GCObject *next
         lu_byte tt
@@ -296,7 +296,7 @@ cdef extern from "lualib.h":
     int luaL_loadfile (lua_State *L, const char *filename)
     int lua_pcall (lua_State *L, int nargs, int nresults, int msgh)
     void lua_close (lua_State *L)
-    
+
     # push functions (C -> stack)
     void        lua_pushnil (lua_State *L)
     void        lua_pushnumber (lua_State *L, lua_Number n)
@@ -324,8 +324,8 @@ cdef extern from "lualib.h":
     void *lua_newuserdata (lua_State *L, size_t sz)
     int   lua_getmetatable (lua_State *L, int objindex)
     int  lua_getuservalue (lua_State *L, int idx)
-    
-    
+
+
     # access functions (stack -> C)
 
     int             lua_isnumber (lua_State *L, int idx)
@@ -350,16 +350,16 @@ cdef extern from "lualib.h":
     lua_State      *lua_tothread (lua_State *L, int idx)
     const void     *lua_topointer (lua_State *L, int idx)
     const char *lua_tostring (lua_State *L, int index)
-    
+
     void lua_setglobal (lua_State *L, const char *name)
     void lua_pushcfunction (lua_State *L, lua_CFunction fn)
-    
+
     const char *luaL_checkstring (lua_State *L, int arg)
     void lua_pop (lua_State *L, int n)
     int luaL_getn (lua_State *L, int t)
     int lua_next (lua_State *L, int index)
     int lua_istable (lua_State *L, int index)
-    
+
     void luaL_getmetatable (lua_State *L, const char *tname)
     int lua_setmetatable (lua_State *L, int index)
     int luaL_newmetatable (lua_State *L, const char *tname)
@@ -370,7 +370,7 @@ cdef extern from "lualib.h":
     void lua_newtable (lua_State *L)
     int luaL_ref (lua_State *L, int t)
     int lua_isnil (lua_State *L, int index)
-    void lua_pushvalue (lua_State *L, int index)    
+    void lua_pushvalue (lua_State *L, int index)
     int LUA_REGISTRYINDEX
     int lua_getinfo (lua_State *L, const char *what, lua_Debug *ar)
     int lua_getstack (lua_State *L, int level, lua_Debug *ar)

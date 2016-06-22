@@ -32,7 +32,7 @@ from libc.stdlib cimport malloc, free, calloc
 from libs.handlers.config cimport Base, Settings as BaseSettings, ConnectionList as BaseConnectionList, LogList as BaseLogList, InstallList as BaseInstallList, HostList as BaseHostList, Package as BasePackage, PackageList as BasePackageList, ProfileList as BaseProfileList, Cmd, Host, Profile
 from libs.win.software cimport SoftwareList
 from pi_service cimport ON_START, ON_SHUTDOWN, REPEATEDLY, CURRENT_USER, WINLOGON
-from c_lua cimport lua_State, luaL_newstate, luaL_openlibs, luaL_loadfile, lua_pcall, lua_close, lua_pushcfunction, lua_setglobal, lua_getglobal, lua_tonumber, lua_pushnumber, luaL_checkstring, lua_toboolean, lua_tointeger, lua_pushlightuserdata, lua_rawlen, lua_pushinteger, lua_pop, lua_rawgeti, luaL_getn, lua_tolstring, lua_tostring, lua_isstring, lua_typename, lua_type, lua_next, lua_pushnil, lua_istable, lua_isinteger, lua_isnumber, lua_isboolean, lua_touserdata, lua_pushboolean, lua_pushcclosure, lua_getmetatable, lua_newuserdata, luaL_getmetatable, lua_setmetatable, lua_pushstring, lua_upvalueindex, luaL_newmetatable, lua_settable, lua_isfunction, lua_gettop, lua_setfield, lua_newtable, luaL_ref, LUA_REGISTRYINDEX, lua_isnil, lua_pushvalue, lua_Integer, lua_getinfo, lua_Debug, lua_getstack, LUA_TSTRING, LUA_TBOOLEAN, LUA_TNUMBER, LUA_MASKLINE, lua_sethook, LUA_ERRFILE
+from c_lua cimport lua_State, luaL_newstate, luaL_openlibs, luaL_loadfile, lua_pcall, lua_close, lua_pushcfunction, lua_setglobal, lua_getglobal, lua_tonumber, lua_pushnumber, luaL_checkstring, lua_toboolean, lua_tointeger, lua_pushlightuserdata, lua_rawlen, lua_pushinteger, lua_pop, lua_rawgeti, luaL_getn, lua_tolstring, lua_tostring, lua_isstring, lua_typename, lua_type, lua_next, lua_pushnil, lua_istable, lua_isinteger, lua_isnumber, lua_isboolean, lua_touserdata, lua_pushboolean, lua_pushcclosure, lua_getmetatable, lua_newuserdata, luaL_getmetatable, lua_setmetatable, lua_pushstring, lua_upvalueindex, luaL_newmetatable, lua_settable, lua_isfunction, lua_gettop, lua_setfield, lua_createtable, lua_newtable, luaL_ref, LUA_REGISTRYINDEX, lua_isnil, lua_pushvalue, lua_Integer, lua_getinfo, lua_Debug, lua_getstack, LUA_TSTRING, LUA_TBOOLEAN, LUA_TNUMBER, LUA_MASKLINE, lua_sethook, LUA_ERRFILE
 from c_windows_data_types cimport LPSTR, LPTSTR, DWORD, LPBYTE, LPWSTR, LPCWSTR, BYTE, PBYTE, LPVOID,  WCHAR, UINT, PUINT, LPDWORD, LONG, PHKEY
 from c_windows cimport NetShareEnum, NetApiBufferFree, NetApiBufferFree, SHARE_INFO_502, NET_API_STATUS,  MAX_PREFERRED_LENGTH, ERROR_SUCCESS, ERROR_MORE_DATA, PSHARE_INFO_502, STYPE_DISKTREE, STYPE_PRINTQ, STYPE_DEVICE, STYPE_IPC, STYPE_SPECIAL, STYPE_TEMPORARY, ACCESS_READ, ACCESS_WRITE, ACCESS_CREATE, ACCESS_EXEC, ACCESS_DELETE, ACCESS_ATRIB, ACCESS_PERM, ACCESS_ALL, Sleep, GetFileVersionInfoSizeW, VS_FIXEDFILEINFO, GetFileVersionInfoW, VerQueryValueW, HIWORD, LOWORD, GetLastError, DsRoleGetPrimaryDomainInformation, DSROLE_PRIMARY_DOMAIN_INFO_BASIC, DsRolePrimaryDomainInfoBasic, GetComputerNameExW, ComputerNameDnsDomain, ComputerNameDnsFullyQualified, ComputerNameDnsHostname, ComputerNameNetBIOS, ComputerNamePhysicalDnsDomain, ComputerNamePhysicalDnsFullyQualified, ComputerNamePhysicalDnsHostname, ComputerNamePhysicalNetBIOS, COMPUTER_NAME_FORMAT,HKEY_CLASSES_ROOT, HKEY_CURRENT_USER, HKEY_LOCAL_MACHINE, HKEY_USERS, HKEY_PERFORMANCE_DATA, HKEY_PERFORMANCE_TEXT, HKEY_PERFORMANCE_NLSTEXT, HKEY_CURRENT_CONFIG, HKEY_DYN_DATA, RegCreateKeyExW, HKEY, RegOpenKeyExW, RegQueryValueExW, RegCloseKey, KEY_QUERY_VALUE, KEY_READ, KEY_SET_VALUE, KEY_CREATE_SUB_KEY, REG_NONE, REG_SZ, REG_EXPAND_SZ, REG_BINARY, REG_DWORD, REG_DWORD_LITTLE_ENDIAN, REG_DWORD_BIG_ENDIAN, REG_LINK, REG_MULTI_SZ, REG_RESOURCE_LIST, REG_FULL_RESOURCE_DESCRIPTOR, REG_RESOURCE_REQUIREMENTS_LIST, REG_QWORD, REG_QWORD_LITTLE_ENDIAN, RegSetValueExW, KEY_ALL_ACCESS
 
@@ -649,6 +649,98 @@ cdef int l_is_in_software_list(lua_State *L):
             lua_pushboolean(L, 1)
             return 1
     lua_pushboolean(L, 0)
+    return 1
+
+
+cdef int software_list2_iter (lua_State *L):
+    cdef:
+        PyObject* p_software_list
+        PyObject* p_software_list_iter
+        SoftwareList obj_software_list
+        object obj_software_list_iter
+        object key
+        object entry
+        object py_byte_string
+    p_software_list = <PyObject *>lua_touserdata(L, lua_upvalueindex(1))
+    p_software_list_iter = <PyObject *>lua_touserdata(L, lua_upvalueindex(2))
+    obj_software_list = <object>p_software_list
+    obj_software_list_iter = <object>p_software_list_iter
+    try:
+        key = obj_software_list_iter.next()
+        entry = obj_software_list[key]
+
+        # creates and pushes new table on top of Lua stack
+        lua_createtable(L, 0, 5)
+        py_byte_string = entry.display_name.encode("UTF-8")
+        # Pushes table value on top of Lua stack
+        lua_pushstring(L, <char*>py_byte_string)
+        #table["name"] = row->name. Pops key value
+        lua_setfield(L, -2, "display_name")
+
+        # no need to keep a reference, lua_pushstring will create a copy
+        py_byte_string = entry.display_version.encode("UTF-8")
+        lua_pushstring(L, <char*>py_byte_string)
+        lua_setfield(L, -2, "display_version")
+
+        lua_pushinteger(L, <lua_Integer>(entry.version))
+        lua_setfield(L, -2, "version")
+
+        lua_pushinteger(L, <lua_Integer>(entry.version_major))
+        lua_setfield(L, -2, "version_major")
+
+        lua_pushinteger(L, <lua_Integer>(entry.version_minor))
+        lua_setfield(L, -2, "version_minor")
+
+        return 1
+    except StopIteration:
+        # no more values to return
+        return 0
+    except:
+        traceback.print_exc()
+        return 0
+
+
+cdef int software_list2_gc( lua_State* L ):
+    cdef:
+        PyObject* p_software_list
+        SoftwareList obj_software_list
+        PyObject* p_software_list_iter
+        object obj_software_list_iter
+    p_software_list = <PyObject *>lua_touserdata(L, lua_upvalueindex(1))
+    obj_software_list = <object>p_software_list
+    Py_DECREF(obj_software_list)
+    p_software_list_iter = <PyObject *>lua_touserdata(L, lua_upvalueindex(2))
+    obj_software_list_iter = <object>p_software_list_iter
+    Py_DECREF(obj_software_list_iter)
+    return 0
+
+
+cdef int l_software_list2 (lua_State *L):
+    cdef:
+        PyObject* p_software_list
+        PyObject* p_software_list_iter
+        SoftwareList obj_software_list
+        object obj_software_list_iter
+        object entry
+    luaL_newmetatable( L, "LuaBook.software_list2" )
+    lua_pushstring( L, "__gc" )
+    lua_pushcfunction( L, software_list2_gc)
+    lua_settable( L, -3 )
+    # create a userdatum to store a python object address 
+    #p_software_list = <PyObject *>lua_newuserdata(L, sizeof(PyObject *))
+    #p_software_list_iter = <PyObject *>lua_newuserdata(L, sizeof(PyObject *))
+    obj_software_list = SoftwareList()
+    obj_software_list_iter = iter(obj_software_list)
+    lua_pushlightuserdata (L, <PyObject*>obj_software_list)
+    lua_pushlightuserdata (L, <PyObject*>obj_software_list_iter)
+    Py_INCREF(obj_software_list)
+    Py_INCREF(obj_software_list_iter)
+    #p_software_list[0] = <PyObject>((<PyObject*>software_list)[0])
+    #p_software_list_iter[0] = <PyObject>((<PyObject*>software_list_iter)[0])
+    # set its metatable
+    luaL_getmetatable(L, "LuaBook.software_list2")
+    lua_setmetatable(L, -2)
+    lua_pushcclosure(L, software_list2_iter, 2)
     return 1
 
 
@@ -2812,6 +2904,10 @@ cdef class PackageList(BasePackageList):
         # iterator
         lua_pushcfunction(self._l, l_software_list)
         lua_setglobal(self._l, "software_list")
+
+        # iterator
+        lua_pushcfunction(self._l, l_software_list2)
+        lua_setglobal(self._l, "software_list2")
 
         # iterator
         lua_pushcfunction(self._l, l_installed_list)

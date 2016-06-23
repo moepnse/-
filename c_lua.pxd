@@ -355,6 +355,7 @@ cdef extern from "lualib.h":
     void lua_pushcfunction (lua_State *L, lua_CFunction fn)
 
     const char *luaL_checkstring (lua_State *L, int arg)
+    lua_Integer luaL_checkinteger (lua_State *L, int narg)
     void lua_pop (lua_State *L, int n)
     int luaL_getn (lua_State *L, int t)
     int lua_next (lua_State *L, int index)

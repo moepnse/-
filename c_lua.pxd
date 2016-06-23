@@ -366,6 +366,7 @@ cdef extern from "lualib.h":
     int luaL_newmetatable (lua_State *L, const char *tname)
     int lua_upvalueindex (int i)
     void lua_settable (lua_State *L, int index)
+    void lua_rawseti (lua_State *L, int index, int n)
     int lua_gettop (lua_State *L)
     void lua_setfield (lua_State *L, int index, const char *k)
     void lua_newtable (lua_State *L)

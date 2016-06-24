@@ -32,7 +32,7 @@ from libc.stdlib cimport malloc, free, calloc
 from libs.handlers.config cimport Base, Settings as BaseSettings, ConnectionList as BaseConnectionList, LogList as BaseLogList, InstallList as BaseInstallList, HostList as BaseHostList, Package as BasePackage, PackageList as BasePackageList, ProfileList as BaseProfileList, Cmd, Host, Profile
 from libs.win.software cimport SoftwareList
 from pi_service cimport ON_START, ON_SHUTDOWN, REPEATEDLY, CURRENT_USER, WINLOGON
-from c_lua cimport lua_State, luaL_newstate, luaL_openlibs, luaL_loadfile, lua_pcall, lua_close, lua_pushcfunction, lua_setglobal, lua_getglobal, lua_tonumber, lua_pushnumber, luaL_checkstring, lua_toboolean, lua_tointeger, lua_pushlightuserdata, lua_rawlen, lua_pushinteger, lua_pop, lua_rawgeti, luaL_getn, lua_tolstring, lua_tostring, lua_isstring, lua_typename, lua_type, lua_next, lua_pushnil, lua_istable, lua_isinteger, lua_isnumber, lua_isboolean, lua_touserdata, lua_pushboolean, lua_pushcclosure, lua_getmetatable, lua_newuserdata, luaL_getmetatable, lua_setmetatable, lua_pushstring, lua_upvalueindex, luaL_newmetatable, lua_settable, lua_isfunction, lua_gettop, lua_setfield, lua_createtable, lua_newtable, luaL_ref, LUA_REGISTRYINDEX, lua_isnil, lua_pushvalue, lua_Integer, lua_getinfo, lua_Debug, lua_getstack, LUA_TSTRING, LUA_TBOOLEAN, LUA_TNUMBER, LUA_MASKLINE, lua_sethook, LUA_ERRFILE
+from c_lua cimport lua_State, luaL_newstate, luaL_openlibs, luaL_loadfile, lua_pcall, lua_close, lua_pushcfunction, lua_setglobal, lua_getglobal, lua_tonumber, lua_pushnumber, luaL_checkstring, luaL_checkinteger, lua_toboolean, lua_tointeger, lua_pushlightuserdata, lua_rawlen, lua_pushinteger, lua_pop, lua_rawgeti, luaL_getn, lua_tolstring, lua_tostring, lua_isstring, lua_typename, lua_type, lua_next, lua_pushnil, lua_istable, lua_isinteger, lua_isnumber, lua_isboolean, lua_touserdata, lua_pushboolean, lua_pushcclosure, lua_getmetatable, lua_newuserdata, luaL_getmetatable, lua_setmetatable, lua_pushstring, lua_upvalueindex, luaL_newmetatable, lua_settable, lua_isfunction, lua_gettop, lua_rawseti, lua_setfield, lua_createtable, lua_newtable, luaL_ref, LUA_REGISTRYINDEX, lua_isnil, lua_pushvalue, lua_Integer, lua_getinfo, lua_Debug, lua_getstack, LUA_TSTRING, LUA_TBOOLEAN, LUA_TNUMBER, LUA_MASKLINE, lua_sethook, LUA_ERRFILE
 from c_windows_data_types cimport LPSTR, LPTSTR, DWORD, LPBYTE, LPWSTR, LPCWSTR, BYTE, PBYTE, LPVOID,  WCHAR, UINT, PUINT, LPDWORD, LONG, PHKEY
 from c_windows cimport NetShareEnum, NetApiBufferFree, NetApiBufferFree, SHARE_INFO_502, NET_API_STATUS,  MAX_PREFERRED_LENGTH, ERROR_SUCCESS, ERROR_MORE_DATA, PSHARE_INFO_502, STYPE_DISKTREE, STYPE_PRINTQ, STYPE_DEVICE, STYPE_IPC, STYPE_SPECIAL, STYPE_TEMPORARY, ACCESS_READ, ACCESS_WRITE, ACCESS_CREATE, ACCESS_EXEC, ACCESS_DELETE, ACCESS_ATRIB, ACCESS_PERM, ACCESS_ALL, Sleep, GetFileVersionInfoSizeW, VS_FIXEDFILEINFO, GetFileVersionInfoW, VerQueryValueW, HIWORD, LOWORD, GetLastError, DsRoleGetPrimaryDomainInformation, DSROLE_PRIMARY_DOMAIN_INFO_BASIC, DsRolePrimaryDomainInfoBasic, GetComputerNameExW, ComputerNameDnsDomain, ComputerNameDnsFullyQualified, ComputerNameDnsHostname, ComputerNameNetBIOS, ComputerNamePhysicalDnsDomain, ComputerNamePhysicalDnsFullyQualified, ComputerNamePhysicalDnsHostname, ComputerNamePhysicalNetBIOS, COMPUTER_NAME_FORMAT,HKEY_CLASSES_ROOT, HKEY_CURRENT_USER, HKEY_LOCAL_MACHINE, HKEY_USERS, HKEY_PERFORMANCE_DATA, HKEY_PERFORMANCE_TEXT, HKEY_PERFORMANCE_NLSTEXT, HKEY_CURRENT_CONFIG, HKEY_DYN_DATA, RegCreateKeyExW, HKEY, RegOpenKeyExW, RegQueryValueExW, RegCloseKey, KEY_QUERY_VALUE, KEY_READ, KEY_SET_VALUE, KEY_CREATE_SUB_KEY, REG_NONE, REG_SZ, REG_EXPAND_SZ, REG_BINARY, REG_DWORD, REG_DWORD_LITTLE_ENDIAN, REG_DWORD_BIG_ENDIAN, REG_LINK, REG_MULTI_SZ, REG_RESOURCE_LIST, REG_FULL_RESOURCE_DESCRIPTOR, REG_RESOURCE_REQUIREMENTS_LIST, REG_QWORD, REG_QWORD_LITTLE_ENDIAN, RegSetValueExW, KEY_ALL_ACCESS
 
@@ -1274,6 +1274,35 @@ cdef int l_splitdrive(lua_State *L):
     lua_pushstring(L, drive.encode("UTF-8"))
     lua_pushstring(L, tail.encode("UTF-8"))
     return 2
+
+
+cdef int l_split(lua_State *L):
+    cdef:
+        const char* string
+        unicode u_string
+        const char* delimiter
+        unicode u_delimiter = u" "
+        int count = -1
+        list tmp
+        int stack_element_count = lua_gettop(L)
+        int i = 0
+        unicode entry
+        object py_byte_string
+    string = luaL_checkstring(L, 1)
+    u_string = string.decode("UTF-8")
+    if stack_element_count > 1:
+        delimiter = luaL_checkstring(L, 2)
+        u_delimiter = delimiter.decode("UTF-8")
+    if stack_element_count > 2:
+        count = luaL_checkinteger(L, 3)
+    tmp = u_string.split(u_delimiter, count)
+    lua_newtable(L)
+    for entry in tmp:
+        py_byte_string = entry.encode("UTF-8")
+        lua_pushstring(L, <char*>py_byte_string)
+        lua_rawseti(L, -2, i)
+        i+=1
+    return 1
 
 
 cdef int l_startswith(lua_State *L):
@@ -2998,6 +3027,9 @@ cdef class PackageList(BasePackageList):
 
         lua_pushcfunction(self._l, l_endswith)
         lua_setglobal(self._l, "endswith")
+
+        lua_pushcfunction(self._l, l_split)
+        lua_setglobal(self._l, "split")
 
 
         lua_push_winreg(self._l)

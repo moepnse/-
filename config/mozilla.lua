@@ -90,7 +90,7 @@ do
     upgrade_cmds = {KILL_FF_CMD, INSTALL_CMD}
     uninstall_cmds = {KILL_FF_CMD, UNINSTALL_CMD}
 
-    register_package('firefox_esr', [[Mozilla Firefox]], "45.2.0", "1", is_in_software_list([[Mozilla Firefox [0-9\.]+]]), firefox_esr_is_upgrade_avalaible(), install_cmds, upgrade_cmds, uninstall_cmds, "", {})
+    register_package('firefox_esr', [[Mozilla Firefox]], "45.2.0", "1", firefox_esr_is_installed(), firefox_esr_is_upgrade_avalaible(), install_cmds, upgrade_cmds, uninstall_cmds, "", {})
 end
 
 set_package_check_functions('firefox_esr', 'firefox_esr_is_installed', 'firefox_esr_is_upgrade_avalaible')

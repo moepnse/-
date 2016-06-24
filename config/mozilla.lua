@@ -1,6 +1,6 @@
 
 function firefox_esr_is_installed ()
-    return is_in_software_list([[Mozilla Firefox [0-9\.]+]])
+    return is_in_software_list([[Mozilla Firefox [0-9\.]+ ESR]])
 end
 
 function firefox_esr_is_upgrade_avalaible ()

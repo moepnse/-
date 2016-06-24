@@ -1321,6 +1321,16 @@ cdef int l_endswith(lua_State *L):
     return 1
 
 
+cdef int l_regex_does_match(lua_State *L):
+    cdef:
+        object match
+        unicode pattern = lua_string_to_python_unicode(L, 1)
+        unicode string = lua_string_to_python_unicode(L, 2)
+    match = re.match(pattern, string)
+    lua_pushboolean(L, match is not None)
+    return 1
+
+
 cdef int l_set_installed(lua_State *L):
     cdef:
         const char* package_id = luaL_checkstring(L, 1)
@@ -3030,6 +3040,9 @@ cdef class PackageList(BasePackageList):
 
         lua_pushcfunction(self._l, l_split)
         lua_setglobal(self._l, "split")
+
+        lua_pushcfunction(self._l, l_regex_does_match)
+        lua_setglobal(self._l, "regex_does_match")
 
 
         lua_push_winreg(self._l)

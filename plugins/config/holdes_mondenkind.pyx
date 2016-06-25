@@ -1341,6 +1341,11 @@ cdef int l_regex_match(lua_State *L):
         int i = 1
     match = re.match(pattern, string)
     lua_pushboolean(L, match is not None)
+    if match is None:
+        lua_pushnil(L)
+    else:
+        py_byte_string = match.group(0).encode("UTF-8")
+        lua_pushstring(L, <char*>py_byte_string)
     lua_newtable(L)
     if match is not None:
         for group in match.groups():
@@ -1348,7 +1353,7 @@ cdef int l_regex_match(lua_State *L):
             lua_pushstring(L, <char*>py_byte_string)
             lua_rawseti(L, -2, i)
             i+=1
-    return 2
+    return 3
 
 
 cdef int l_set_installed(lua_State *L):

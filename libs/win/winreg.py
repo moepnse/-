@@ -130,17 +130,22 @@ class Value(object):
 
 
 class Key(object):
-    def __init__(self, key, sub_key, key_name):
+    def __init__(self, key, sub_key, key_name=None):
         self._name = key_name
-        self._sub_key = sub_key
         self._key = key
+        if key_name is not None:
+            sub_key = "\\".join((sub_key, key_name))
+        else:
+            keys = sub_key.split("\\")
+            self._name = keys[-1]
+        self._sub_key = sub_key
 
         try:
             #self._key_handle = winreg.OpenKey(REG_MAPPING[key], r"%s\%s" % (sub_key, key_name), 0, winreg.KEY_READ | winreg.KEY_WRITE | winreg.KEY_SET_VALUE)
-            self._key_handle = winreg.OpenKey(REG_MAPPING[key], r"%s\%s" % (sub_key, key_name), 0, winreg.KEY_ALL_ACCESS)
+            self._key_handle = winreg.OpenKey(REG_MAPPING[key], sub_key, 0, winreg.KEY_ALL_ACCESS)
 
         except WindowsError, err:
-            self._key_handle = winreg.OpenKey(REG_MAPPING[key], r"%s\%s" % (sub_key, key_name), 0, winreg.KEY_READ)
+            self._key_handle = winreg.OpenKey(REG_MAPPING[key], sub_key, 0, winreg.KEY_READ)
 
         #self._set_values()
         #self._set_keys()
@@ -178,7 +183,7 @@ class Key(object):
 
         self._key_index += 1
 
-        return Key(self._key, r"%s\%s" % (self._sub_key, self._name), key_name)
+        return Key(self._key, "\\".join(self._sub_key, key_name))
 
     def _get_next_value(self):
 
@@ -202,31 +207,31 @@ class Key(object):
 
     def __getattr__(self, name):
         'Return the new Key Instance over an Attribute'
-        if not sub_key_exists(self._key, r"%s\%s\%s" % (self._sub_key, self._name, name)):
-            if not value_exists(self._key, r"%s\%s" % (self._sub_key, self._name), name):
+        if not sub_key_exists(self._key, r"%s\%s" % (self._sub_key, name)):
+            if not value_exists(self._key, self._sub_key, name):
                 raise AttributeNotFound(name)
             value = winreg.QueryValueEx(self._key_handle, name)
             value_data = value[0]
             value_type = value[1]
-            return Value(self._key, r"%s\%s" % (self._sub_key, self._name), name, value_data, value_type)
-        return Key(self._key, r"%s\%s" % (self._sub_key, self._name), name)
+            return Value(self._key, self._sub_key, name, value_data, value_type)
+        return Key(self._key, r"%s\%s" % (self._sub_key, name))
 
     def __getitem__(self, name):
         'Return the new Key Instance over a Item'
-        if not sub_key_exists(self._key, r"%s\%s\%s" % (self._sub_key, self._name, name)):
-            if not value_exists(self._key, r"%s\%s" % (self._sub_key, self._name), name):
+        if not sub_key_exists(self._key, r"%s\%s" % (self._sub_key, name)):
+            if not value_exists(self._key, self._sub_key, name):
                 raise AttributeNotFound(name)
             value = winreg.QueryValueEx(self._key_handle, name)
             value_data = value[0]
             value_type = value[1]
-            return Value(self._key, r"%s\%s" % (self._sub_key, self._name), name, value_data, value_type)
-        return Key(self._key, r"%s\%s" % (self._sub_key, self._name), name)
+            return Value(self._key, self._sub_key, name, value_data, value_type)
+        return Key(self._key, self._sub_key, name)
 
     def __delitem__(self, index):
         if self[index].is_key():
             for key in self[index].get_keys():
                 del self[index][key.get_name()]
-            key_path = r"%s\%s\%s" % (self._sub_key, self._name, index)
+            key_path = r"%s\%s" % (self._sub_key, index)
             #print key_path
             #winreg.DeleteKey(self._key_handle, key_path)
             winreg.DeleteKey(REG_MAPPING[self._key], key_path)
@@ -248,8 +253,8 @@ class Key(object):
             yield((child.get_name(), child))
 
     def create_key(self, key_name):
-        handle = winreg.CreateKey(REG_MAPPING[self._key], r'%s\%s\%s' % (self._sub_key, self._name, key_name))
-        return Key(self._key, r'%s\%s' % (self._sub_key, self._name), key_name)
+        handle = winreg.CreateKey(REG_MAPPING[self._key], r'%s\%s' % (self._sub_key, key_name))
+        return Key(self._key, self._sub_key, key_name)
 
     def get_name(self):
         return self._name
@@ -349,7 +354,7 @@ class Key(object):
 
     def get_keys(self):
 
-        key_handle = winreg.OpenKey(REG_MAPPING[self._key], "%s\%s" % (self._sub_key, self._name))
+        key_handle = winreg.OpenKey(REG_MAPPING[self._key], self._sub_key)
 
         # winreg.QueryInfoKey:
         # Returns information about a key, as a tuple.
@@ -367,11 +372,11 @@ class Key(object):
             # The result is the name of a key
             key_name = winreg.EnumKey(self._key_handle, i)
 
-            yield Key(self._key, "%s\%s" % (self._sub_key, self._name), key_name)
+            yield Key(self._key, self._sub_key, key_name)
 
     def get_key_count(self):
 
-        key_handle = winreg.OpenKey(REG_MAPPING[self._key], "%s\%s" % (self._sub_key, self._name))
+        key_handle = winreg.OpenKey(REG_MAPPING[self._key], self._sub_key)
 
         # winreg.QueryInfoKey:
         # Returns information about a key, as a tuple.

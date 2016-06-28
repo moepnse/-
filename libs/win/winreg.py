@@ -37,7 +37,7 @@ REG_QWORD = 11
 
 # Reg Mapping
 REG_MAPPING = {
-    "HKLM": winreg.HKEY_LOCAL_MACHINE, 
+    "HKLM": winreg.HKEY_LOCAL_MACHINE,
     "HKCU": winreg.HKEY_CURRENT_USER,
     "HKU": winreg.HKEY_USERS,
     "HKEY_LOCAL_MACHINE": winreg.HKEY_LOCAL_MACHINE,
@@ -46,7 +46,7 @@ REG_MAPPING = {
     }
 
 REGISTRY_ENCODING = 'utf-8'
-    
+
 # Error Class
 class KeyNotFound(Exception):
     def __init__(self, value):
@@ -83,7 +83,7 @@ class Value(object):
 
     def is_key(self):
         return False
-        
+
     def is_value(self):
         return True
 
@@ -138,7 +138,7 @@ class Key(object):
         try:
             #self._key_handle = winreg.OpenKey(REG_MAPPING[key], r"%s\%s" % (sub_key, key_name), 0, winreg.KEY_READ | winreg.KEY_WRITE | winreg.KEY_SET_VALUE)
             self._key_handle = winreg.OpenKey(REG_MAPPING[key], r"%s\%s" % (sub_key, key_name), 0, winreg.KEY_ALL_ACCESS)
-            
+
         except WindowsError, err:
             self._key_handle = winreg.OpenKey(REG_MAPPING[key], r"%s\%s" % (sub_key, key_name), 0, winreg.KEY_READ)
 
@@ -153,10 +153,10 @@ class Key(object):
 
     def is_key(self):
         return True
-        
+
     def is_value(self):
         return False
-        
+
     def __iter__(self):
         self.reset()
         return self
@@ -232,7 +232,7 @@ class Key(object):
             winreg.DeleteKey(REG_MAPPING[self._key], key_path)
         else:
             winreg.DeleteValue(self._key_handle, key_path)
-    
+
     def __contains__(self, index):
         self.reset()
         while self._key_index < self._key_count:
@@ -242,11 +242,11 @@ class Key(object):
             if self._get_next_value().name == index:
                 return True
         return False
-    
-    def iteritems(self): 
+
+    def iteritems(self):
         for child in self:
             yield((child.get_name(), child))
-        
+
     def create_key(self, key_name):
         handle = winreg.CreateKey(REG_MAPPING[self._key], r'%s\%s\%s' % (self._sub_key, self._name, key_name))
         return Key(self._key, r'%s\%s' % (self._sub_key, self._name), key_name)
@@ -382,7 +382,7 @@ class Key(object):
         # 2         An integer giving when the key was last modified (if available) as 100?s of nanoseconds since Jan 1, 1600.
         key_count = winreg.QueryInfoKey(self._key_handle)[0]
         return key_count
-            
+
     def __del__(self):
         try:
             winreg.CloseKey(self._key_handle)
@@ -521,14 +521,14 @@ def get_keys(key, sub_key):
 
     winreg.CloseKey(key_handle)
 
-    
+
 def delete_key(key, sub_key):
     # https://docs.python.org/2/faq/design.html#why-can-t-raw-strings-r-strings-end-with-a-backslash
     key = key.strip("\\")
     sub_key = sub_key.strip("\\")
     winreg.DeleteKey(key, sub_key)
-    
-    # IMPORTANT: 
+
+    # IMPORTANT:
     # If you need to Delete a Key, you need to set the access mask to KEY_WRITE!
     # Default Value is KEY_READ!
     key_handle = winreg.OpenKey(REG_MAPPING[key], sub_key, 0, winreg.KEY_WRITE)
@@ -542,7 +542,7 @@ def del_value(key, sub_key, value):
     key = key.strip("\\")
     sub_key = sub_key.strip("\\")
 
-    # IMPORTANT: 
+    # IMPORTANT:
     # If you need to Delete a Key, you need to set the access mask to KEY_WRITE!
     # Default Value is KEY_READ!
     key_handle = winreg.OpenKey(REG_MAPPING[key], sub_key, 0, winreg.KEY_WRITE)

@@ -397,6 +397,16 @@ class Key(object):
     name = property(get_name, set_name, del_name, "'name' property.")
 
 
+def create_key(key, sub_key):
+    # https://docs.python.org/2/faq/design.html#why-can-t-raw-strings-r-strings-end-with-a-backslash
+    key = key.strip("\\")
+    sub_key = sub_key.strip("\\").encode(REGISTRY_ENCODING)
+
+    if sub_key_exists(key, sub_key) == False:
+        key_handle = winreg.CreateKey(REG_MAPPING[key], sub_key)
+    return Key(key, sub_key)
+
+
 def set_value(key, sub_key, value_name, value_type, value_data):
     # https://docs.python.org/2/faq/design.html#why-can-t-raw-strings-r-strings-end-with-a-backslash
     key = key.strip("\\")

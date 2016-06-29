@@ -135,6 +135,40 @@ cdef class SoftwareList:
     def __getitem__(self, key):
         return self._sw_list[key]
 
+    def __setitem__(self, key, value):
+        mapping = {
+            "DisplayIcon": winreg.REG_SZ,
+            "DisplayName": winreg.REG_SZ,
+            "DisplayVersion": winreg.REG_SZ,
+            "Emitter": winreg.REG_DWORD,
+            "EstimatedSize": winreg.REG_DWORD,
+            "HelpLink": winreg.REG_SZ,
+            "InstallDate": winreg.REG_SZ,
+            "InstallLocation": winreg.REG_SZ,
+            "Integrated": winreg.REG_DWORD,
+            "NoModify": winreg.REG_DWORD,
+            "NoRepair": winreg.REG_DWORD,
+            "Publisher": winreg.REG_SZ,
+            "Readme": winreg.REG_SZ,
+            "Size": winreg.REG_DWORD,
+            "SystemComponent": winreg.REG_DWORD,
+            "QuietUninstallString": winreg.REG_SZ,
+            "RequiresIESysFile": winreg.REG_SZ,
+            "QuietUninstallString": winreg.REG_SZ,
+            "UninstallString": winreg.REG_SZ,
+            "URLInfoAbout": winreg.REG_SZ,
+            "URLUpdateInfo": winreg.REG_SZ,
+            "Version": winreg.REG_DWORD,
+            "VersionMajor": winreg.REG_DWORD,
+            "VersionMinor": winreg.REG_DWORD,
+            "WindowsInstaller": winreg.REG_DWORD
+        }
+        new_key = winreg.create_key(r"HKEY_LOCAL_MACHINE", "\\".join((UNINSTALL_PATH, key)))
+        for _key, _value in value.items():
+            if _key in mapping:
+                new_key.set_value(_key, mapping[_key], _value)
+
+
 # http://flexget.com/ticket/1641?cversion=0&cnum_hist=2
 # FIXT IT! 
 class SoftwareTree(SoftwareList):

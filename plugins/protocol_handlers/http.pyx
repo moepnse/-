@@ -192,6 +192,7 @@ cdef class HTTPHandler(BaseHandler):
         cdef:
             object args
             DWORD ret_code = -1
+            DWORD last_error_code = 0
         args = libs.win.commandline.parse(cmd)
         args[0] = self.get_path(args[0])
         #print args[0], os.path.isfile(args[0])
@@ -200,7 +201,7 @@ cdef class HTTPHandler(BaseHandler):
         #if 'log_info' in self._log:
         self._log.log_info(u"[http] [%d] %s (%d kb, md5: %s)" % (libs.common.get_current_line_nr(), cmd, os.path.getsize(args[0]), hashlib.md5(args[0])))
         #print "CMD:", repr(cmd)
-        ret_code = self._execute(cmd.strip())
+        ret_code = self._execute(cmd.strip(), &last_error_code)
         #if 'log_info' in self._log:
         self._log.log_info(u"[http] [%d] ret code: %d" % (libs.common.get_current_line_nr(), ret_code))
         return ret_code

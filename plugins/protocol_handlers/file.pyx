@@ -55,6 +55,7 @@ cdef class FileHandler(BaseHandler):
     def execute(self, unicode cmd):
         cdef:
             DWORD ret_code = -1
+            DWORD last_error_code = 0
             object args
         args = libs.win.commandline.parse(cmd)
         if args[0].startswith(self._url_prefix):
@@ -63,7 +64,7 @@ cdef class FileHandler(BaseHandler):
         cmd = (u'"%s" %s' if " " in args[0] else u'%s %s') % (args[0] , libs.win.commandline.merge(args[1:]))
 
         self._log_debug("[file] [%d] executing: %s" % (libs.common.get_current_line_nr(), cmd))
-        ret_code = self._execute(cmd)
+        ret_code = self._execute(cmd, &last_error_code)
         self._log_info("[file] [%d] cmd: %s, ret code: %s" % (libs.common.get_current_line_nr(), cmd, ret_code))
         return ret_code
 

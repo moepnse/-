@@ -244,7 +244,7 @@ cdef class BaseHandler:
         free(w_cmd)
         return ret_code
 
-    cdef unsigned long _execute(self, unicode cmd):
+    cdef unsigned long _execute(self, unicode cmd, DWORD* last_error_code):
         cdef:
             STARTUPINFOW si
             PROCESS_INFORMATION pi
@@ -257,6 +257,7 @@ cdef class BaseHandler:
             wchar_t* w_cmd = <wchar_t*>malloc(32768)
             #wchar_t* w_cmd = <wchar_t*>cmd
             str key = ""
+            DWORD error_code = 0
         for key in os.environ:
             #cmd = cmd.replace(u"%%%s%%" % key.decode("utf-8"), os.environ[key].decode("utf-8"))
             cmd = ireplace(cmd, u"%%%s%%" % key.decode("utf-8"), os.environ[key].decode("utf-8"))
@@ -281,16 +282,19 @@ cdef class BaseHandler:
             &si,            # Pointer to STARTUPINFOW structure
             &pi)            # Pointer to PROCESS_INFORMATION structure
         if ret_val == False:
-            self._log_err(u"[protocol/%s] CreateProcess failed (%d)." % (self._plugin_name, GetLastError()))
-            return -1
-        # Wait until child process exits.
-        WaitForSingleObject(pi.hProcess, INFINITE)
-        if not GetExitCodeProcess(pi.hProcess, &ret_code):
-            self._log_err(u"[protocol/%s] GetExitCodeProcess failed with error code %d" % GetLastError())
+            error_code = GetLastError()
+            self._log_err(u"[protocol/%s] CreateProcess failed (%d)." % (self._plugin_name, error_code))
+        else:
+            # Wait until child process exits.
+            WaitForSingleObject(pi.hProcess, INFINITE)
+            if not GetExitCodeProcess(pi.hProcess, &ret_code):
+                error_code = GetLastError()
+                self._log_err(u"[protocol/%s] GetExitCodeProcess failed with error code %d" % error_code)
         # Close process and thread handles. 
         CloseHandle(pi.hProcess)
         CloseHandle(pi.hThread)
         free(w_cmd)
+        last_error_code[0] = error_code
         return ret_code
 
     def execute(self, unicode cmd):
@@ -300,6 +304,7 @@ cdef class BaseHandler:
             DWORD dw_major_version = 0
             DWORD dw_minor_version = 0
             #DWORD dw_build = 0
+            DWORD last_error_code = 0
 
         self._log_debug(u"[protocol/%s] execute: %s" % (self._plugin_name, cmd))
         self.connect()
@@ -311,9 +316,10 @@ cdef class BaseHandler:
         dw_major_version = <DWORD>(LOBYTE(LOWORD(dw_version)))
         dw_minor_version = <DWORD>(HIBYTE(LOWORD(dw_version)))
         if dw_major_version >= 6 and dw_minor_version >= 0:
-            return self._execute_as_user(cmd)
+            ret_value = self._execute_as_user(cmd)
         else:
-            return self._execute(cmd)
+            ret_value = self._execute(cmd, &last_error_code)
+        return ret_value
         #ret_code = subprocess.call(args)
         #return ret_code
 

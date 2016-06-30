@@ -127,6 +127,8 @@ cdef class SMBHandler(BaseHandler):
     def execute(self, unicode cmd):
         cdef:
             object args
+            int ret_value = 0
+            DWORD last_error_code = 0
         self.connect()
         args = libs.win.commandline.parse(cmd)
         if args[0].startswith(self._url_prefix):
@@ -136,7 +138,8 @@ cdef class SMBHandler(BaseHandler):
             status_id = self._status_handler.set_status(ss__connection_handler, st__info, u"smb", 1, u"Executng file: %s." % cmd)
         self._log_debug("[smb] [%d] executing: %s" % (libs.common.get_current_line_nr(), cmd))
         #ret_code = win32api.WinExec(cmd)
-        return self._execute(cmd)
+        ret_value = self._execute(cmd, &last_error_code)
+        return ret_value
 
 
 def register_handler(plugins):

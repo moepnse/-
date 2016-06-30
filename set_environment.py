@@ -45,7 +45,7 @@ def main():
             print "\n%s is now:\n%s\n" % (variable_name, envpath)
             print "Expanded:"
             print winreg.ExpandEnvironmentStrings(envpath)
-        
+
         print "PYTHONHOME: %s" % python_path
         winreg.SetValueEx(key, "PYTHONHOME", 0, winreg.REG_EXPAND_SZ, python_path)
 

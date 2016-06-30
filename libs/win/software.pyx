@@ -24,6 +24,7 @@ class Product(object):
         self._parent_display_name = parent_display_name
         self._parent_key_name = parent_key_name
         self._childs = {}
+        self._attrs = kwargs
 
     def uninstall():
         pass
@@ -82,6 +83,13 @@ class Product(object):
 
     def items(self):
         return self._childs.items()
+
+    def __getattr__(self, name):
+        if name in self._attrs[name]:
+            return self._attrs[name]
+        else:
+            # Default behaviour
+            raise AttributeError
 
 
 cdef class SoftwareList:

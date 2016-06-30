@@ -542,12 +542,12 @@ cdef _install(package_list, package_id):
     cdef:
         object package
         list action_list = []
-    if package_id in package_list.keys():
-        _handle_dependencies(package_id, action_list)
-        action_list.append({'action': u'install', 'package_id': package_id})
-    else:
-        print "Package with id: %s not found!" % package_id
+    if not package_id in package_list.keys():
+        return False
+    _handle_dependencies(package_id, action_list)
+    action_list.append({'action': u'install', 'package_id': package_id})
     _handle_actions(action_list)
+    return True
 
 
 cdef install(packages=[]):

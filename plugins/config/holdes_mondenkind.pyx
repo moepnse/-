@@ -4230,7 +4230,7 @@ cdef class ConnectionList(BaseConnectionList):
                 print >>lua_log_err, "Error! Not allowed type!"
                 continue
             #print key, value
-            kwargs[key] = value.decode("UTF-8")
+            kwargs[key] = value
             if lua_istable(self._l, -2):
                 self._lua_handle_table()
             # removes 'value'; keeps 'key' for next iteration

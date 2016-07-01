@@ -1,12 +1,14 @@
 # -*- coding: utf-8 -*-
 
-def parse(command):
+def parse(command, keep_quotes=False):
     args = []
     arg = u""
     quote_start = False
     for i in range(0, len(command)):
         token = command[i:i+1]
         if token == r'"':
+            if keep_quotes:
+                arg += token
             if quote_start == True:
                 args.append(arg)
                 arg = u""

@@ -133,7 +133,7 @@ cdef class SMBHandler(BaseHandler):
         args = libs.win.commandline.parse(cmd, True)
         if args[0].startswith(self._url_prefix):
             args[0] = self._strip_url_prefix(args[0])
-        cmd = libs.win.commandline.merge(args)
+        cmd = (u'"%s" %s' if " " in args[0] else u'%s %s') % (args[0], libs.win.commandline.merge(args[1:]))
         if self._status_handler is not None:
             status_id = self._status_handler.set_status(ss__connection_handler, st__info, u"smb", 1, u"Executng file: %s." % cmd)
         self._log_debug("[smb] [%d] executing: %s" % (libs.common.get_current_line_nr(), cmd))

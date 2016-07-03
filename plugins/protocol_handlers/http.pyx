@@ -195,6 +195,7 @@ cdef class HTTPHandler(BaseHandler):
         args = libs.win.commandline.parse(cmd, True)
         args[0] = self.get_path(args[0].strip("\""))
         #print args[0], os.path.isfile(args[0])
+        cmd = (u'"%s" %s' if " " in args[0] else u'%s %s') % (args[0] , libs.win.commandline.merge(args[1:]))
         #cmd = " ".join(args)
         #if 'log_info' in self._log:
         self._log.log_info(u"[http] [%d] %s (%d kb, md5: %s)" % (libs.common.get_current_line_nr(), cmd, os.path.getsize(args[0]), hashlib.md5(args[0])))

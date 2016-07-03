@@ -100,14 +100,13 @@ cdef class HTTPHandler(BaseHandler):
         path = path[1:]
         path = path.replace("/", "\\")
         #print scheme, netloc, path, query, fragment
-        head, tail = os.path.split(path)
+        head, tail = os.path.split(urllib.unquote(path))
         file_name, file_extension = os.path.splitext(tail)
         req = urllib2.Request(url)
         if self._use_cache:
             if not os.path.exists(self._cache_path):
                 if self._status_handler is not None:
                     status_id = self._status_handler.set_status(ss__connection_handler, st__info, u"http", 1, u"Creating cache directory: %s" % (self._cache_path))
-
                 os.makedirs(self._cache_path)
             cache_dir = os.path.join(self._cache_path, netloc, head)
             if not os.path.exists(cache_dir):

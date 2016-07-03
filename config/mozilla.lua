@@ -82,6 +82,14 @@ do
                         true
                     }
                 }
+            },
+            {   parameter = [[/S]],
+                values = {
+                    {
+                        "",
+                        false
+                    }
+                }
             }
         }
     }

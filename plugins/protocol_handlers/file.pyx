@@ -58,9 +58,9 @@ cdef class FileHandler(BaseHandler):
             DWORD last_error_code = 0
             object args
         args = libs.win.commandline.parse(cmd, True)
+        args[0] = libs.win.commandline.strip_qoutes(args[0])
         if args[0].startswith(self._url_prefix):
             args[0] = self._strip_url_prefix(args[0])
-
         cmd = (u'"%s" %s' if " " in args[0] else u'%s %s') % (args[0] , libs.win.commandline.merge(args[1:]))
 
         self._log_debug("[file] [%d] executing: %s" % (libs.common.get_current_line_nr(), cmd))

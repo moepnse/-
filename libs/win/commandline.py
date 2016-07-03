@@ -28,7 +28,6 @@ def parse(command, keep_quotes=False):
 
     if arg != "":
         args.append(arg)
-
     return args
 
 
@@ -39,6 +38,14 @@ def merge(args):
         cmd += (u'%s' if last_arg.startswith('/') and last_arg.endswith('=') else u' %s') % (u'"%s"' % arg if " " in arg and not (arg.startswith('"') and arg.endswith('"')) else arg)
         last_arg = arg
     return cmd
+
+
+def strip_qoutes(string):
+    quotes = ["\"", "'"]
+    for char in quotes:
+        if string.startswith(char) and string.endswith(char):
+            string = string.strip(char)
+    return string
 
 
 def test():

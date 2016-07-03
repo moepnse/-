@@ -130,7 +130,7 @@ cdef class SMBHandler(BaseHandler):
             int ret_value = 0
             DWORD last_error_code = 0
         self.connect()
-        args = libs.win.commandline.parse(cmd)
+        args = libs.win.commandline.parse(cmd, True)
         if args[0].startswith(self._url_prefix):
             args[0] = self._strip_url_prefix(args[0])
         cmd = libs.win.commandline.merge(args)

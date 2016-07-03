@@ -57,7 +57,7 @@ cdef class FileHandler(BaseHandler):
             DWORD ret_code = -1
             DWORD last_error_code = 0
             object args
-        args = libs.win.commandline.parse(cmd)
+        args = libs.win.commandline.parse(cmd, True)
         if args[0].startswith(self._url_prefix):
             args[0] = self._strip_url_prefix(args[0])
 

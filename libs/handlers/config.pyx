@@ -64,6 +64,7 @@ cdef class BaseCmd:
         self._status_handler = status_handler
         self.break_on_md5_violation
         self.break_on_hash_violation
+        self._connection_handler = None
 
     def open(self, path, mode):
         self._get_connection_handler()
@@ -269,7 +270,6 @@ cdef class Cmd(BaseCmd):
         self._path = path
         self._parameters = []
         self._connection_handlers = connection_handlers
-        self._connection_handler = None
         """
         success_codes = {
             0: "The operation completed successfully."
@@ -356,7 +356,7 @@ cdef class Cmd(BaseCmd):
         parameters = self._parameters + parameters
         if path.startswith('"') and path.endswith('"'):
             placeholder = u'%s %s'
-        return placeholder % (path, ' '.join([str(parameter) for parameter in parameters]))
+        return placeholder % (path, ' '.join([unicode(parameter) for parameter in parameters]))
 
     cdef unsigned long _execute(self, object parameters=[]):
         cdef:

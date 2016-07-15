@@ -424,11 +424,11 @@ cdef __handle_dependencies(package_list, package_id, action_list):
 cdef _handle_dependencies(package_id, action_list):
     """
     action_list = {
-        [   
+        [
             {   package_id:"winrar",
                 action: "install",
             }
-        ]      
+        ]
     }
     """
     cdef:

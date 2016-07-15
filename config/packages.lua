@@ -68,11 +68,6 @@ end
 
 set_package_check_functions('7zip', 'sevenzip_is_installed', 'sevenzip_is_upgrade_avalaible')
 
-for installed_package in installed_list() do
-    print(installed_package['package_id'])
-    print(installed_package['version'] > "1.0")
-end
-
 --print(arch)
 
 --HKEY_CLASSES_ROOT

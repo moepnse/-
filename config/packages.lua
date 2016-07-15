@@ -68,18 +68,6 @@ end
 
 set_package_check_functions('7zip', 'sevenzip_is_installed', 'sevenzip_is_upgrade_avalaible')
 
-function print_products()
-    for product_name in software_list() do
-    --print(startswith(product_name, [[Microsoft Office Professional Plus 2013]]))
-    end
-end
-
-local status, err = pcall(print_products)
---print(err.code)  -->  121
-
-for installed_software in software_list() do
-    print(installed_software)
-end
 for installed_package in installed_list() do
     print(installed_package['package_id'])
     print(installed_package['version'] > "1.0")

@@ -556,6 +556,7 @@ cdef install(packages=[]):
         object package_id
         object package
         list action_list = []
+        object _package_list
     for package_id in packages:
         found = _install(package_list, package_id)
         if found:
@@ -595,7 +596,7 @@ cdef upgrade(packages=[]):
         if found:
             continue
         for _package_list in package_lists:
-            found = _upgrade(package_list, package_id)
+            found = _upgrade(_package_list, package_id)
             if found:
                 break
         if not found:
@@ -629,7 +630,7 @@ cdef uninstall(packages=[]):
         if found:
             continue
         for _package_list in package_lists:
-            found = _uninstall(package_list, package_id)
+            found = _uninstall(_package_list, package_id)
             if found:
                 break
         if not found:

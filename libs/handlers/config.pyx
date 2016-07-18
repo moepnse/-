@@ -584,6 +584,7 @@ cdef class Settings(Base):
     def __init__(self, settings_path):
         self._settings_path = settings_path
         self._package_lists = []
+        self._package_list = ""
 
     @property
     def path(self):
@@ -874,6 +875,39 @@ cdef class PackageList(Base):
         # for legacy reason
         self._package_list_path = self._config_path
         self._status_handler = status_handler
+        self._packages = {}
+        self._index = 0
+
+    def __len__(self):
+        return len(self._packages)
+
+    def __iter__(self):
+        return iter(self._packages)
+
+    def iteritems(self):
+        return self._packages.iteritems()
+
+    def next(self):
+        if self._index == self._packages_count:
+            raise StopIteration
+        package_id = self._packages[self._index]
+        self._index += 1
+        return package_id
+
+    def keys(self):
+        return self._packages.keys()
+
+    def values(self):
+        return self._packages.values()
+
+    def items(self):
+        return self._packages.items()
+
+    def __getitem__(self, package_id):
+        return self._packages[package_id]
+
+    def __setitem__(self, package_id, package):
+        self._packages[package_id] = package
 
 
 cdef class ConnectionList:

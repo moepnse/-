@@ -78,6 +78,9 @@ cdef class PackageList(Base):
         public object _installed_list
         public object _package_list_path
         public object _status_handler
+        #public list _packages
+        public object _packages
+        public int _index
 
 
 cdef class Package(BaseVersion):

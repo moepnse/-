@@ -10,7 +10,7 @@ import subprocess
 # third party imports
 
 # application/library imports
-from libs.handlers.config import RETURN_PACKAGE, RETURN_ID, RET_CODE_UNKNOWN, RET_CODE_SUCCESS, RET_CODE_ERROR, RET_CODE_ALREADY_INSTALLED, RET_CODE_ALREADY_REMOVED
+from libs.handlers.config import RETURN_PACKAGE, RETURN_ID, RET_CODE_UNKNOWN, RET_CODE_SUCCESS, RET_CODE_ERROR, RET_CODE_ALREADY_INSTALLED, RET_CODE_ALREADY_REMOVED, PackageList
 import libs.handlers.plugin_handler
 
 """
@@ -151,6 +151,8 @@ def connection_list_factory(connection_list_path, plugins, log, status_handler):
 
 
 def package_list_factory(package_list_path, connection_list, installed_list, log, status_handler):
+    if package_list_path == '':
+        return PackageList(package_list_path, connection_list, installed_list, log, status_handler)
     return get_config_plugin(package_list_path).PackageList(package_list_path, connection_list, installed_list, log, status_handler)
 
 

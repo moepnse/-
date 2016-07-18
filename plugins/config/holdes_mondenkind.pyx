@@ -3458,9 +3458,6 @@ cdef class PackageList(BasePackageList):
                 cmd_obj.error_codes = cmd.get(u"success_codes", {})
             cmds[i] = cmd_obj
 
-    def __len__(self):
-        return len(self._packages)
-
     def uninstall(self, package_id):
         cdef:
             list cmd_list = []
@@ -3532,34 +3529,6 @@ cdef class PackageList(BasePackageList):
                 self._installed_list.append(package.package_id, package.version, package.rev)
         self._installed_list.save()
         return status, cmd_list
-
-    def __iter__(self):
-        return iter(self._packages)
-
-    def iteritems(self):
-        return self._packages.iteritems()
-
-    def next(self):
-        if self._index == self._packages_count:
-            raise StopIteration
-        package_id = self._packages[self._index]
-        self._index += 1
-        return package_id
-
-    def keys(self):
-        return self._packages.keys()
-
-    def values(self):
-        return self._packages.values()
-
-    def items(self):
-        return self._packages.items()
-
-    def __getitem__(self, package_id):
-        return self._packages[package_id]
-
-    def __setitem__(self, package_id, package):
-        self._packages[package_id] = package
 
 
 cdef class LogList(BaseLogList):

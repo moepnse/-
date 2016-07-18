@@ -2891,7 +2891,6 @@ cdef class PackageList(BasePackageList):
 
     cdef:
         lua_State *_l
-        public object _packages
 
     def __init__(self, package_list_path, connection_list, installed_list, log, status_handler):
 

@@ -2808,6 +2808,7 @@ cdef class Settings(BaseSettings):
         cdef:
             int ret_code
             const char* err_msg
+            unicode package_list_path
         global lua_log_err
         # Create Lua state variable
         self._l = luaL_newstate()
@@ -2841,7 +2842,9 @@ cdef class Settings(BaseSettings):
         self._install_list = get_absolute_config_path(self._settings_path, self._lua_get_string("install_list"))
         self._host_list = get_absolute_config_path(self._settings_path, self._lua_get_string("host_list"))
         self._installed_list = get_absolute_config_path(self._settings_path, self._lua_get_string("installed_list"))
-        self._package_list = get_absolute_config_path(self._settings_path, self._lua_get_string("package_list"))
+        package_list_path = self._lua_get_string("package_list")
+        if package_list_path != "":
+            self._package_list = get_absolute_config_path(self._settings_path, package_list_path)
         lua_getglobal(self._l, "package_lists")
         if lua_istable(self._l, -1):
             get_table_as_list(self._l, -1, self._package_lists)

@@ -503,12 +503,13 @@ cdef _handle_actions(action_list):
         int status
         list cmd_list
         dict dict_package
+        object package_list
     for dict_package in action_list:
         try:
             if not "action" in dict_package:
                 continue
             package_id = dict_package["package_id"]
-            action = dict_package["action"]
+            package_list = dict_package["package_list"]
             if not package_id in package_list:
                 print "Package with package_id %s not found in package list" % package_id
                 continue
@@ -545,7 +546,7 @@ cdef _install(package_list, package_id):
     if not package_id in package_list.keys():
         return False
     _handle_dependencies(package_id, action_list)
-    action_list.append({'action': u'install', 'package_id': package_id})
+    action_list.append({'package_list': package_list, 'action': u'install', 'package_id': package_id})
     _handle_actions(action_list)
     return True
 

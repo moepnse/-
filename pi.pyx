@@ -556,6 +556,7 @@ cdef install(packages=[]):
         object package_id
         object package
         list action_list = []
+        bint found = False
         object _package_list
     for package_id in packages:
         found = _install(package_list, package_id)

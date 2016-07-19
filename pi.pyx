@@ -529,13 +529,13 @@ cdef _handle_actions(action_list):
                 status, cmd_list = package_list.uninstall(package_id)
                 print "status: %d, executed cmds: %s" % (status, cmd_list)
         except ChecksumViolation, e:
-            print >>stderr, "Checksum violation!"
+            print >>stderr, "Error: Checksum violation!"
         except FileNotFound, e:
-            print e
+            print >>stderr, "Error: ", e
         except ConnectionError, e:
-            print e
+            print >>stderr, "Error: ", e
         except AuthenticationError, e:
-            print e
+            print >>stderr, "Error: ", e
     print "Done"
 
 

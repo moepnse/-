@@ -358,7 +358,7 @@ cdef class Cmd(BaseCmd):
             placeholder = u'%s %s'
         return placeholder % (path, ' '.join([unicode(parameter) for parameter in parameters]))
 
-    cdef unsigned long _execute(self, object parameters=[]):
+    cdef unsigned long _execute(self, object parameters=[]) except *:
         cdef:
             unsigned long ret_code = 0
         self._get_connection_handler()

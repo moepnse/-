@@ -70,24 +70,23 @@ cdef class SMBHandler(BaseHandler):
 
         #win32wnet.WNetAddConnection2(win32netcon.RESOURCETYPE_DISK, self._drive, self._strip_url_prefix(self._url), None, self._username, self._password)
 
-        try:
-            ret_val = WNetAddConnection2W(&nr, self._password, self._username, CONNECT_TEMPORARY)
+        ret_val = WNetAddConnection2W(&nr, self._password, self._username, CONNECT_TEMPORARY)
+        if ret_val == 0:
             self._connected = True
-        except Exception as err:
-            err_number = err[0]
-            if err_number == 1219:
-                self._log_err("[smb] [%d] %s already connected" % (libs.common.get_current_line_nr(), self._url))
-                if self._status_handler is not None:
-                    status_id = self._status_handler.set_status(ss__protocol, st__info, u"smb", err_number, u"%s already connected!" % self._url)
-            if err_number == 53:
-                # https://technet.microsoft.com/en-us/library/cc940100.aspx
-                err_text = "NetBIOS name resolution failed or NetBIOS session could not be established. To distinguish between these two cases follow this instructions: https://technet.microsoft.com/en-us/library/cc940100.aspx or meet a (hot) wisewoman."
-                self._log_err("[smb] [%d] %s %s" % (libs.common.get_current_line_nr(), self._url, err_text))
-                if self._status_handler is not None:
-                    status_id = self._status_handler.set_status(ss__protocol, st__info, u"smb", err_number, u"%s" % err_text)
-                raise libs.handlers.protocol.ConnectionError(err_text)
-            else:
-                self._log_err("[smb] [%d] %s Unknown Error: %s" % (libs.common.get_current_line_nr(), self._url, err[0]))
+        elif ret_val == 1219:
+            self._connected = True
+            self._log_err("[smb] [%d] %s already connected" % (libs.common.get_current_line_nr(), self._url))
+            if self._status_handler is not None:
+                status_id = self._status_handler.set_status(ss__protocol, st__info, u"smb", ret_val, u"%s already connected!" % self._url)
+        elif ret_val == 53:
+            # https://technet.microsoft.com/en-us/library/cc940100.aspx
+            err_text = "NetBIOS name resolution failed or NetBIOS session could not be established. To distinguish between these two cases follow this instructions: https://technet.microsoft.com/en-us/library/cc940100.aspx or meet a (hot) wisewoman."
+            self._log_err("[smb] [%d] %s %s" % (libs.common.get_current_line_nr(), self._url, err_text))
+            if self._status_handler is not None:
+                status_id = self._status_handler.set_status(ss__protocol, st__error, u"smb", ret_val, u"%s" % err_text)
+            raise libs.handlers.protocol.ConnectionError(err_text)
+        else:
+            self._log_err("[smb] [%d] %s Unknown Error: %s" % (libs.common.get_current_line_nr(), self._url, ret_val))
 
     def disconnect(self):
         cdef DWORD ret_val
@@ -139,6 +138,7 @@ cdef class SMBHandler(BaseHandler):
         self._log_debug("[smb] [%d] executing: %s" % (libs.common.get_current_line_nr(), cmd))
         #ret_code = win32api.WinExec(cmd)
         ret_value = self._execute(cmd, &last_error_code)
+        #print "last error", last_error_code
         return ret_value
 
 

@@ -1244,11 +1244,11 @@ cdef class PIService:
     def _handle_dependencies(self, package_id, action_list):
         """
         action_list = {
-            [   
+            [
                 {   package_id:"winrar",
                     installed: False,
                 }
-            ]      
+            ]
         }
         """
         cdef:

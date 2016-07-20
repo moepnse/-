@@ -268,6 +268,7 @@ class NamedPipeThread(threading.Thread):
             DWORD dw_bytes_read = 0
             unsigned char info_type = 0
             unsigned int info_text_length = 0
+            unsigned int package_status_index = 0
         try:
             while 1:
                 self._log.log_debug(u"waiting for data...")
@@ -297,6 +298,8 @@ class NamedPipeThread(threading.Thread):
                         self._log.log_debug(u"%d %d" % (package_name_length, len(data)))
                         package_name = struct.unpack('!%ds' % package_name_length, data)[0]
                         self._log.log_debug(u"package_name: %s" % package_name)
+                        if action in (INSTALLING, REMOVING, UPGRADING):
+                            package_status_index = self._pi_status_gui._lb_packages.GetItemCount()
                         if action == INSTALLING:
                             self._pi_status_gui._lb_packages.Append(("Installing %s (%s)..." % (package_name, package_id),))
                         elif action == REMOVING:
@@ -305,7 +308,7 @@ class NamedPipeThread(threading.Thread):
                             self._pi_status_gui._lb_packages.Append(("Upgrading %s (%s)..." % (package_name, package_id),))
                         else:
                             self._log.log_err(u"Action %d unknown!" % action)
-                        self._pi_status_gui._lb_packages.SetItemColumnImage(self._pi_status_gui._lb_packages.GetItemCount() - 1, 0, self._pi_status_gui._status_img_mapping[action])
+                        self._pi_status_gui._lb_packages.SetItemColumnImage(package_status_index, 0, self._pi_status_gui._status_img_mapping[action])
                         self._pi_status_gui._pb_status.progress += 1
                     elif response_type == SEND_INFO:
                         data = self._nph.read(5)
@@ -326,7 +329,7 @@ class NamedPipeThread(threading.Thread):
                     else:
                         self._log.log_err(u"response type %d unknown" % response_type)
                     if self._pi_status_gui._lb_packages.GetItemCount() > 0:
-                        self._pi_status_gui._lb_packages.EnsureVisible(self._pi_status_gui._lb_packages.GetItemCount()-1)
+                        self._pi_status_gui._lb_packages.EnsureVisible(self._pi_status_gui._lb_packages.GetItemCount() - 1)
                 elif rc == WAIT_TIMEOUT:
                     pass    
         except Exception as e:

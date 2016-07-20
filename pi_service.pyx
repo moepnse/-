@@ -1414,17 +1414,25 @@ cdef class PIService:
                                 path, file = os.path.split(libs.win.commandline.parse(cmd)[0])
                                 cmd_info = file
                             self._send_info(u'%s: %d' % (cmd_info, exit_code), SEND_INFO_SUCCESS)
-            except ChecksumViolation, e:
-                pass
+            #except ChecksumViolation, e:
+                #if self._status_gui:
+                    #self._send_status(FAILED, package_id)
+                    #self._send_info(u"%s %s" % (package_id, str(e)), SEND_INFO_ERROR)
                 #print >>stderr, "Error: Checksum violation!"
-            except FileNotFound, e:
-                pass
+            #except FileNotFound, e:
+                #if self._status_gui:
+                    #self._send_status(FAILED, package_id)
+                    #self._send_info(u"%s %s" % (package_id, str(e)), SEND_INFO_ERROR)
                 #print >>stderr, "Error: ", e
-            except ConnectionError, e:
-                pass
+            #except ConnectionError, e:
+                #if self._status_gui:
+                    #self._send_status(FAILED, package_id)
+                    #self._send_info(u"%s %s" % (package_id, str(e)), SEND_INFO_ERROR)
                 #print >>stderr, "Error: ", e
-            except AuthenticationError, e:
-                pass
+            except (AuthenticationError, ConnectionError, FileNotFound, ChecksumViolation), e:
+                if self._status_gui:
+                    self._send_status(FAILED, package_id)
+                    #self._send_info(u"%s %s" % (package_id, str(e)), SEND_INFO_ERROR)
                 #print >>stderr, "Error: ", e
             except Exception as e:
                 print str(e)

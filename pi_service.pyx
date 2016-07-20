@@ -39,7 +39,7 @@ from libc.string cimport memset
 #from c_python cimport Py_intptr_t
 
 # application/library cimports
-from libs.handlers.config cimport StatusHandler as BaseStatusHandler
+from libs.handlers.config cimport StatusHandler as BaseStatusHandler, st__info, st__success, st__warn, st__error
 from c_windows_data_types cimport DWORD, VOID, LPCWSTR, LPWSTR, size_t, LPCTSTR, wchar_t, PHANDLE, LPVOID, BOOL, PWSTR, LPCWSTR, PCWSTR, ULONG, PDWORD, PBYTE 
 from c_winsock2 cimport time_t, NI_NUMERICHOST, AF_INET, AF_UNSPEC, WSADATA, WSAStartup, WSACleanup
 from c_iptypes cimport GAA_FLAG_INCLUDE_PREFIX, PIP_ADAPTER_ADDRESSES_XP, PIP_ADAPTER_UNICAST_ADDRESS_XP, PIP_ADAPTER_ADDRESSES_LH, PIP_ADAPTER_UNICAST_ADDRESS_LH
@@ -427,8 +427,24 @@ cdef bint get_ip_addresses(list ip4_addresses, list ip6_addresses):
     WSACleanup()
 
 
-class StatusHandler(BaseStatusHandler):
-    pass
+cdef class StatusHandler(BaseStatusHandler):
+
+    cdef:
+        PIService _pi_service
+
+    def __init__(self, object pi_service):
+        self._pi_service = pi_service
+
+    def set_status(self, int source_id, int status_type, unicode status_source_name, int status_id, unicode description):
+        status_id_count = BaseStatusHandler.set_status(self, source_id, status_type, status_source_name, status_id, description)
+        if status_type == st__info:
+            self._pi_service._send_info(description, SEND_INFO_SUCCESS)
+        elif status_type == st__success:
+            self._pi_service._send_info(description, SEND_INFO_SUCCESS)
+        elif status_type == st__warn:
+            self._pi_service._send_info(description, SEND_INFO_SUCCESS)
+        elif status_type == st__error:
+            self._pi_service._send_info(description, SEND_INFO_ERROR)
 
 
 cdef class PIService:
@@ -469,6 +485,7 @@ cdef class PIService:
         list _profiles
         dict _config_plugins
         list _api_versions
+    cdef public void _send_info(self, unicode msg, unsigned char msg_type)
 
     def __cinit__(self):
         cdef:
@@ -1134,7 +1151,7 @@ cdef class PIService:
         log_targets = self._log_list_factory()
         log = Log(log_targets)
         self._log = log
-        self._status_handler = StatusHandler()
+        self._status_handler = StatusHandler(self)
         self._connection_list = self._connection_list_factory()
         self._installed_list = self._installed_list_factory()
         self._package_list = self._package_list_factory()
@@ -1175,7 +1192,7 @@ cdef class PIService:
         data = struct.pack('!B', self._steps)
         self._send_data(data)
 
-    cdef void _send_info(self, unicode msg, unsigned char msg_type):
+    cdef public void _send_info(self, unicode msg, unsigned char msg_type):
         cdef:
             bytes b_msg = msg.encode("UTF-8")
             unsigned int text_length = <unsigned int>len(b_msg)

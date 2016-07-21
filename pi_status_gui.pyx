@@ -331,7 +331,7 @@ class NamedPipeThread(threading.Thread):
                     if self._pi_status_gui._lb_packages.GetItemCount() > 0:
                         self._pi_status_gui._lb_packages.EnsureVisible(self._pi_status_gui._lb_packages.GetItemCount() - 1)
                 elif rc == WAIT_TIMEOUT:
-                    pass    
+                    pass
         except Exception as e:
             self._log.log_err(u"Error: %s" % str(e))
         self._nph.close()

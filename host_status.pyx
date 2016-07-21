@@ -114,17 +114,20 @@ cdef class PIStatus:
                 if not host.hostname_is(self._local_hostname) and not host.workgroup_is(self._local_workgroup) and not host.domain_name_is(self._local_domain_name) and not host.forest_name_is(self._local_forest_name):
                     continue
                 for package_action_information in host:
-                    package = self._package_list[package_action_information['package_id']]
-                    action = package_action_information['action']
-                    yield (package.package_id, action, package.installed, package.upgrade_available)
+                    package_id = package_action_information['package_id']
+                    if package_id in self._package_list:
+                        package = self._package_list[package_id]
+                        action = package_action_information['action']
+                        yield (package.package_id, action, package.installed, package.upgrade_available)
         # since version 0.1
         elif self._settings.target_source == 'install_list':
             for package_action_information in self._install_list:
                 package_id = package_action_information['package_id']
-                action = package_action_information['action']
-                if package_id in self._package_list.keys():
-                    package = self._package_list[package_id]
-                    yield (package_id, action, package.installed, package.upgrade_available)
+                if package_id in self._package_list:
+                    action = package_action_information['action']
+                    if package_id in self._package_list.keys():
+                        package = self._package_list[package_id]
+                        yield (package_id, action, package.installed, package.upgrade_available)
 
     def target_source(self):
         return self._settings.target_source

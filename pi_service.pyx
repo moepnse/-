@@ -445,6 +445,7 @@ cdef class StatusHandler(BaseStatusHandler):
             self._pi_service._send_info(description, SEND_INFO_WARN)
         elif status_type == st__error:
             self._pi_service._send_info(description, SEND_INFO_ERROR)
+        return status_id_count
 
 
 cdef class PIService:

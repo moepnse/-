@@ -92,8 +92,10 @@ cdef class PIStatus:
         self._connection_list = connection_list_factory(self._settings.connection_list, self._plugins, self._log, self._status_handler)
         self._installed_list = installed_list_factory(self._settings.installed_list, self._log)
         self._package_list = package_list_factory(self._settings.package_list, self._connection_list, self._installed_list, self._log, self._status_handler)
-        self._install_list = install_list_factory(self._settings.install_list, self._connection_list, self._log)
-        self._host_list = host_list_factory(self._settings.host_list, self._log)
+        if self._settings.target_source == 'host_list':
+            self._host_list = host_list_factory(self._settings.host_list, self._log)
+        else:
+            self._install_list = install_list_factory(self._settings.install_list, self._connection_list, self._log)
         # better way?
         self._local_hostname = unicode(platform.node())
 

@@ -328,8 +328,7 @@ class NamedPipeThread(threading.Thread):
                         break
                     else:
                         self._log.log_err(u"response type %d unknown" % response_type)
-                    if self._pi_status_gui._lb_packages.GetItemCount() > 0:
-                        self._pi_status_gui._lb_packages.EnsureVisible(self._pi_status_gui._lb_packages.GetItemCount() - 1)
+                    self._auto_scroll()
                 elif rc == WAIT_TIMEOUT:
                     pass
         except Exception as e:
@@ -344,6 +343,11 @@ class NamedPipeThread(threading.Thread):
             self._log.log_info(u"Good bye! :-)")
             self._pi_status_gui.Close()
             sys.exit(0)
+
+    def _auto_scroll(self):
+        item_count = self._pi_status_gui._lb_packages.GetItemCount()
+        if item_count > 0:
+            self._pi_status_gui._lb_packages.EnsureVisible(item_count - 1)
 
     def run(self):
         self._pi_status_gui._lb_packages.Append(("Starting NP Thread...",))

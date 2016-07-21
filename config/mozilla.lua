@@ -22,7 +22,8 @@ function firefox_esr_is_upgrade_avalaible ()
 end
 
 do
-    MFFESR_IN = [[smb://\\10.0.19.10\software\mffesr.ini]]
+    --MFFESR_IN = [[smb://\\10.0.19.10\software\mffesr.ini]]
+    MFFESR_IN = [[http://packages.unicom.ws/arch/noarch/mffesr.ini]]
     MFFESR_EXE = "https://download-installer.cdn.mozilla.net/pub/firefox/releases/45.2.0esr/win32/en-US/Firefox%20Setup%2045.2.0esr.exe"
     UNINSTALL_EXE = [["%PROGRAMFILES%\Mozilla Firefox\uninstall\helper.exe"]]
     UNINSTALL_EXE = [["file://%PROGRAMFILES(X86)%\Mozilla Firefox\uninstall\helper.exe"]]

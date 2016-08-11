@@ -15,43 +15,47 @@ cdef class FileInfo:
     def __init__(self, unicode path):
         self._path = path
         self._file_info = {}
-        self._get_file_info()
+        IF UNAME_SYSNAME == "Windows":
+            self._get_file_info()
 
     cdef _get_file_info(self):
-        cdef:
-            DWORD dw_handle
-            DWORD dw_len
-            UINT buf_len
-            LPCVOID lp_data
-            LPWSTR lp_buffer
-            LPCWSTR cw_path = <LPCWSTR>self._path
-            VS_FIXEDFILEINFO *p_file_info
-            unicode sub_block = u""
-            unicode entry = u""
-        dw_len = GetFileVersionInfoSizeW (cw_path, &dw_handle)
-        if not dw_len:
-            return -1;
+        IF UNAME_SYSNAME == "Windows":
+            cdef:
+                DWORD dw_handle
+                DWORD dw_len
+                UINT buf_len
+                LPCVOID lp_data
+                LPWSTR lp_buffer
+                LPCWSTR cw_path = <LPCWSTR>self._path
+                VS_FIXEDFILEINFO *p_file_info
+                unicode sub_block = u""
+                unicode entry = u""
+            dw_len = GetFileVersionInfoSizeW (cw_path, &dw_handle)
+            if not dw_len:
+                return -1;
 
-        lp_data = <LPCVOID>malloc(dw_len)
-        if  not lp_data:
-            return -1;
-        if not GetFileVersionInfoW(cw_path, dw_handle, dw_len, lp_data):
-            free(lp_data)
+            lp_data = <LPCVOID>malloc(dw_len)
+            if  not lp_data:
+                return -1;
+            if not GetFileVersionInfoW(cw_path, dw_handle, dw_len, lp_data):
+                free(lp_data)
+                return -1
+            sub_block = u"\\"
+            if VerQueryValueW(lp_data, <LPCWSTR>sub_block, <LPVOID*>&p_file_info, <PUINT>&buf_len):
+                self['major_version'] = HIWORD(p_file_info.dwFileVersionMS)
+                self['minor_version'] = LOWORD(p_file_info.dwFileVersionMS)
+                self['build_number'] = HIWORD(p_file_info.dwFileVersionLS)
+                self['revision_number'] = LOWORD(p_file_info.dwFileVersionLS)
+
+            for entry in (u"Comments", u"InternalName",	u"ProductName", u"CompanyName", u"LegalCopyright", u"ProductVersion", u"FileDescription", u"LegalTrademarks", u"PrivateBuild", u"FileVersion", u"OriginalFilename", u"SpecialBuild"):
+                sub_block = u"\\StringFileInfo\\040904E4\\%s" % entry
+                # language ID 040904E4: U.S. English, char set = Windows, Multilingual
+                if VerQueryValueW(lp_data, <LPCWSTR>sub_block, <LPVOID*>&lp_buffer, <PUINT>&buf_len):
+                    self[entry] = unicode(lp_buffer)
+                    self[un_camel(entry)] = unicode(lp_buffer)
+            free (lp_data)
+        ELSE:
             return -1
-        sub_block = u"\\"
-        if VerQueryValueW(lp_data, <LPCWSTR>sub_block, <LPVOID*>&p_file_info, <PUINT>&buf_len):
-            self['major_version'] = HIWORD(p_file_info.dwFileVersionMS)
-            self['minor_version'] = LOWORD(p_file_info.dwFileVersionMS)
-            self['build_number'] = HIWORD(p_file_info.dwFileVersionLS)
-            self['revision_number'] = LOWORD(p_file_info.dwFileVersionLS)
-
-        for entry in (u"Comments", u"InternalName",	u"ProductName", u"CompanyName", u"LegalCopyright", u"ProductVersion", u"FileDescription", u"LegalTrademarks", u"PrivateBuild", u"FileVersion", u"OriginalFilename", u"SpecialBuild"):
-            sub_block = u"\\StringFileInfo\\040904E4\\%s" % entry
-            # language ID 040904E4: U.S. English, char set = Windows, Multilingual
-            if VerQueryValueW(lp_data, <LPCWSTR>sub_block, <LPVOID*>&lp_buffer, <PUINT>&buf_len):
-                self[entry] = unicode(lp_buffer)
-                self[un_camel(entry)] = unicode(lp_buffer)
-        free (lp_data)
 
     def items(self):
         return self._file_info.items()

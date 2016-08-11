@@ -262,78 +262,80 @@ cdef int l_winreg_create_key(lua_State *L):
         LONG ret_val
     return 0
 
-
 cdef int l_winreg_query_value(lua_State *L):
-    cdef:
-        HKEY h_reserved_key = <HKEY>lua_touserdata(L, 1)
-        HKEY h_key
-        unicode sub_key = lua_string_to_python_unicode(L, 2)
-        unicode value_name =lua_string_to_python_unicode(L, 3)
-        DWORD type = 0
-        DWORD size = 1024
-        #char *res = <char *>malloc(size)
-        LPBYTE res = <LPBYTE>calloc(1, size)
-        LONG ret_val
-    ret_val = RegOpenKeyExW(h_reserved_key, <LPCWSTR>sub_key,
-0, KEY_QUERY_VALUE, &h_key)
-    if ret_val == ERROR_SUCCESS:
-        ret_val = RegQueryValueExW(h_key,
-            <LPCWSTR>value_name,
-            NULL,
-            &type,
-            <LPBYTE>res,
-            &size)
-        RegCloseKey(h_key)
-    lua_pushinteger(L, <lua_Integer>ret_val)
-    lua_pushinteger(L, <lua_Integer>type)
-    """
-    REG_BINARY
-    Binary data in any form.
+    IF UNAME_SYSNAME == "Windows":
+        cdef:
+            HKEY h_reserved_key = <HKEY>lua_touserdata(L, 1)
+            HKEY h_key
+            unicode sub_key = lua_string_to_python_unicode(L, 2)
+            unicode value_name =lua_string_to_python_unicode(L, 3)
+            DWORD type = 0
+            DWORD size = 1024
+            #char *res = <char *>malloc(size)
+            LPBYTE res = <LPBYTE>calloc(1, size)
+            LONG ret_val
+        ret_val = RegOpenKeyExW(h_reserved_key, <LPCWSTR>sub_key,
+    0, KEY_QUERY_VALUE, &h_key)
+        if ret_val == ERROR_SUCCESS:
+            ret_val = RegQueryValueExW(h_key,
+                <LPCWSTR>value_name,
+                NULL,
+                &type,
+                <LPBYTE>res,
+                &size)
+            RegCloseKey(h_key)
+        lua_pushinteger(L, <lua_Integer>ret_val)
+        lua_pushinteger(L, <lua_Integer>type)
+        """
+        REG_BINARY
+        Binary data in any form.
 
-    REG_DWORD
-    32-bit number.
+        REG_DWORD
+        32-bit number.
 
-    REG_QWORD
-    64-bit number.
+        REG_QWORD
+        64-bit number.
 
-    REG_DWORD_LITTLE_ENDIAN
-    32-bit number in little-endian format. This is equivalent to REG_DWORD.
+        REG_DWORD_LITTLE_ENDIAN
+        32-bit number in little-endian format. This is equivalent to REG_DWORD.
 
-    In little-endian format, a multibyte value is stored in memory from the lowest byte (the "little end") to the highest byte. For example, the value 0x12345678 is stored as (0x78 0x56 0x34 0x12) in little-endian format.
+        In little-endian format, a multibyte value is stored in memory from the lowest byte (the "little end") to the highest byte. For example, the value 0x12345678 is stored as (0x78 0x56 0x34 0x12) in little-endian format.
 
-    REG_QWORD_LITTLE_ENDIAN
-    A 64-bit number in little-endian format. This is equivalent to REG_QWORD.
+        REG_QWORD_LITTLE_ENDIAN
+        A 64-bit number in little-endian format. This is equivalent to REG_QWORD.
 
-    REG_DWORD_BIG_ENDIAN
-    32-bit number in big-endian format.
+        REG_DWORD_BIG_ENDIAN
+        32-bit number in big-endian format.
 
-    In big-endian format, a multibyte value is stored in memory from the highest byte (the "big end") to the lowest byte. For example, the value 0x12345678 is stored as (0x12 0x34 0x56 0x78) in big-endian format.
+        In big-endian format, a multibyte value is stored in memory from the highest byte (the "big end") to the lowest byte. For example, the value 0x12345678 is stored as (0x12 0x34 0x56 0x78) in big-endian format.
 
-    REG_EXPAND_SZ
-    Null-terminated string that contains unexpanded references to environment variables (for example, "%PATH%"). It will be a Unicode or ANSI string, depending on whether you use the Unicode or ANSI functions.
+        REG_EXPAND_SZ
+        Null-terminated string that contains unexpanded references to environment variables (for example, "%PATH%"). It will be a Unicode or ANSI string, depending on whether you use the Unicode or ANSI functions.
 
-    REG_LINK
-    Unicode symbolic link.
+        REG_LINK
+        Unicode symbolic link.
 
-    REG_MULTI_SZ
-    Array of null-terminated strings that are terminated by two null characters.
+        REG_MULTI_SZ
+        Array of null-terminated strings that are terminated by two null characters.
 
-    REG_NONE
-    No defined value type.
+        REG_NONE
+        No defined value type.
 
-    REG_RESOURCE_LIST
-    Device-driver resource list.
+        REG_RESOURCE_LIST
+        Device-driver resource list.
 
-    REG_SZ
-    Null-terminated string. It will be a Unicode or ANSI string, depending on whether you use the Unicode or ANSI functions.
-    """
-    if type in (REG_DWORD,
-REG_QWORD):
-        lua_pushinteger(L,<lua_Integer>(<lua_Integer*>res)[0])
-    elif type in (REG_EXPAND_SZ, REG_SZ):
-        lua_pushstring(L, <const char*>res)
-    free(res)
-    return 3
+        REG_SZ
+        Null-terminated string. It will be a Unicode or ANSI string, depending on whether you use the Unicode or ANSI functions.
+        """
+        if type in (REG_DWORD,
+    REG_QWORD):
+            lua_pushinteger(L,<lua_Integer>(<lua_Integer*>res)[0])
+        elif type in (REG_EXPAND_SZ, REG_SZ):
+            lua_pushstring(L, <const char*>res)
+        free(res)
+        return 3
+    ELSE:
+        return 0
 
 
 cdef union RegValue:
@@ -343,40 +345,43 @@ cdef union RegValue:
 
 
 cdef int l_winreg_set_value(lua_State *L):
-    cdef:
-        HKEY h_reserved_key = <HKEY>lua_touserdata(L, 1)
-        HKEY h_key
-        unicode sub_key = lua_string_to_python_unicode(L, 2)
-        unicode value_name =lua_string_to_python_unicode(L, 3)
-        DWORD type = <DWORD>lua_tointeger(L, 4)
-        RegValue reg_value
-        LONG ret_val
-        DWORD size
+    IF UNAME_SYSNAME == "Windows":
+        cdef:
+            HKEY h_reserved_key = <HKEY>lua_touserdata(L, 1)
+            HKEY h_key
+            unicode sub_key = lua_string_to_python_unicode(L, 2)
+            unicode value_name =lua_string_to_python_unicode(L, 3)
+            DWORD type = <DWORD>lua_tointeger(L, 4)
+            RegValue reg_value
+            LONG ret_val
+            DWORD size
 
-    if lua_isboolean(L , 5):
-        reg_value.b_data = <bint>lua_toboolean(L, 5)
-        size = sizeof(bint)
-    elif lua_isinteger(L, 5):
-        reg_value.dw_data = <DWORD>lua_tointeger(L, 5)
-        size = sizeof(DWORD)
-    elif lua_isstring(L, 5):
-        reg_value.data = <BYTE*>lua_tostring(L, 5)
-        size = len(reg_value.data) * sizeof(BYTE)
-    else:
-        print >>lua_log_err, "Error in winreg_set_value(): Unknown type!"
-    #ret_val =  RegOpenKeyExW(h_reserved_key, <LPCWSTR>sub_key, 0, KEY_ALL_ACCESS, &h_key)
-    ret_val =  RegOpenKeyExW(h_reserved_key, <LPCWSTR>sub_key, 0, KEY_READ | KEY_SET_VALUE, &h_key)
-    if ret_val == ERROR_SUCCESS:
-        ret_val = RegSetValueExW(
-            h_key,
-            <LPCWSTR>value_name,
-            0,
-            type,
-            <const BYTE *>&(reg_value.data),
-            size
-        )
-        RegCloseKey(h_key)
-    lua_pushinteger(L, ret_val)
+        if lua_isboolean(L , 5):
+            reg_value.b_data = <bint>lua_toboolean(L, 5)
+            size = sizeof(bint)
+        elif lua_isinteger(L, 5):
+            reg_value.dw_data = <DWORD>lua_tointeger(L, 5)
+            size = sizeof(DWORD)
+        elif lua_isstring(L, 5):
+            reg_value.data = <BYTE*>lua_tostring(L, 5)
+            size = len(reg_value.data) * sizeof(BYTE)
+        else:
+            print >>lua_log_err, "Error in winreg_set_value(): Unknown type!"
+        #ret_val =  RegOpenKeyExW(h_reserved_key, <LPCWSTR>sub_key, 0, KEY_ALL_ACCESS, &h_key)
+        ret_val =  RegOpenKeyExW(h_reserved_key, <LPCWSTR>sub_key, 0, KEY_READ | KEY_SET_VALUE, &h_key)
+        if ret_val == ERROR_SUCCESS:
+            ret_val = RegSetValueExW(
+                h_key,
+                <LPCWSTR>value_name,
+                0,
+                type,
+                <const BYTE *>&(reg_value.data),
+                size
+            )
+            RegCloseKey(h_key)
+        lua_pushinteger(L, ret_val)
+    ELSE:
+        lua_pushinteger(L, 0)
     return 1
 
 
@@ -400,78 +405,89 @@ cdef int l_set_package_check_functions(lua_State *L):
     return 0
 
 
-cdef bint get_domain_info(DSROLE_PRIMARY_DOMAIN_INFO_BASIC **info):
-    cdef:
-        DWORD dw
+IF UNAME_SYSNAME == "Windows":
+    cdef bint get_domain_info(DSROLE_PRIMARY_DOMAIN_INFO_BASIC **info):
+        cdef:
+            DWORD dw
 
-    global lua_log_err
-    dw = DsRoleGetPrimaryDomainInformation(NULL, DsRolePrimaryDomainInfoBasic, <PBYTE *>info)
-    if dw != ERROR_SUCCESS:
-        lua_log_err("DsRoleGetPrimaryDomainInformation() failed with error code: %d" % GetLastError())
-        return False
-    return True
+        global lua_log_err
+        dw = DsRoleGetPrimaryDomainInformation(NULL, DsRolePrimaryDomainInfoBasic, <PBYTE *>info)
+        if dw != ERROR_SUCCESS:
+            lua_log_err("DsRoleGetPrimaryDomainInformation() failed with error code: %d" % GetLastError())
+            return False
+        return True
 
 
 cdef int l_get_domain_name (lua_State *L):
-    cdef:
-        DSROLE_PRIMARY_DOMAIN_INFO_BASIC *info
-        const char* domain_name_dns = ""
+    IF UNAME_SYSNAME == "Windows":
+        cdef:
+            DSROLE_PRIMARY_DOMAIN_INFO_BASIC *info
+            const char* domain_name_dns = ""
 
-    get_domain_info(&info)
-    if info.DomainNameDns != NULL:
-        domain_name_dns = <const char*>info.DomainNameDns
-    # Pushes the zero-terminated string pointed to by s onto the stack. Lua makes (or reuses) an internal copy of the given string, so the memory at s can be freed or reused immediately after the function returns. The string cannot contain embedded zeros; it is assumed to end at the first zero. 
-    lua_pushstring(L, domain_name_dns)
-
+        get_domain_info(&info)
+        if info.DomainNameDns != NULL:
+            domain_name_dns = <const char*>info.DomainNameDns
+        # Pushes the zero-terminated string pointed to by s onto the stack. Lua makes (or reuses) an internal copy of the given string, so the memory at s can be freed or reused immediately after the function returns. The string cannot contain embedded zeros; it is assumed to end at the first zero. 
+        lua_pushstring(L, domain_name_dns)
+    ELSE:
+        lua_pushnil(L)
     return 1
 
 
 cdef int l_get_netbios_domain_name (lua_State *L):
-    cdef:
-        DSROLE_PRIMARY_DOMAIN_INFO_BASIC *info
+    IF UNAME_SYSNAME == "Windows":
+        cdef:
+            DSROLE_PRIMARY_DOMAIN_INFO_BASIC *info
 
-    get_domain_info(&info)
+        get_domain_info(&info)
 
-    # Pushes the zero-terminated string pointed to by s onto the stack. Lua makes (or reuses) an internal copy of the given string, so the memory at s can be freed or reused immediately after the function returns. The string cannot contain embedded zeros; it is assumed to end at the first zero. 
-    lua_pushstring(L, <const char*>info.DomainNameFlat)
-
+        # Pushes the zero-terminated string pointed to by s onto the stack. Lua makes (or reuses) an internal copy of the given string, so the memory at s can be freed or reused immediately after the function returns. The string cannot contain embedded zeros; it is assumed to end at the first zero. 
+        lua_pushstring(L, <const char*>info.DomainNameFlat)
+    ELSE:
+        lua_pushnil(L)
     return 1
 
 
 cdef int l_get_forest_name (lua_State *L):
-    cdef:
-        DSROLE_PRIMARY_DOMAIN_INFO_BASIC *info
-        const char* domain_forest_name = ""
+    IF UNAME_SYSNAME == "Windows":
+        cdef:
+            DSROLE_PRIMARY_DOMAIN_INFO_BASIC *info
+            const char* domain_forest_name = ""
 
-    get_domain_info(&info)
-    if info.DomainForestName != NULL:
-        domain_forest_name = <const char*>info.DomainForestName
-    # Pushes the zero-terminated string pointed to by s onto the stack. Lua makes (or reuses) an internal copy of the given string, so the memory at s can be freed or reused immediately after the function returns. The string cannot contain embedded zeros; it is assumed to end at the first zero. 
-    lua_pushstring(L, domain_forest_name)
-
+        get_domain_info(&info)
+        if info.DomainForestName != NULL:
+            domain_forest_name = <const char*>info.DomainForestName
+        # Pushes the zero-terminated string pointed to by s onto the stack. Lua makes (or reuses) an internal copy of the given string, so the memory at s can be freed or reused immediately after the function returns. The string cannot contain embedded zeros; it is assumed to end at the first zero. 
+        lua_pushstring(L, domain_forest_name)
+    ELSE:
+        lua_pushnil(L)
     return 1
 
 
-cdef int _get_computer_name_ex_w_to_lua_mb_string (lua_State *L, COMPUTER_NAME_FORMAT format):
-    cdef:
-        WCHAR w_buffer[256]
-        unicode u_buffer
-        bytes buffer
-        DWORD dw_size = sizeof(w_buffer)
+IF UNAME_SYSNAME == "Windows":
+    cdef int _get_computer_name_ex_w_to_lua_mb_string (lua_State *L, COMPUTER_NAME_FORMAT format):
+        cdef:
+            WCHAR w_buffer[256]
+            unicode u_buffer
+            bytes buffer
+            DWORD dw_size = sizeof(w_buffer)
 
-    GetComputerNameExW(format, <LPWSTR>w_buffer, &dw_size)
-    u_buffer = <unicode>w_buffer
-    buffer = u_buffer.encode("utf-8")
-    # Pushes the zero-terminated string pointed to by s onto the stack. Lua makes (or reuses) an internal copy of the given string, so the memory at s can be freed or reused immediately after the function returns. The string cannot contain embedded zeros; it is assumed to end at the first zero. 
-    lua_pushstring(L, <const char*>buffer)
-    return 0
+        GetComputerNameExW(format, <LPWSTR>w_buffer, &dw_size)
+        u_buffer = <unicode>w_buffer
+        buffer = u_buffer.encode("utf-8")
+        # Pushes the zero-terminated string pointed to by s onto the stack. Lua makes (or reuses) an internal copy of the given string, so the memory at s can be freed or reused immediately after the function returns. The string cannot contain embedded zeros; it is assumed to end at the first zero. 
+        lua_pushstring(L, <const char*>buffer)
+        return 0
 
 
 cdef int l_get_computer_name_net_bios (lua_State *L):
     """
     The NetBIOS name of the local computer or the cluster associated with the local computer.
     """
-    _get_computer_name_ex_w_to_lua_mb_string(L, ComputerNameNetBIOS)
+    IF UNAME_SYSNAME == "Windows":
+        _get_computer_name_ex_w_to_lua_mb_string(L, ComputerNameNetBIOS)
+    ELSE:
+        lua_pushnil(L)
     return 1
 
 
@@ -479,7 +495,10 @@ cdef int l_get_computer_name_dns_hostname (lua_State *L):
     """
     The DNS name of the local computer or the cluster associated with the local computer.
     """
-    _get_computer_name_ex_w_to_lua_mb_string(L, ComputerNameDnsHostname)
+    IF UNAME_SYSNAME == "Windows":
+        _get_computer_name_ex_w_to_lua_mb_string(L, ComputerNameDnsHostname)
+    ELSE:
+        lua_pushnil(L)
     return 1
 
 
@@ -487,7 +506,10 @@ cdef int l_get_computer_name_dns_domain (lua_State *L):
     """
     The name of the DNS domain assigned to the local computer or the cluster associated with the local computer.
     """
-    _get_computer_name_ex_w_to_lua_mb_string(L, ComputerNameDnsDomain)
+    IF UNAME_SYSNAME == "Windows":
+        _get_computer_name_ex_w_to_lua_mb_string(L, ComputerNameDnsDomain)
+    ELSE:
+        lua_pushnil(L)
     return 1
 
 
@@ -497,7 +519,10 @@ cdef int l_get_computer_name_dns_fully_qualified (lua_State *L):
 
     This name is a combination of the DNS host name and the DNS domain name, using the form HostName.DomainName. For example, if the DNS host name is "samba" and the DNS domain name is "unicom.ws", the fully qualified DNS name is "samba.unicom.ws".
     """
-    _get_computer_name_ex_w_to_lua_mb_string(L, ComputerNameDnsFullyQualified)
+    IF UNAME_SYSNAME == "Windows":
+        _get_computer_name_ex_w_to_lua_mb_string(L, ComputerNameDnsFullyQualified)
+    ELSE:
+        lua_pushnil(L)
     return 1
 
 
@@ -505,7 +530,10 @@ cdef int l_get_computer_name_physical_net_bios (lua_State *L):
     """
     The NetBIOS name of the local computer. On a cluster, this is the NetBIOS name of the local node on the cluster.
     """
-    _get_computer_name_ex_w_to_lua_mb_string(L, ComputerNamePhysicalNetBIOS)
+    IF UNAME_SYSNAME == "Windows":
+        _get_computer_name_ex_w_to_lua_mb_string(L, ComputerNamePhysicalNetBIOS)
+    ELSE:
+        lua_pushnil(L)
     return 1
 
 
@@ -513,7 +541,10 @@ cdef int l_get_computer_name_physical_dns_hostname (lua_State *L):
     """
     The DNS host name of the local computer. On a cluster, this is the DNS host name of the local node on the cluster.
     """
-    _get_computer_name_ex_w_to_lua_mb_string(L, ComputerNamePhysicalDnsHostname)
+    IF UNAME_SYSNAME == "Windows":
+        _get_computer_name_ex_w_to_lua_mb_string(L, ComputerNamePhysicalDnsHostname)
+    ELSE:
+        lua_pushnil(L)
     return 1
 
 
@@ -521,7 +552,10 @@ cdef int l_get_computer_name_physical_dns_domain (lua_State *L):
     """"
     The name of the DNS domain assigned to the local computer. On a cluster, this is the DNS domain of the local node on the cluster.
     """
-    _get_computer_name_ex_w_to_lua_mb_string(L, ComputerNamePhysicalDnsDomain)
+    IF UNAME_SYSNAME == "Windows":
+        _get_computer_name_ex_w_to_lua_mb_string(L, ComputerNamePhysicalDnsDomain)
+    ELSE:
+        lua_pushnil(L)
     return 1
 
 
@@ -529,7 +563,10 @@ cdef int l_get_computer_name_physical_dns_fully_qualified (lua_State *L):
     """
     The fully qualified DNS name that uniquely identifies the computer. On a cluster, this is the fully qualified DNS name of the local node on the cluster. The fully qualified DNS name is a combination of the DNS host name and the DNS domain name, using the form HostName.DomainName.
     """
-    _get_computer_name_ex_w_to_lua_mb_string(L, ComputerNamePhysicalDnsFullyQualified)
+    IF UNAME_SYSNAME == "Windows":
+        _get_computer_name_ex_w_to_lua_mb_string(L, ComputerNamePhysicalDnsFullyQualified)
+    ELSE:
+        lua_pushnil(L)
     return 1
 
 
@@ -805,150 +842,157 @@ cdef int l_is_in_installed_list(lua_State *L):
 
 
 cdef int net_shares_iter (lua_State *L):
-    cdef:
-        PSHARE_INFO_502 p_share_info_502, p
-        NET_API_STATUS res
-        LPWSTR lpwstr_server = NULL
-        const char* server_name = NULL
-        unicode u_server_name = u""
-        DWORD i
-        DWORD* p_resume
-        DWORD* p_er
-        DWORD* p_tr
-        DWORD* p_i
-        bint* p_nse
-        PSHARE_INFO_502* pp_share_info_502
-        DWORD er = 0
-        DWORD tr = 0
+    IF UNAME_SYSNAME == "Windows":
+        cdef:
+            PSHARE_INFO_502 p_share_info_502, p
+            NET_API_STATUS res
+            LPWSTR lpwstr_server = NULL
+            const char* server_name = NULL
+            unicode u_server_name = u""
+            DWORD i
+            DWORD* p_resume
+            DWORD* p_er
+            DWORD* p_tr
+            DWORD* p_i
+            bint* p_nse
+            PSHARE_INFO_502* pp_share_info_502
+            DWORD er = 0
+            DWORD tr = 0
 
-    lua_newtable(L)
-    p_share_info_502 = <PSHARE_INFO_502>lua_touserdata(L, lua_upvalueindex(1))
-    #lpwstr_server = <LPWSTR>lua_touserdata(L, lua_upvalueindex(2))
-    server_name = lua_tostring(L, lua_upvalueindex(2))
-    u_server_name = (server_name).decode("UTF-8")
-    lpwstr_server = <LPWSTR>u_server_name
-    #print "SERVER:", lpwstr_server
-    p_resume = <DWORD*>lua_touserdata(L, lua_upvalueindex(3))
-    p_er = <DWORD*>lua_touserdata(L, lua_upvalueindex(4))
-    p_tr = <DWORD*>lua_touserdata(L, lua_upvalueindex(5))
-    p_i = <DWORD*>lua_touserdata(L, lua_upvalueindex(6))
-    p_nse = <bint*>lua_touserdata(L, lua_upvalueindex(7))
-    pp_share_info_502 = <PSHARE_INFO_502*>lua_touserdata(L, lua_upvalueindex(8))
+        lua_newtable(L)
+        p_share_info_502 = <PSHARE_INFO_502>lua_touserdata(L, lua_upvalueindex(1))
+        #lpwstr_server = <LPWSTR>lua_touserdata(L, lua_upvalueindex(2))
+        server_name = lua_tostring(L, lua_upvalueindex(2))
+        u_server_name = (server_name).decode("UTF-8")
+        lpwstr_server = <LPWSTR>u_server_name
+        #print "SERVER:", lpwstr_server
+        p_resume = <DWORD*>lua_touserdata(L, lua_upvalueindex(3))
+        p_er = <DWORD*>lua_touserdata(L, lua_upvalueindex(4))
+        p_tr = <DWORD*>lua_touserdata(L, lua_upvalueindex(5))
+        p_i = <DWORD*>lua_touserdata(L, lua_upvalueindex(6))
+        p_nse = <bint*>lua_touserdata(L, lua_upvalueindex(7))
+        pp_share_info_502 = <PSHARE_INFO_502*>lua_touserdata(L, lua_upvalueindex(8))
 
-    er = p_er[0]
-    tr = p_tr[0]
-    #print er, tr
-    if p_nse[0] == False:
-        res = NetShareEnum(lpwstr_server, 502, <LPBYTE *> &p_share_info_502, MAX_PREFERRED_LENGTH, p_er, p_tr, p_resume)
-        p_nse[0] = True
-        # If the call succeeds
-        if res == ERROR_SUCCESS or res == ERROR_MORE_DATA:
-            pass
-        else:
-            return 0
-        pp_share_info_502[0] = p_share_info_502
+        er = p_er[0]
+        tr = p_tr[0]
+        #print er, tr
+        if p_nse[0] == False:
+            res = NetShareEnum(lpwstr_server, 502, <LPBYTE *> &p_share_info_502, MAX_PREFERRED_LENGTH, p_er, p_tr, p_resume)
+            p_nse[0] = True
+            # If the call succeeds
+            if res == ERROR_SUCCESS or res == ERROR_MORE_DATA:
+                pass
+            else:
+                return 0
+            pp_share_info_502[0] = p_share_info_502
 
-    # Loop through the entries
-    if p_i[0] <= p_er[0]:
-        #print p_i[0]
-        lua_pushstring(L, (pp_share_info_502[0].shi502_netname).encode('UTF-8')) # Pushes table value on top of Lua stack
-        lua_setfield(L, -2, "netname")  # table["netname"] = row->name. Pops key value
+        # Loop through the entries
+        if p_i[0] <= p_er[0]:
+            #print p_i[0]
+            lua_pushstring(L, (pp_share_info_502[0].shi502_netname).encode('UTF-8')) # Pushes table value on top of Lua stack
+            lua_setfield(L, -2, "netname")  # table["netname"] = row->name. Pops key value
 
-        lua_pushinteger(L, (pp_share_info_502[0].shi502_type))
-        lua_setfield(L, -2, "type")
+            lua_pushinteger(L, (pp_share_info_502[0].shi502_type))
+            lua_setfield(L, -2, "type")
 
-        lua_pushstring(L, (pp_share_info_502[0].shi502_remark).encode('UTF-8'))
-        lua_setfield(L, -2, "remark")
+            lua_pushstring(L, (pp_share_info_502[0].shi502_remark).encode('UTF-8'))
+            lua_setfield(L, -2, "remark")
 
-        lua_pushinteger(L, (pp_share_info_502[0].shi502_permissions))
-        lua_setfield(L, -2, "permissions")
+            lua_pushinteger(L, (pp_share_info_502[0].shi502_permissions))
+            lua_setfield(L, -2, "permissions")
 
-        lua_pushstring(L, (pp_share_info_502[0].shi502_path).encode('UTF-8'))
-        lua_setfield(L, -2, "path")
+            lua_pushstring(L, (pp_share_info_502[0].shi502_path).encode('UTF-8'))
+            lua_setfield(L, -2, "path")
 
-        lua_pushinteger(L, pp_share_info_502[0].shi502_max_uses)
-        lua_setfield(L, -2, "max_uses")
+            lua_pushinteger(L, pp_share_info_502[0].shi502_max_uses)
+            lua_setfield(L, -2, "max_uses")
 
-        lua_pushinteger(L, pp_share_info_502[0].shi502_current_uses)
-        lua_setfield(L, -2, "current_uses")
+            lua_pushinteger(L, pp_share_info_502[0].shi502_current_uses)
+            lua_setfield(L, -2, "current_uses")
 
-        lua_pushstring(L, (pp_share_info_502[0].shi502_passwd).encode('UTF-8'))
-        lua_setfield(L, -2, "passwd")
+            lua_pushstring(L, (pp_share_info_502[0].shi502_passwd).encode('UTF-8'))
+            lua_setfield(L, -2, "passwd")
 
-        # Validate the value of the 
-        #  shi502_security_descriptor member.
-        #lua_pushboolean(L, IsValidSecurityDescriptor(p.shi502_security_descriptor))
-        #lua_setfield(L, -2, "current_uses")
+            # Validate the value of the 
+            #  shi502_security_descriptor member.
+            #lua_pushboolean(L, IsValidSecurityDescriptor(p.shi502_security_descriptor))
+            #lua_setfield(L, -2, "current_uses")
 
-        # Validate the value of the 
-        #  shi502_security_descriptor member.
+            # Validate the value of the 
+            #  shi502_security_descriptor member.
 
-        pp_share_info_502[0] += 1
-        p_i[0] += 1
-        if p_i[0] == p_er[0]:
-            p_nse[0] = False
-        return 1
+            pp_share_info_502[0] += 1
+            p_i[0] += 1
+            if p_i[0] == p_er[0]:
+                p_nse[0] = False
+            return 1
+    ELSE:
+        return 0
 
 
 cdef int net_shares_gc( lua_State* L ):
-    cdef:
-        PSHARE_INFO_502 p_share_info_502 = <PSHARE_INFO_502>lua_touserdata(L, lua_upvalueindex(1))
-        LPWSTR lpwstr_server = <LPWSTR>lua_touserdata(L, lua_upvalueindex(2))
-        DWORD* p_resume = <DWORD*>lua_touserdata(L, lua_upvalueindex(3))
-        DWORD* p_er = <DWORD*>lua_touserdata(L, lua_upvalueindex(4))
-        DWORD* p_tr = <DWORD*>lua_touserdata(L, lua_upvalueindex(5))
-        DWORD* p_i = <DWORD*>lua_touserdata(L, lua_upvalueindex(6))
-        bint* p_nse = <bint*>lua_touserdata(L, lua_upvalueindex(7))
-        PSHARE_INFO_502*pp_share_info_502 = <PSHARE_INFO_502*>lua_touserdata(L, lua_upvalueindex(8))
+    IF UNAME_SYSNAME == "Windows":
+        cdef:
+            PSHARE_INFO_502 p_share_info_502 = <PSHARE_INFO_502>lua_touserdata(L, lua_upvalueindex(1))
+            LPWSTR lpwstr_server = <LPWSTR>lua_touserdata(L, lua_upvalueindex(2))
+            DWORD* p_resume = <DWORD*>lua_touserdata(L, lua_upvalueindex(3))
+            DWORD* p_er = <DWORD*>lua_touserdata(L, lua_upvalueindex(4))
+            DWORD* p_tr = <DWORD*>lua_touserdata(L, lua_upvalueindex(5))
+            DWORD* p_i = <DWORD*>lua_touserdata(L, lua_upvalueindex(6))
+            bint* p_nse = <bint*>lua_touserdata(L, lua_upvalueindex(7))
+            PSHARE_INFO_502*pp_share_info_502 = <PSHARE_INFO_502*>lua_touserdata(L, lua_upvalueindex(8))
 
-    # Free the allocated buffer.
-    NetApiBufferFree(p_share_info_502)
-    free(p_resume)
-    free(p_er)
-    free(p_tr)
-    free(p_i)
-    free(p_nse)
-    free(pp_share_info_502)
+        # Free the allocated buffer.
+        NetApiBufferFree(p_share_info_502)
+        free(p_resume)
+        free(p_er)
+        free(p_tr)
+        free(p_i)
+        free(p_nse)
+        free(pp_share_info_502)
     return 0
 
 
 cdef int l_net_shares(lua_State *L):
-    cdef:
-        const char* server_name = luaL_checkstring(L, 1)
-        #unicode u_server_name = (server_name).decode("UTF-8")
-        PSHARE_INFO_502 p_share_info_502 = NULL
-        #LPWSTR lpwstr_server = <LPWSTR>u_server_name
-        PSHARE_INFO_502 *pp_share_info_502 = <PSHARE_INFO_502*>malloc(sizeof(PSHARE_INFO_502))
-        DWORD *p_resume = <DWORD*>malloc(sizeof(DWORD))
-        DWORD *p_er = <DWORD*>malloc(sizeof(DWORD))
-        DWORD *p_tr = <DWORD*>malloc(sizeof(DWORD))
-        DWORD *p_i = <DWORD*>malloc(sizeof(DWORD))
-        bint *p_nse = <bint*>malloc(sizeof(bint))
+    IF UNAME_SYSNAME == "Windows":
+        cdef:
+            const char* server_name = luaL_checkstring(L, 1)
+            #unicode u_server_name = (server_name).decode("UTF-8")
+            PSHARE_INFO_502 p_share_info_502 = NULL
+            #LPWSTR lpwstr_server = <LPWSTR>u_server_name
+            PSHARE_INFO_502 *pp_share_info_502 = <PSHARE_INFO_502*>malloc(sizeof(PSHARE_INFO_502))
+            DWORD *p_resume = <DWORD*>malloc(sizeof(DWORD))
+            DWORD *p_er = <DWORD*>malloc(sizeof(DWORD))
+            DWORD *p_tr = <DWORD*>malloc(sizeof(DWORD))
+            DWORD *p_i = <DWORD*>malloc(sizeof(DWORD))
+            bint *p_nse = <bint*>malloc(sizeof(bint))
 
-    luaL_newmetatable( L, "LuaBook.net_shares" )
-    lua_pushstring( L, "__gc" )
-    lua_pushcfunction( L, net_shares_gc)
-    lua_settable( L, -3 )
+        luaL_newmetatable( L, "LuaBook.net_shares" )
+        lua_pushstring( L, "__gc" )
+        lua_pushcfunction( L, net_shares_gc)
+        lua_settable( L, -3 )
 
-    p_resume[0] = 0
-    p_er[0] = 0
-    p_tr[0] = 0
-    p_i[0] = 1
-    p_nse[0] = False
-    lua_pushlightuserdata (L, p_share_info_502)
-    #lua_pushlightuserdata (L, lpwstr_server)
-    lua_pushstring(L, server_name)
-    lua_pushlightuserdata (L, p_resume)
-    lua_pushlightuserdata (L, p_er)
-    lua_pushlightuserdata (L, p_tr)
-    lua_pushlightuserdata (L, p_i)
-    lua_pushlightuserdata (L, p_nse)
-    lua_pushlightuserdata (L, pp_share_info_502)
-    # set its metatable
-    luaL_getmetatable(L, "LuaBook.net_shares")
-    lua_setmetatable(L, -2)
-    lua_pushcclosure(L, net_shares_iter, 8)
-    return 1
+        p_resume[0] = 0
+        p_er[0] = 0
+        p_tr[0] = 0
+        p_i[0] = 1
+        p_nse[0] = False
+        lua_pushlightuserdata (L, p_share_info_502)
+        #lua_pushlightuserdata (L, lpwstr_server)
+        lua_pushstring(L, server_name)
+        lua_pushlightuserdata (L, p_resume)
+        lua_pushlightuserdata (L, p_er)
+        lua_pushlightuserdata (L, p_tr)
+        lua_pushlightuserdata (L, p_i)
+        lua_pushlightuserdata (L, p_nse)
+        lua_pushlightuserdata (L, pp_share_info_502)
+        # set its metatable
+        luaL_getmetatable(L, "LuaBook.net_shares")
+        lua_setmetatable(L, -2)
+        lua_pushcclosure(L, net_shares_iter, 8)
+        return 1
+    ELSE:
+        return 0
 
 
 cdef int installed_list_iter (lua_State *L):
@@ -1035,112 +1079,125 @@ cdef int l_installed_list (lua_State *L):
 
 
 cdef int l_get_file_version_info(lua_State *L):
-    cdef:
-        const char* file_path = luaL_checkstring(L, 1)
-        LPCWSTR pcw_file_path
-        unicode u_file_path
-        DWORD dw_dummy
-        DWORD dw_fvi_size
-        LPVOID p_version_info
-        UINT u_len
-        VS_FIXEDFILEINFO *p_fixed_fileinfo
-        DWORD dwFileVersionMS
-        DWORD dwFileVersionLS
-        DWORD dwLeftMost
-        DWORD dwSecondLeft
-        DWORD dwSecondRight
-        DWORD dwRightMost
+    IF UNAME_SYSNAME == "Windows":
+        cdef:
+            const char* file_path = luaL_checkstring(L, 1)
+            LPCWSTR pcw_file_path
+            unicode u_file_path
+            DWORD dw_dummy
+            DWORD dw_fvi_size
+            LPVOID p_version_info
+            UINT u_len
+            VS_FIXEDFILEINFO *p_fixed_fileinfo
+            DWORD dwFileVersionMS
+            DWORD dwFileVersionLS
+            DWORD dwLeftMost
+            DWORD dwSecondLeft
+            DWORD dwSecondRight
+            DWORD dwRightMost
 
-    global lua_log_err
+        global lua_log_err
 
-    u_file_path = (file_path).decode("UTF-8")
-    pcw_file_path = <LPWSTR>u_file_path
-    dw_fvi_size = GetFileVersionInfoSizeW( pcw_file_path , &dw_dummy )
-    p_version_info = <LPVOID>malloc(dw_fvi_size)
+        u_file_path = (file_path).decode("UTF-8")
+        pcw_file_path = <LPWSTR>u_file_path
+        dw_fvi_size = GetFileVersionInfoSizeW( pcw_file_path , &dw_dummy )
+        p_version_info = <LPVOID>malloc(dw_fvi_size)
 
-    if dw_fvi_size == 0:
-        print >>lua_log_err, "Error in GetFileVersionInfoSizeW: %d" % GetLastError()
+        if dw_fvi_size == 0:
+            print >>lua_log_err, "Error in GetFileVersionInfoSizeW: %d" % GetLastError()
+            return 0
+        if not GetFileVersionInfoW( pcw_file_path , 0 , dw_fvi_size , p_version_info ):
+            print >>lua_log_err, "Error in GetFileVersionInfoW: %d" % GetLastError()
+            return 0
+        if not VerQueryValueW( p_version_info , u"\\" , <LPVOID *>&p_fixed_fileinfo , &u_len ):
+            print >>lua_log_err, "Error in VerQueryValue: %d" % GetLastError()
+            return 0
+
+        lua_newtable(L)
+        #dwFileVersionMS = p_fixed_fileinfo.dwFileVersionMS
+        #dwFileVersionLS = p_fixed_fileinfo.dwFileVersionLS
+
+        #dwLeftMost = HIWORD(dwFileVersionMS)
+        #dwSecondLeft = LOWORD(dwFileVersionMS)
+        #dwSecondRight = HIWORD(dwFileVersionLS)
+        #dwRightMost = LOWORD(dwFileVersionLS)
+        #print "Version: %d.%d.%d.%d" % (dwLeftMost, dwSecondLeft, dwSecondRight, dwRightMost)
+        lua_pushinteger(L, (p_fixed_fileinfo.dwSignature))
+        lua_setfield(L, -2, "signature")
+        lua_pushinteger(L, (p_fixed_fileinfo.dwStrucVersion))
+        lua_setfield(L, -2, "struct_version")
+        lua_pushinteger(L, (p_fixed_fileinfo.dwFileVersionMS))
+        lua_setfield(L, -2, "file_version_ms")
+        lua_pushinteger(L, (p_fixed_fileinfo.dwFileVersionLS))
+        lua_setfield(L, -2, "file_version_ls")
+        lua_pushinteger(L, (p_fixed_fileinfo.dwProductVersionMS))
+        lua_setfield(L, -2, "product_version_ms")
+        lua_pushinteger(L, (p_fixed_fileinfo.dwProductVersionLS))
+        lua_setfield(L, -2, "product_version_ls")
+        lua_pushinteger(L, (p_fixed_fileinfo.dwFileFlagsMask))
+        lua_setfield(L, -2, "file_flags_mask")
+        lua_pushinteger(L, (p_fixed_fileinfo.dwFileFlags))
+        lua_setfield(L, -2, "file_flags")
+        lua_pushinteger(L, (p_fixed_fileinfo.dwFileOS))
+        lua_setfield(L, -2, "file_os")
+        lua_pushinteger(L, (p_fixed_fileinfo.dwFileType))
+        lua_setfield(L, -2, "file_tpye")
+        lua_pushinteger(L, (p_fixed_fileinfo.dwFileSubtype))
+        lua_setfield(L, -2, "file_subtype")
+        lua_pushinteger(L, (p_fixed_fileinfo.dwFileDateMS))
+        lua_setfield(L, -2, "file_date_ms")
+        lua_pushinteger(L, (p_fixed_fileinfo.dwFileDateLS))
+        lua_setfield(L, -2, "file_date_ls")
+
+        lua_pushinteger(L, HIWORD(p_fixed_fileinfo.dwFileVersionMS))
+        lua_setfield(L, -2, "major_version")
+
+        lua_pushinteger(L, LOWORD(p_fixed_fileinfo.dwFileVersionMS))
+        lua_setfield(L, -2, "minor_version")
+
+        lua_pushinteger(L, HIWORD(p_fixed_fileinfo.dwFileVersionLS))
+        lua_setfield(L, -2, "build_number")
+
+        lua_pushinteger(L, LOWORD(p_fixed_fileinfo.dwFileVersionLS))
+        lua_setfield(L, -2, "revision_number")
+
+        return 1
+    ELSE:
         return 0
-    if not GetFileVersionInfoW( pcw_file_path , 0 , dw_fvi_size , p_version_info ):
-        print >>lua_log_err, "Error in GetFileVersionInfoW: %d" % GetLastError()
-        return 0
-    if not VerQueryValueW( p_version_info , u"\\" , <LPVOID *>&p_fixed_fileinfo , &u_len ):
-        print >>lua_log_err, "Error in VerQueryValue: %d" % GetLastError()
-        return 0
-
-    lua_newtable(L)
-    #dwFileVersionMS = p_fixed_fileinfo.dwFileVersionMS
-    #dwFileVersionLS = p_fixed_fileinfo.dwFileVersionLS
-
-    #dwLeftMost = HIWORD(dwFileVersionMS)
-    #dwSecondLeft = LOWORD(dwFileVersionMS)
-    #dwSecondRight = HIWORD(dwFileVersionLS)
-    #dwRightMost = LOWORD(dwFileVersionLS)
-    #print "Version: %d.%d.%d.%d" % (dwLeftMost, dwSecondLeft, dwSecondRight, dwRightMost)
-    lua_pushinteger(L, (p_fixed_fileinfo.dwSignature))
-    lua_setfield(L, -2, "signature")
-    lua_pushinteger(L, (p_fixed_fileinfo.dwStrucVersion))
-    lua_setfield(L, -2, "struct_version")
-    lua_pushinteger(L, (p_fixed_fileinfo.dwFileVersionMS))
-    lua_setfield(L, -2, "file_version_ms")
-    lua_pushinteger(L, (p_fixed_fileinfo.dwFileVersionLS))
-    lua_setfield(L, -2, "file_version_ls")
-    lua_pushinteger(L, (p_fixed_fileinfo.dwProductVersionMS))
-    lua_setfield(L, -2, "product_version_ms")
-    lua_pushinteger(L, (p_fixed_fileinfo.dwProductVersionLS))
-    lua_setfield(L, -2, "product_version_ls")
-    lua_pushinteger(L, (p_fixed_fileinfo.dwFileFlagsMask))
-    lua_setfield(L, -2, "file_flags_mask")
-    lua_pushinteger(L, (p_fixed_fileinfo.dwFileFlags))
-    lua_setfield(L, -2, "file_flags")
-    lua_pushinteger(L, (p_fixed_fileinfo.dwFileOS))
-    lua_setfield(L, -2, "file_os")
-    lua_pushinteger(L, (p_fixed_fileinfo.dwFileType))
-    lua_setfield(L, -2, "file_tpye")
-    lua_pushinteger(L, (p_fixed_fileinfo.dwFileSubtype))
-    lua_setfield(L, -2, "file_subtype")
-    lua_pushinteger(L, (p_fixed_fileinfo.dwFileDateMS))
-    lua_setfield(L, -2, "file_date_ms")
-    lua_pushinteger(L, (p_fixed_fileinfo.dwFileDateLS))
-    lua_setfield(L, -2, "file_date_ls")
-
-    lua_pushinteger(L, HIWORD(p_fixed_fileinfo.dwFileVersionMS))
-    lua_setfield(L, -2, "major_version")
-
-    lua_pushinteger(L, LOWORD(p_fixed_fileinfo.dwFileVersionMS))
-    lua_setfield(L, -2, "minor_version")
-
-    lua_pushinteger(L, HIWORD(p_fixed_fileinfo.dwFileVersionLS))
-    lua_setfield(L, -2, "build_number")
-
-    lua_pushinteger(L, LOWORD(p_fixed_fileinfo.dwFileVersionLS))
-    lua_setfield(L, -2, "revision_number")
-
-    return 1
 
 
 cdef int l_hiword(lua_State *L):
-    cdef:
-        DWORD dw_value = 0
+    # FIXME
+    IF UNAME_SYSNAME == "Windows":
+        cdef:
+            DWORD dw_value = 0
 
-    dw_value = <DWORD>lua_tointeger(L, -1)
-    lua_pushinteger(L, HIWORD(dw_value))
-    return 1
+        dw_value = <DWORD>lua_tointeger(L, -1)
+        lua_pushinteger(L, HIWORD(dw_value))
+        return 1
+    ELSE:
+        return 0
 
 
 cdef int l_loword(lua_State *L):
-    cdef:
-        DWORD dw_value = 0
+    # FIXME
+    IF UNAME_SYSNAME == "Windows":
+        cdef:
+            DWORD dw_value = 0
 
-    dw_value = <DWORD>lua_tointeger(L, -1)
-    lua_pushinteger(L, LOWORD(dw_value))
-    return 1
+        dw_value = <DWORD>lua_tointeger(L, -1)
+        lua_pushinteger(L, LOWORD(dw_value))
+        return 1
+    ELSE:
+        return 0
 
 
 cdef int l_sleep(lua_State *L):
     cdef DWORD milliseconds = 0
     milliseconds = <DWORD>lua_tointeger(L, -1)
-    Sleep(milliseconds)
+    # FIXME
+    IF UNAME_SYSNAME == "Windows":
+        Sleep(milliseconds)
     return 0
 
 
@@ -3680,16 +3737,21 @@ cdef bint lua_push_domain_info (lua_State *L):
         DSROLE_PRIMARY_DOMAIN_INFO_BASIC *info
         const char* domain_name_dns = ""
         const char* domain_forest_name = ""
-    get_domain_info(&info)
-    if info.DomainNameDns != NULL:
-        domain_name_dns = <const char*>info.DomainNameDns
-    if info.DomainForestName != NULL:
-        domain_forest_name = <const char*>info.DomainForestName
+
+    IF UNAME_SYSNAME == "Windows":
+        get_domain_info(&info)
+        if info.DomainNameDns != NULL:
+            domain_name_dns = <const char*>info.DomainNameDns
+        if info.DomainForestName != NULL:
+            domain_forest_name = <const char*>info.DomainForestName
 
     # Pushes the zero-terminated string pointed to by s onto the stack. Lua makes (or reuses) an internal copy of the given string, so the memory at s can be freed or reused immediately after the function returns. The string cannot contain embedded zeros; it is assumed to end at the first zero. 
     lua_pushstring(L, domain_name_dns)
     lua_setglobal(L, "domain_name_dns")
-    lua_pushstring(L, <const char*>info.DomainNameFlat)
+    IF UNAME_SYSNAME == "Windows":
+        lua_pushstring(L, <const char*>info.DomainNameFlat)
+    ELSE:
+        lua_pushstring(L, "")
     lua_setglobal(L, "netbios_domain_name")
     lua_pushstring(L, domain_forest_name)
     lua_setglobal(L, "domain_forest_name")

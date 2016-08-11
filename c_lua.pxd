@@ -51,8 +51,8 @@ cdef extern from "lua.h":
 cdef extern from "luaconf.h":
     pass
 
-cdef extern from "lvm.h":
-    pass
+#cdef extern from "lvm.h":
+#    pass
 
 cdef extern from "lauxlib.h":
     int LUA_ERRFILE     = 7

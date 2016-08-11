@@ -15,8 +15,10 @@ import libs.common
 # third party cimports
 
 # application/library cimports
-from c_windows_data_types cimport WORD, DWORD
+#from c_windows_data_types cimport WORD, DWORD
 from c_windows cimport HIWORD, LOWORD
+
+#ctypedef unsigned short WORD
 
 
 RETURN_PACKAGE = 0
@@ -820,7 +822,7 @@ cdef class Profile(BaseVersion):
         return self._id
 
     @id.setter
-    def packages(self, value):
+    def id(self, value):
         self._id = value
 
     def __len__(self):

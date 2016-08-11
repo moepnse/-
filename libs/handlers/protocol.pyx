@@ -140,194 +140,208 @@ cdef class BaseHandler:
         return md5sum == md5.hexdigest()
 
     cdef HANDLE _get_current_user_token(self):
-        cdef:
-            HANDLE current_token = NULL
-            HANDLE primary_token = NULL
-            ULONG dw_session_id = 0
-            #LPWSTR win_station_name = ""
-            HANDLE h_user_token = NULL
-            HANDLE h_token_dup = NULL
-            PWTS_SESSION_INFOW p_session_info = NULL
-            DWORD dw_count = 0
-            DWORD i = 0
-            WTS_SESSION_INFOW si
-            BOOL b_ret = False
+        IF UNAME_SYSNAME == "Windows":
+            cdef:
+                HANDLE current_token = NULL
+                HANDLE primary_token = NULL
+                ULONG dw_session_id = 0
+                #LPWSTR win_station_name = ""
+                HANDLE h_user_token = NULL
+                HANDLE h_token_dup = NULL
+                PWTS_SESSION_INFOW p_session_info = NULL
+                DWORD dw_count = 0
+                DWORD i = 0
+                WTS_SESSION_INFOW si
+                BOOL b_ret = False
 
-        # Get the list of all terminal sessions
-        WTSEnumerateSessionsW(WTS_CURRENT_SERVER_HANDLE, 0, 1, &p_session_info, &dw_count)
-        # look over obtained list in search of the active session
-        for i in range(0, dw_count):
-            si = p_session_info[i]
-            if WTSActive == si.State:
-                # If the current session is active – store its ID
-                dw_session_id = si.SessionId
-                #win_station_name = si.pWinStationName
-                break
-        self._log.log_debug(u"[protocol/%s] Session ID: %d" % (self._plugin_name, dw_session_id))
-        #self._log.log_debug(u"[protocol/%s] WinStation: %s" % win_station_name)
+            # Get the list of all terminal sessions
+            WTSEnumerateSessionsW(WTS_CURRENT_SERVER_HANDLE, 0, 1, &p_session_info, &dw_count)
+            # look over obtained list in search of the active session
+            for i in range(0, dw_count):
+                si = p_session_info[i]
+                if WTSActive == si.State:
+                    # If the current session is active – store its ID
+                    dw_session_id = si.SessionId
+                    #win_station_name = si.pWinStationName
+                    break
+            self._log.log_debug(u"[protocol/%s] Session ID: %d" % (self._plugin_name, dw_session_id))
+            #self._log.log_debug(u"[protocol/%s] WinStation: %s" % win_station_name)
 
-        # Get token of the logged in user by the active session ID
-        b_ret = WTSQueryUserToken(dw_session_id, &current_token)
-        if b_ret == False:
-            self._log.log_err(u"[protocol/%s] WTSQueryUserToken: %d" % (self._plugin_name, GetLastError()))
-            return <HANDLE>0
-        b_ret = DuplicateTokenEx(current_token, TOKEN_ASSIGN_PRIMARY | TOKEN_ALL_ACCESS, <LPSECURITY_ATTRIBUTES>0, SecurityImpersonation, TokenPrimary, &primary_token)
-        if b_ret == False:
-            self._log.log_err(u"[protocol/%s] Cannot duplicate Token!" % (self._plugin_name))
-            self._log.log_err(u"[protocol/%s] DuplicateTokenEx: %d" % (self._plugin_name, GetLastError()))
-            return <HANDLE>0
-        return primary_token
+            # Get token of the logged in user by the active session ID
+            b_ret = WTSQueryUserToken(dw_session_id, &current_token)
+            if b_ret == False:
+                self._log.log_err(u"[protocol/%s] WTSQueryUserToken: %d" % (self._plugin_name, GetLastError()))
+                return <HANDLE>0
+            b_ret = DuplicateTokenEx(current_token, TOKEN_ASSIGN_PRIMARY | TOKEN_ALL_ACCESS, <LPSECURITY_ATTRIBUTES>0, SecurityImpersonation, TokenPrimary, &primary_token)
+            if b_ret == False:
+                self._log.log_err(u"[protocol/%s] Cannot duplicate Token!" % (self._plugin_name))
+                self._log.log_err(u"[protocol/%s] DuplicateTokenEx: %d" % (self._plugin_name, GetLastError()))
+                return <HANDLE>0
+            return primary_token
+        ELSE:
+            return NULL
 
     cdef unsigned long _execute_as_user(self, unicode cmd):
-        cdef:
-            STARTUPINFOW si
-            PROCESS_INFORMATION pi
-            bint ret_val = False
-            DWORD ret_code = -1
-            DWORD create_flags = 0
-            Py_ssize_t length = len(cmd)
-            wchar_t* w_cmd = <wchar_t*>malloc(32768)
-            str key = ""
-            HANDLE h_token = NULL
-            LPVOID lp_environment = NULL
-            #wchar_t sz_user_profile_dir[MAX_PATH]
-            wchar_t sz_user_profile_dir[32768]
-            #DWORD cch_user_profile_dir = ARRAYSIZE(sz_user_profile_dir)
-            DWORD cch_user_profile_dir = <DWORD>(32768 / sizeof(wchar_t))
+        IF UNAME_SYSNAME == "Windows":
+            cdef:
+                STARTUPINFOW si
+                PROCESS_INFORMATION pi
+                bint ret_val = False
+                DWORD ret_code = -1
+                DWORD create_flags = 0
+                Py_ssize_t length = len(cmd)
+                wchar_t* w_cmd = <wchar_t*>malloc(32768)
+                str key = ""
+                HANDLE h_token = NULL
+                LPVOID lp_environment = NULL
+                #wchar_t sz_user_profile_dir[MAX_PATH]
+                wchar_t sz_user_profile_dir[32768]
+                #DWORD cch_user_profile_dir = ARRAYSIZE(sz_user_profile_dir)
+                DWORD cch_user_profile_dir = <DWORD>(32768 / sizeof(wchar_t))
 
-        h_token = self._get_current_user_token()
-        if h_token == <HANDLE>0:
-            self._log.log_err(u"[protocol/%s] Invalid Token!" % (self._plugin_name))
-            return -1
-        CreateEnvironmentBlock(&lp_environment, h_token, True)
-        for key in os.environ:
-            #cmd = cmd.replace(u"%%%s%%" % key.decode("utf-8"), os.environ[key].decode("utf-8"))
-            cmd = ireplace(cmd, u"%%%s%%" % key.decode("utf-8"), os.environ[key].decode("utf-8"))
-        self._log.log_debug("u[protocol/%s] environment variables: %s" % (self._plugin_name, os.environ))
-        self._log.log_debug("u[protocol/%s] _execute_as_user: %s" % (self._plugin_name, cmd))
-        wcscpy_s(w_cmd, length * sizeof(wchar_t), <wchar_t*>cmd)
-        SecureZeroMemory(&pi, sizeof(pi))
-        SecureZeroMemory(&si, sizeof(si))
-        #si.dwFlags = STARTF_USESTDHANDLES | STARTF_USESHOWWINDOW
-        si.lpDesktop = <bytes>u"winsta0\\default"
-        si.cb = sizeof(si)
-        create_flags = CREATE_NEW_CONSOLE | CREATE_UNICODE_ENVIRONMENT
-        # Retrieve the path to the root directory of the user's profile.
-        if not GetUserProfileDirectoryW(h_token, sz_user_profile_dir, &cch_user_profile_dir):
-            self._log.log_err(u"[protocol/%s] GetUserProfileDirectoryW: %d." % (self._plugin_name, GetLastError()))
-            return -1
-        self._log.log_debug(u"[pi_serivce] User Profile Directory: %s" % (self._plugin_name, sz_user_profile_dir))
-        self._log.log_debug(u"[protocol/%s] CreateProcessAsUserW: %s" % (self._plugin_name, cmd))
-        ret_val = CreateProcessAsUserW(
-            h_token,
-            NULL,                   # No module name (use command line)
-            w_cmd,                  # Command line
-            NULL,                   # Process handle not inheritable
-            NULL,                   # Thread handle not inheritable
-            False,                  # Set handle inheritance to FALSE
-            create_flags,           # creation flags
-            lp_environment,         # environment block
-            sz_user_profile_dir,    # starting directory 
-            &si,                    # Pointer to STARTUPINFOW structure
-            &pi)                    # Pointer to PROCESS_INFORMATION structure
-        if ret_val == False:
-            self._log.log_err(u"[protocol/%s] CreateProcessAsUserW failed (%d)." % (self._plugin_name, GetLastError()))
-            return -1
-        # Wait until child process exits.
-        WaitForSingleObject(pi.hProcess, INFINITE)
-
-        if not GetExitCodeProcess(pi.hProcess, &ret_code):
-            self._log.log_err(u"[protocol/%s] GetExitCodeProcess failed with error %d" % GetLastError())
-        # Close process and thread handles. 
-        CloseHandle(pi.hProcess)
-        CloseHandle(pi.hThread)
-        free(w_cmd)
-        return ret_code
-
-    cdef unsigned long _execute(self, unicode cmd, DWORD* last_error_code):
-        cdef:
-            STARTUPINFOW si
-            PROCESS_INFORMATION pi
-            bint ret_val = False
-            DWORD create_flags = 0
-            # ExitCode
-            DWORD ret_code = -1
-            Py_ssize_t length = len(cmd)
-            #wchar_t* w_cmd = <wchar_t*>malloc((length+1) * sizeof(wchar_t)) 32768
-            wchar_t* w_cmd = <wchar_t*>malloc(32768)
-            #wchar_t* w_cmd = <wchar_t*>cmd
-            str key = ""
-            DWORD error_code = 0
-        for key in os.environ:
-            #cmd = cmd.replace(u"%%%s%%" % key.decode("utf-8"), os.environ[key].decode("utf-8"))
-            cmd = ireplace(cmd, u"%%%s%%" % key.decode("utf-8"), os.environ[key].decode("utf-8"))
-        self._log_debug(u"[protocol/%s] environment variables: %s" % (self._plugin_name, os.environ))
-        self._log_debug(u"[protocol/%s] _execute: %s" % (self._plugin_name, cmd))
-        wcscpy_s(w_cmd, length * sizeof(wchar_t), <wchar_t*>cmd)
-        SecureZeroMemory(&pi, sizeof(pi))
-        SecureZeroMemory(&si, sizeof(si))
-        si.dwFlags = STARTF_USESTDHANDLES | STARTF_USESHOWWINDOW
-        si.wShowWindow = SW_HIDE
-        si.cb = sizeof(si)
-        create_flags = CREATE_NEW_CONSOLE | CREATE_UNICODE_ENVIRONMENT
-        ret_val = CreateProcessW(
-            NULL,           # No module name (use command line)
-            w_cmd,          # Command line
-            NULL,           # Process handle not inheritable
-            NULL,           # Thread handle not inheritable
-            False,          # Set handle inheritance to FALSE
-            create_flags,   # creation flags
-            NULL,           # Use parent's environment block
-            NULL,           # Use parent's starting directory 
-            &si,            # Pointer to STARTUPINFOW structure
-            &pi)            # Pointer to PROCESS_INFORMATION structure
-        if ret_val == False:
-            error_code = GetLastError()
-            self._log_err(u"[protocol/%s] CreateProcess failed (%d)." % (self._plugin_name, error_code))
-        else:
+            h_token = self._get_current_user_token()
+            if h_token == <HANDLE>0:
+                self._log.log_err(u"[protocol/%s] Invalid Token!" % (self._plugin_name))
+                return -1
+            CreateEnvironmentBlock(&lp_environment, h_token, True)
+            for key in os.environ:
+                #cmd = cmd.replace(u"%%%s%%" % key.decode("utf-8"), os.environ[key].decode("utf-8"))
+                cmd = ireplace(cmd, u"%%%s%%" % key.decode("utf-8"), os.environ[key].decode("utf-8"))
+            self._log.log_debug("u[protocol/%s] environment variables: %s" % (self._plugin_name, os.environ))
+            self._log.log_debug("u[protocol/%s] _execute_as_user: %s" % (self._plugin_name, cmd))
+            wcscpy_s(w_cmd, length * sizeof(wchar_t), <wchar_t*>cmd)
+            SecureZeroMemory(&pi, sizeof(pi))
+            SecureZeroMemory(&si, sizeof(si))
+            #si.dwFlags = STARTF_USESTDHANDLES | STARTF_USESHOWWINDOW
+            si.lpDesktop = <bytes>u"winsta0\\default"
+            si.cb = sizeof(si)
+            create_flags = CREATE_NEW_CONSOLE | CREATE_UNICODE_ENVIRONMENT
+            # Retrieve the path to the root directory of the user's profile.
+            if not GetUserProfileDirectoryW(h_token, sz_user_profile_dir, &cch_user_profile_dir):
+                self._log.log_err(u"[protocol/%s] GetUserProfileDirectoryW: %d." % (self._plugin_name, GetLastError()))
+                return -1
+            self._log.log_debug(u"[pi_serivce] User Profile Directory: %s" % (self._plugin_name, sz_user_profile_dir))
+            self._log.log_debug(u"[protocol/%s] CreateProcessAsUserW: %s" % (self._plugin_name, cmd))
+            ret_val = CreateProcessAsUserW(
+                h_token,
+                NULL,                   # No module name (use command line)
+                w_cmd,                  # Command line
+                NULL,                   # Process handle not inheritable
+                NULL,                   # Thread handle not inheritable
+                False,                  # Set handle inheritance to FALSE
+                create_flags,           # creation flags
+                lp_environment,         # environment block
+                sz_user_profile_dir,    # starting directory 
+                &si,                    # Pointer to STARTUPINFOW structure
+                &pi)                    # Pointer to PROCESS_INFORMATION structure
+            if ret_val == False:
+                self._log.log_err(u"[protocol/%s] CreateProcessAsUserW failed (%d)." % (self._plugin_name, GetLastError()))
+                return -1
             # Wait until child process exits.
             WaitForSingleObject(pi.hProcess, INFINITE)
+
             if not GetExitCodeProcess(pi.hProcess, &ret_code):
+                self._log.log_err(u"[protocol/%s] GetExitCodeProcess failed with error %d" % GetLastError())
+            # Close process and thread handles. 
+            CloseHandle(pi.hProcess)
+            CloseHandle(pi.hThread)
+            free(w_cmd)
+            return ret_code
+        ELSE:
+            return -1
+
+    cdef unsigned long _execute(self, unicode cmd, DWORD* last_error_code):
+        IF UNAME_SYSNAME == "Windows":
+
+            cdef:
+                STARTUPINFOW si
+                PROCESS_INFORMATION pi
+                bint ret_val = False
+                DWORD create_flags = 0
+                # ExitCode
+                DWORD ret_code = -1
+                Py_ssize_t length = len(cmd)
+                #wchar_t* w_cmd = <wchar_t*>malloc((length+1) * sizeof(wchar_t)) 32768
+                wchar_t* w_cmd = <wchar_t*>malloc(32768)
+                #wchar_t* w_cmd = <wchar_t*>cmd
+                str key = ""
+                DWORD error_code = 0
+            for key in os.environ:
+                #cmd = cmd.replace(u"%%%s%%" % key.decode("utf-8"), os.environ[key].decode("utf-8"))
+                cmd = ireplace(cmd, u"%%%s%%" % key.decode("utf-8"), os.environ[key].decode("utf-8"))
+            self._log_debug(u"[protocol/%s] environment variables: %s" % (self._plugin_name, os.environ))
+            self._log_debug(u"[protocol/%s] _execute: %s" % (self._plugin_name, cmd))
+            wcscpy_s(w_cmd, length * sizeof(wchar_t), <wchar_t*>cmd)
+            SecureZeroMemory(&pi, sizeof(pi))
+            SecureZeroMemory(&si, sizeof(si))
+            si.dwFlags = STARTF_USESTDHANDLES | STARTF_USESHOWWINDOW
+            si.wShowWindow = SW_HIDE
+            si.cb = sizeof(si)
+            create_flags = CREATE_NEW_CONSOLE | CREATE_UNICODE_ENVIRONMENT
+            ret_val = CreateProcessW(
+                NULL,           # No module name (use command line)
+                w_cmd,          # Command line
+                NULL,           # Process handle not inheritable
+                NULL,           # Thread handle not inheritable
+                False,          # Set handle inheritance to FALSE
+                create_flags,   # creation flags
+                NULL,           # Use parent's environment block
+                NULL,           # Use parent's starting directory 
+                &si,            # Pointer to STARTUPINFOW structure
+                &pi)            # Pointer to PROCESS_INFORMATION structure
+            if ret_val == False:
                 error_code = GetLastError()
-                self._log_err(u"[protocol/%s] GetExitCodeProcess failed with error code %d" % error_code)
-        # Close process and thread handles. 
-        CloseHandle(pi.hProcess)
-        CloseHandle(pi.hThread)
-        free(w_cmd)
-        last_error_code[0] = error_code
-        return ret_code
+                self._log_err(u"[protocol/%s] CreateProcess failed (%d)." % (self._plugin_name, error_code))
+            else:
+                # Wait until child process exits.
+                WaitForSingleObject(pi.hProcess, INFINITE)
+                if not GetExitCodeProcess(pi.hProcess, &ret_code):
+                    error_code = GetLastError()
+                    self._log_err(u"[protocol/%s] GetExitCodeProcess failed with error code %d" % error_code)
+            # Close process and thread handles. 
+            CloseHandle(pi.hProcess)
+            CloseHandle(pi.hThread)
+            free(w_cmd)
+            last_error_code[0] = error_code
+            return ret_code
+        ELSE:
+            return -1
 
     def execute(self, unicode cmd):
-        cdef:
-            int ret_value = 0
-            DWORD dw_version = 0; 
-            DWORD dw_major_version = 0
-            DWORD dw_minor_version = 0
-            #DWORD dw_build = 0
-            DWORD last_error_code = 0
+        IF UNAME_SYSNAME == "Windows":
+            cdef:
+                int ret_value = 0
+                DWORD dw_version = 0; 
+                DWORD dw_major_version = 0
+                DWORD dw_minor_version = 0
+                #DWORD dw_build = 0
+                DWORD last_error_code = 0
 
-        self._log_debug(u"[protocol/%s] execute: %s" % (self._plugin_name, cmd))
-        self.connect()
-        args = libs.win.commandline.parse(cmd)
-        if args[0].startswith(self._url_prefix):
-            args[0] = args[0][len(self._url_prefix):]
-        cmd = u" ".join(args)
-        dw_version = GetVersion()
-        dw_major_version = <DWORD>(LOBYTE(LOWORD(dw_version)))
-        dw_minor_version = <DWORD>(HIBYTE(LOWORD(dw_version)))
-        if dw_major_version >= 6 and dw_minor_version >= 0:
-            ret_value = self._execute_as_user(cmd)
-        else:
-            ret_value = self._execute(cmd, &last_error_code)
-        return ret_value
-        #ret_code = subprocess.call(args)
-        #return ret_code
+            self._log_debug(u"[protocol/%s] execute: %s" % (self._plugin_name, cmd))
+            self.connect()
+            args = libs.win.commandline.parse(cmd)
+            if args[0].startswith(self._url_prefix):
+                args[0] = args[0][len(self._url_prefix):]
+            cmd = u" ".join(args)
+            dw_version = GetVersion()
+            dw_major_version = <DWORD>(LOBYTE(LOWORD(dw_version)))
+            dw_minor_version = <DWORD>(HIBYTE(LOWORD(dw_version)))
+            if dw_major_version >= 6 and dw_minor_version >= 0:
+                ret_value = self._execute_as_user(cmd)
+            else:
+                ret_value = self._execute(cmd, &last_error_code)
+            return ret_value
+            #ret_code = subprocess.call(args)
+            #return ret_code
+        ELSE:
+            return -1
 
     def copy(self, source, target):
         self.connect()
 
-        if not CopyFile(source, target, 0):
-            self._log_err(u"[protocol/%s] CopyFile failed with Error: %d" % (self._plugin_name, GetLastError()))
+        IF UNAME_SYSNAME == "Windows":
+            if not CopyFile(source, target, 0):
+                self._log_err(u"[protocol/%s] CopyFile failed with Error: %d" % (self._plugin_name, GetLastError()))
 
     def __exit__(self, type, value, traceback):
         self.disconnect()

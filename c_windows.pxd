@@ -7,7 +7,11 @@ cdef extern from "stdio.h":
 cdef extern from "time.h":
     ctypedef long time_t
 
-cdef extern from "Windows.h":
+IF UNAME_SYSNAME == "Windows":
+    cdef extern from "Windows.h":
+        pass
+
+cdef extern from *:
 
     ctypedef DWORD ACCESS_MASK
     ctypedef ACCESS_MASK* PACCESS_MASK
@@ -96,7 +100,11 @@ cdef extern from "Windows.h":
     ctypedef _SID_AND_ATTRIBUTES SID_AND_ATTRIBUTES
     ctypedef _SID_AND_ATTRIBUTES *PSID_AND_ATTRIBUTES
 
-cdef extern from "WinUser.h":
+IF UNAME_SYSNAME == "Windows":
+    cdef extern from "WinUser.h":
+        pass
+
+cdef extern from *:
     DWORD MAX_STR_BLOCKREASON = 256
 
     BOOL ShutdownBlockReasonCreate(
@@ -733,8 +741,12 @@ cdef extern from "WinUser.h":
         LPWSTR lpMachineName
     ) nogil
 
-cdef extern from "WinSvc.h":
 
+IF UNAME_SYSNAME == "Windows":
+    cdef extern from "WinSvc.h":
+        pass
+
+cdef extern from *:
     enum _SC_STATUS_TYPE:
         SC_STATUS_PROCESS_INFO  = 0
 
@@ -1499,16 +1511,22 @@ cdef extern from "WinSvc.h":
         DWORD nSize
     ) nogil
 
-cdef extern from "Winnetwk.h":
-    pass
+IF UNAME_SYSNAME == "Windows":
+    cdef extern from "Winnetwk.h":
+        pass
 
-cdef extern from "Winsvc.h":
-    pass
+    cdef extern from "Winsvc.h":
+        pass
 
-cdef extern from "Lm.h":
-    pass
+    cdef extern from "Lm.h":
+        pass
 
-cdef extern from "Userenv.h": 
+
+    cdef extern from "Userenv.h":
+        pass
+
+
+cdef extern from *:
     BOOL CreateEnvironmentBlock(
         LPVOID *lpEnvironment,
         HANDLE  hToken,
@@ -1530,8 +1548,11 @@ cdef extern from "Userenv.h":
         LPDWORD lpcchSize
     ) nogil
 
-cdef extern from "Wtsapi32.h":
+IF UNAME_SYSNAME == "Windows":
+    cdef extern from "Wtsapi32.h":
+        pass
 
+cdef extern from *:
     enum _WTS_CONNECTSTATE_CLASS:
         WTSActive,              # User logged on to WinStation
         WTSConnected,           # WinStation connected to client
@@ -1617,7 +1638,11 @@ cdef extern from "wchar.h":
        const wchar_t *string2 
     ) nogil
 
-cdef extern from "Psapi.h":
+IF UNAME_SYSNAME == "Windows":
+    cdef extern from "Psapi.h":
+        pass
+
+cdef extern from *:
     BOOL EnumProcesses (
         DWORD * lpidProcess,
         DWORD cb,
@@ -1638,7 +1663,11 @@ cdef extern from "Psapi.h":
         DWORD nSize
     ) nogil
 
-cdef extern from "Guiddef.h":
+IF UNAME_SYSNAME == "Windows":
+    cdef extern from "Guiddef.h":
+        pass
+
+cdef extern from *:
     ctypedef struct _GUID:
         DWORD Data1
         WORD  Data2
@@ -1647,7 +1676,11 @@ cdef extern from "Guiddef.h":
 
     ctypedef _GUID GUID
 
-cdef extern from "DSRole.h":
+IF UNAME_SYSNAME == "Windows":
+    cdef extern from "DSRole.h":
+        pass
+
+cdef extern from *:
     #
     # Domain information
     #
@@ -1733,8 +1766,11 @@ cdef extern from "DSRole.h":
      ) nogil
 
 
-cdef extern from "LMJoin.h":
+IF UNAME_SYSNAME == "Windows":
+    cdef extern from "LMJoin.h":
+        pass
 
+cdef extern from *:
     #
     # Types of name that can be validated
     #
@@ -1913,8 +1949,11 @@ cdef extern from "LMJoin.h":
         LPWSTR **ComputerNames
     ) nogil       
 
-cdef extern from "WinReg.h":
+IF UNAME_SYSNAME == "Windows":
+    cdef extern from "WinReg.h":
+        pass
 
+cdef extern from *:
     ctypedef LONG LSTATUS
 
     #
@@ -2096,8 +2135,11 @@ cdef extern from "WinReg.h":
     ) nogil
 
 
-cdef extern from "WinCon.h":
+IF UNAME_SYSNAME == "Windows":
+    cdef extern from "WinCon.h":
+        pass
 
+cdef extern from *:
     #
     # Attributes flags:
     #

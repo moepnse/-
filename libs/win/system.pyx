@@ -13,48 +13,55 @@ from c_windows cimport ComputerNameNetBIOS, ComputerNameDnsHostname, ComputerNam
 
 
 def get_arch():
-    value = winreg.get_value("HKEY_LOCAL_MACHINE", r"SYSTEM\CurrentControlSet\Control\Session Manager\Environment", "PROCESSOR_ARCHITECTURE")
-    return value.data
+    IF UNAME_SYSNAME == "Windows":
+        value = winreg.get_value("HKEY_LOCAL_MACHINE", r"SYSTEM\CurrentControlSet\Control\Session Manager\Environment", "PROCESSOR_ARCHITECTURE")
+        return value.data
+    return ""
 
 
-cdef bint _get_domain_info(DSROLE_PRIMARY_DOMAIN_INFO_BASIC **info):
-    cdef:
-        DWORD dw
+IF UNAME_SYSNAME == "Windows":
+    cdef bint _get_domain_info(DSROLE_PRIMARY_DOMAIN_INFO_BASIC **info):
+        cdef:
+            DWORD dw
 
-    dw = DsRoleGetPrimaryDomainInformation(NULL, DsRolePrimaryDomainInfoBasic, <PBYTE *>info)
-    if dw != ERROR_SUCCESS:
-        #print >>sys.stderr, "DsRoleGetPrimaryDomainInformation() failed with error code: %d" % GetLastError())
-        return False
-    return True
+        dw = DsRoleGetPrimaryDomainInformation(NULL, DsRolePrimaryDomainInfoBasic, <PBYTE *>info)
+        if dw != ERROR_SUCCESS:
+            #print >>sys.stderr, "DsRoleGetPrimaryDomainInformation() failed with error code: %d" % GetLastError())
+            return False
+        return True
 
 
 def get_domain_info():
     cdef:
-        DSROLE_PRIMARY_DOMAIN_INFO_BASIC *info
+        IF UNAME_SYSNAME == "Windows":
+            DSROLE_PRIMARY_DOMAIN_INFO_BASIC *info
         unicode workgroup = u""
         unicode domain_name = u""
         unicode forest_name = u""
 
-    _get_domain_info(&info)
+    IF UNAME_SYSNAME == "Windows":
+        _get_domain_info(&info)
 
-    if info.DomainNameDns != NULL:
-        domain_name = <unicode>info.DomainNameDns
+        if info.DomainNameDns != NULL:
+            domain_name = <unicode>info.DomainNameDns
 
-    if info.DomainForestName != NULL:
-        forest_name = <unicode>info.DomainForestName
+        if info.DomainForestName != NULL:
+            forest_name = <unicode>info.DomainForestName
 
-    workgroup = <unicode>info.DomainNameFlat
+        workgroup = <unicode>info.DomainNameFlat
     return workgroup, domain_name, forest_name
 
 
 def get_computer_name():
     cdef:
-        #wchar_t w_computer_name[MAX_COMPUTERNAME_LENGTH + 1]
-        #DWORD dw_size = MAX_COMPUTERNAME_LENGTH
-        wchar_t w_computer_name[32]
-        DWORD dw_size = 31
+        IF UNAME_SYSNAME == "Windows":
+            #wchar_t w_computer_name[MAX_COMPUTERNAME_LENGTH + 1]
+            #DWORD dw_size = MAX_COMPUTERNAME_LENGTH
+            wchar_t w_computer_name[32]
+            DWORD dw_size = 31
         unicode computer_name = u""
-    GetComputerNameW(w_computer_name, &dw_size)
+    IF UNAME_SYSNAME == "Windows":
+        GetComputerNameW(w_computer_name, &dw_size)
     return computer_name
 
 
@@ -129,9 +136,10 @@ def get_computer_name_ex():
     The NetBIOS name of the local computer. If the local computer is a node in a cluster, lpBuffer receives the NetBIOS name of the local computer, not the name of the cluster virtual server.    
     """
 
-    for format in formats:
-        GetComputerNameExW(<COMPUTER_NAME_FORMAT>format, w_buffer, &dw_size)
-        return_value[formats[format]] = unicode(w_buffer)
+    IF UNAME_SYSNAME == "Windows":
+        for format in formats:
+            GetComputerNameExW(<COMPUTER_NAME_FORMAT>format, w_buffer, &dw_size)
+            return_value[formats[format]] = unicode(w_buffer)
 
     return return_value
 

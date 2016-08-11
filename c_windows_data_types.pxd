@@ -1,4 +1,4 @@
-IF UNAME_SYSNAME == "LINUX":
+IF UNAME_SYSNAME == "Linux":
     cdef extern from "win_def.h":
         pass
 

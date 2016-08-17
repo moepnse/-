@@ -11,11 +11,13 @@ __status__ = 'Development'
 
 
 # standard library imports
+import os
 import sys
 import platform
 import traceback
 
 # third party imports
+import cherrypy
 
 # application/library imports
 from package_installer import get_application_path, settings_factory, install_list_factory, installed_list_factory, package_list_factory, package_lists_factory, host_list_factory, connection_list_factory, log_list_factory, Log, get_ph_plugins, get_log_plugins, get_settings_config_path
@@ -85,5 +87,68 @@ except Exception as e:
     sys.exit(1)
 
 
-for package in package_list:
-    print package
+class WS:
+
+    _template_index = u"""
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+    <head>
+        <title>Packages</title>
+        <meta name="keywords" content="Package Search">
+        <meta name="robots" content="index, follow" />
+        <meta name="author" content="Richard Lamboj" />
+        <!-- HTML 4.x -->
+        <meta http-equiv="content-type" content="text/html; charset=utf-8">
+        <!-- <link rel="stylesheet" type="text/css" href="/style.css"> -->
+    </head>
+    <body>
+        %(html)s
+    </body>
+</html>
+    """
+
+    def __init__(self):
+        if not os.path.exists("tmp"):
+            os.makedirs("tmp")
+
+    @cherrypy.expose
+    def index(self, **kwargs):
+        html = u""
+        for package in package_list:
+            html += u"<div>%s</div>" % package
+
+        html = self._template_index % {'html': html}
+        return  html
+
+    @cherrypy.expose
+    def search(self, search_string=""):
+        html = u""
+        for package in package_list:
+            if package.find(search_string) != -1:
+                html += u"<div>%s</div>" % package
+
+        html = self._template_index % {'html': html}
+        return  html
+
+
+if __name__ == '__main__':
+    if not os.path.exists("sessions"):
+        os.makedirs("sessions")
+
+    cherrypy.config.update({'server.socket_port': 8080,
+                        'server.socket_host': '127.0.0.1',
+                        'engine.autoreload_on': False,
+                        'log.access_file': './access.log',
+                        'log.error_file': './error.log'})
+    conf = {
+        '/': {
+            #'request.dispatch': cherrypy.dispatch.MethodDispatcher(),
+            'tools.sessions.on': True,
+            'tools.sessions.storage_type': 'file',
+            'tools.sessions.storage_path': os.path.join(os.path.abspath(os.getcwd()), 'sessions'),
+            'tools.staticdir.root': os.path.abspath(os.getcwd()),
+            'tools.encode.on': True,
+            'tools.encode.encoding"': "utf-8"
+        }
+    }
+    cherrypy.quickstart(WS(), '/', conf)

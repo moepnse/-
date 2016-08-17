@@ -112,3 +112,6 @@ DWORD REG_FULL_RESOURCE_DESCRIPTOR = 9;   // Resource list in the hardware descr
 DWORD REG_RESOURCE_REQUIREMENTS_LIST = 10;
 DWORD REG_QWORD                   = 11;   // 64-bit number
 DWORD REG_QWORD_LITTLE_ENDIAN     = 11;   // 64-bit number =same as REG_QWORD
+
+#define LOWORD(l) ((WORD)(l))
+#define HIWORD(l) ((WORD)(((DWORD)(l) >> 16) & 0xFFFF))

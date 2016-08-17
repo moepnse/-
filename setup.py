@@ -89,10 +89,11 @@ ext_modules = [
     Extension('plugins.config.holdes_mondenkind',
         sources=[os.path.join(r'plugins', 'config', 'holdes_mondenkind.pyx')],
         extra_compile_args=compile_args,
+        extra_link_args = [] if "win" in sys.platform else ['-Wl,-rpath=$ORIGIN'],
         include_dirs = include_dirs + [os.path.join('dependencies', 'lua-5.3.0', 'src')],
         #include_dirs = include_dirs + ([os.path.join('dependencies', 'lua-5.3.0', 'src')] if "win" in sys.platform else []),
         #libraries = (['Advapi32', 'Netapi32', 'Version']  if "win" in sys.platform else []) + ['lua5.3.0', 'luac'],
-        libraries = (['Advapi32', 'Netapi32', 'Version']  if "win" in sys.platform else []) + ['lua5.3.0'],
+        libraries = (['Advapi32', 'Netapi32', 'Version']  if "win" in sys.platform else []) + ['lua'],
         library_dirs = library_dir + [os.path.join('dependencies', 'lua-5.3.0', 'src')]
         #library_dirs = library_dir + ([os.path.join('dependencies', 'lua-5.3.0', 'src')] if "win" in sys.platform else [])
     ),

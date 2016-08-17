@@ -6,7 +6,8 @@ import re
 # third party imports
 
 # application/library imports
-import winreg
+IF UNAME_SYSNAME == "Windows":
+    import winreg
 
 UNINSTALL_PATH = r"Software\Microsoft\Windows\CurrentVersion\Uninstall"
 UNINSTALL_PATHS = [r"Software\Microsoft\Windows\CurrentVersion\Uninstall", r"Software\Wow6432Node\Microsoft\Windows\CurrentVersion\Uninstall"]
@@ -95,57 +96,61 @@ class Product(object):
 cdef class SoftwareList:
 
     def __init__(self):
-        self._mapping = {
-            "DisplayIcon": winreg.REG_SZ,
-            "DisplayName": winreg.REG_SZ,
-            "DisplayVersion": winreg.REG_SZ,
-            "Emitter": winreg.REG_DWORD,
-            "EstimatedSize": winreg.REG_DWORD,
-            "HelpLink": winreg.REG_SZ,
-            "InstallDate": winreg.REG_SZ,
-            "InstallLocation": winreg.REG_SZ,
-            "Integrated": winreg.REG_DWORD,
-            "NoModify": winreg.REG_DWORD,
-            "NoRepair": winreg.REG_DWORD,
-            "Publisher": winreg.REG_SZ,
-            "Readme": winreg.REG_SZ,
-            "Size": winreg.REG_DWORD,
-            "SystemComponent": winreg.REG_DWORD,
-            "QuietUninstallString": winreg.REG_SZ,
-            "RequiresIESysFile": winreg.REG_SZ,
-            "QuietUninstallString": winreg.REG_SZ,
-            "UninstallString": winreg.REG_SZ,
-            "URLInfoAbout": winreg.REG_SZ,
-            "URLUpdateInfo": winreg.REG_SZ,
-            "Version": winreg.REG_DWORD,
-            "VersionMajor": winreg.REG_DWORD,
-            "VersionMinor": winreg.REG_DWORD,
-            "WindowsInstaller": winreg.REG_DWORD
-        }
+        IF UNAME_SYSNAME == "Windows":
+            self._mapping = {
+                "DisplayIcon": winreg.REG_SZ,
+                "DisplayName": winreg.REG_SZ,
+                "DisplayVersion": winreg.REG_SZ,
+                "Emitter": winreg.REG_DWORD,
+                "EstimatedSize": winreg.REG_DWORD,
+                "HelpLink": winreg.REG_SZ,
+                "InstallDate": winreg.REG_SZ,
+                "InstallLocation": winreg.REG_SZ,
+                "Integrated": winreg.REG_DWORD,
+                "NoModify": winreg.REG_DWORD,
+                "NoRepair": winreg.REG_DWORD,
+                "Publisher": winreg.REG_SZ,
+                "Readme": winreg.REG_SZ,
+                "Size": winreg.REG_DWORD,
+                "SystemComponent": winreg.REG_DWORD,
+                "QuietUninstallString": winreg.REG_SZ,
+                "RequiresIESysFile": winreg.REG_SZ,
+                "QuietUninstallString": winreg.REG_SZ,
+                "UninstallString": winreg.REG_SZ,
+                "URLInfoAbout": winreg.REG_SZ,
+                "URLUpdateInfo": winreg.REG_SZ,
+                "Version": winreg.REG_DWORD,
+                "VersionMajor": winreg.REG_DWORD,
+                "VersionMinor": winreg.REG_DWORD,
+                "WindowsInstaller": winreg.REG_DWORD
+            }
+        ELSE:
+            self._mapping = {}
         self._update()
 
     def _update(self):
         self._sw_list = {}
-        for uninstall_path in UNINSTALL_PATHS:
-            if not winreg.sub_key_exists(r"HKEY_LOCAL_MACHINE", uninstall_path):
-                continue
-            for product in winreg.get_keys(r"HKEY_LOCAL_MACHINE", uninstall_path):
-                kwargs = {}
-                if winreg.value_exists(r"HKEY_LOCAL_MACHINE", r"%s\%s" % (uninstall_path, product.name), "DisplayName"):
-                    product_name = product.DisplayName.data
-                    uninstall_string = product.DisplayName.data
-                    path = uninstall_path + '\\' + product.name
-                    for entry_name, value_type in self._mapping.items():
-                        if winreg.value_exists(r"HKEY_LOCAL_MACHINE", path, entry_name):
-                            reg_value = winreg.get_value(r"HKEY_LOCAL_MACHINE", path, entry_name).data
-                            if value_type == winreg.REG_DWORD:
-                                if reg_value == '':
-                                    reg_value = 0
-                                else:
-                                    reg_value = int(reg_value)
-                            kwargs[entry_name] = reg_value
-                            kwargs[re.sub('(?!^)([A-Z]+)', r'_\1', entry_name).lower()] = reg_value
-                    self._sw_list[product_name] = Product(**kwargs)
+        IF UNAME_SYSNAME == "Windows":
+            for uninstall_path in UNINSTALL_PATHS:
+                if not winreg.sub_key_exists(r"HKEY_LOCAL_MACHINE", uninstall_path):
+                    continue
+                for product in winreg.get_keys(r"HKEY_LOCAL_MACHINE", uninstall_path):
+                    kwargs = {}
+                    if winreg.value_exists(r"HKEY_LOCAL_MACHINE", r"%s\%s" % (uninstall_path, product.name), "DisplayName"):
+                        product_name = product.DisplayName.data
+                        uninstall_string = product.DisplayName.data
+                        path = uninstall_path + '\\' + product.name
+                        for entry_name, value_type in self._mapping.items():
+                            if winreg.value_exists(r"HKEY_LOCAL_MACHINE", path, entry_name):
+                                reg_value = winreg.get_value(r"HKEY_LOCAL_MACHINE", path, entry_name).data
+                                if value_type == winreg.REG_DWORD:
+                                    if reg_value == '':
+                                        reg_value = 0
+                                    else:
+                                        reg_value = int(reg_value)
+                                kwargs[entry_name] = reg_value
+                                kwargs[re.sub('(?!^)([A-Z]+)', r'_\1', entry_name).lower()] = reg_value
+                        self._sw_list[product_name] = Product(**kwargs)
 
     def __iter__(self):
         self._update()
@@ -170,10 +175,13 @@ cdef class SoftwareList:
         return self._sw_list[key]
 
     def __setitem__(self, key, value):
-        new_key = winreg.create_key(r"HKEY_LOCAL_MACHINE", "\\".join((UNINSTALL_PATH, key)))
-        for _key, _value in value.items():
-            if _key in self._mapping:
-                new_key.set_value(_key, self._mapping[_key], _value)
+        IF UNAME_SYSNAME == "Windows":
+            new_key = winreg.create_key(r"HKEY_LOCAL_MACHINE", "\\".join((UNINSTALL_PATH, key)))
+            for _key, _value in value.items():
+                if _key in self._mapping:
+                    new_key.set_value(_key, self._mapping[_key], _value)
+        ELSE:
+            pass
 
 
 # http://flexget.com/ticket/1641?cversion=0&cnum_hist=2
@@ -192,22 +200,27 @@ class SoftwareTree(SoftwareList):
 
 
 def get_products():
-    for product in winreg.get_keys(r"HKEY_LOCAL_MACHINE", UNINSTALL_PATH):
-        if winreg.value_exists(r"HKEY_LOCAL_MACHINE", r"%s\%s" % (UNINSTALL_PATH, product.name), "DisplayName"):
-            display_name = product.DisplayName.data
-        else:
-            display_name = None
-        if winreg.value_exists(r"HKEY_LOCAL_MACHINE", r"%s\%s" % (UNINSTALL_PATH, product.name), "UninstallString"):
-            uninstall_string = product.UninstallString.data
-        else:
-            uninstall_string = None
+    IF UNAME_SYSNAME == "Windows":
+        for product in winreg.get_keys(r"HKEY_LOCAL_MACHINE", UNINSTALL_PATH):
+            if winreg.value_exists(r"HKEY_LOCAL_MACHINE", r"%s\%s" % (UNINSTALL_PATH, product.name), "DisplayName"):
+                display_name = product.DisplayName.data
+            else:
+                display_name = None
+            if winreg.value_exists(r"HKEY_LOCAL_MACHINE", r"%s\%s" % (UNINSTALL_PATH, product.name), "UninstallString"):
+                uninstall_string = product.UninstallString.data
+            else:
+                uninstall_string = None
 
-        yield Product(display_name, uninstall_string)
+            yield Product(display_name, uninstall_string)
+    ELSE:
+        return iter([])
+
 
 def is_installed(product_name):
-    for product in winreg.get_keys(r"HKEY_LOCAL_MACHINE", UNINSTALL_PATH):
-        if winreg.value_exists(r"HKEY_LOCAL_MACHINE", r"%s\%s" % (UNINSTALL_PATH, product.name), "DisplayName"):
-            if product.DisplayName.data == product_name:
-                return True
+    IF UNAME_SYSNAME == "Windows":
+        for product in winreg.get_keys(r"HKEY_LOCAL_MACHINE", UNINSTALL_PATH):
+            if winreg.value_exists(r"HKEY_LOCAL_MACHINE", r"%s\%s" % (UNINSTALL_PATH, product.name), "DisplayName"):
+                if product.DisplayName.data == product_name:
+                    return True
 
     return False

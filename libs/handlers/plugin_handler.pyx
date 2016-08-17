@@ -36,15 +36,21 @@ class PluginSystem(object):
         self._get_plugins('.pyc')
         self._get_plugins('.py')
         self._get_plugins('.pyd')
+        self._get_plugins('.so')
         return self._plugins
 
     def load_plugin(self, plugin):
-        #print plugin[1]
-        if plugin[1].endswith('.py'):
+        plugin_path = plugin[1]
+        print plugin_path
+        head, tail = os.path.split(plugin_path)
+        if tail.endswith('.py'):
             plugin = imp.load_source(*plugin)
-        elif plugin[1].endswith('.pyd'):
-            plugin = imp.load_dynamic(*plugin)
-        else:
+        elif tail.endswith('.pyd') or (tail.endswith('.so') and not tail.startswith('lib')):
+            try:
+                plugin = imp.load_dynamic(*plugin)
+            except ImportError, err:
+                print plugin_path, err
+        elif tail.endswith('.pyc'):
             plugin = imp.load_compiled(*plugin)
         return plugin
 

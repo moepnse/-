@@ -5,7 +5,8 @@
 # third party imports
 
 # application/library imports
-import winreg
+IF UNAME_SYSNAME == "Windows":
+    import winreg
 
 # application/library cimports
 from c_windows_data_types cimport PBYTE, PDWORD, DWORD, wchar_t

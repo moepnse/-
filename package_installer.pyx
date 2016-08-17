@@ -92,8 +92,11 @@ def get_settings_config_path(settings_path_file=""):
 
 def get_ph_plugins():
     path = os.path.dirname(__file__)
-    fh = open(os.path.join(path, r'logs\core\plugins.log'), 'a')
-    plugins_path = os.path.join(path, r'plugins\protocol_handlers')
+    plugins_log_path = os.path.join(path, 'logs', 'core')
+    if not os.path.exists(plugins_log_path):
+        os.makedirs(plugins_log_path)
+    fh = open(os.path.join(plugins_log_path, 'plugins.log'), 'a')
+    plugins_path = os.path.join(path, 'plugins', 'protocol_handlers')
     fh.write(plugins_path+'\n`')
     plugin_handler_protocol = libs.handlers.plugin_handler.PluginSystem(plugins_path)
     protocol_plugins = {}
@@ -110,7 +113,7 @@ def get_ph_plugins():
 
 def get_config_plugins():
     path = os.path.dirname(__file__)
-    plugin_handler_protocol = libs.handlers.plugin_handler.PluginSystem(os.path.join(path, r'plugins\config'))
+    plugin_handler_protocol = libs.handlers.plugin_handler.PluginSystem(os.path.join(path, 'plugins', 'config'))
     config_plugins = {}
     for config_plugin in plugin_handler_protocol.load_plugins():
         try:
@@ -122,7 +125,7 @@ def get_config_plugins():
 
 def get_log_plugins():
     path = os.path.dirname(__file__)
-    plugin_handler_log = libs.handlers.plugin_handler.PluginSystem(os.path.join(path, r'plugins\logging'))
+    plugin_handler_log = libs.handlers.plugin_handler.PluginSystem(os.path.join(path, 'plugins', 'logging'))
     log_plugins = {}
     for log_plugin in plugin_handler_log.load_plugins():
         try:

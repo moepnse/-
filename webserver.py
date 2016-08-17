@@ -106,6 +106,7 @@ class WS:
     </body>
 </html>
     """
+    _template_list_entry_package = u"<div><a href='/package/%s'>%s</a></div>"
 
     def __init__(self):
         if not os.path.exists("tmp"):
@@ -115,17 +116,32 @@ class WS:
     def index(self, **kwargs):
         html = u""
         for package in package_list:
-            html += u"<div>%s</div>" % package
+            html += self._template_list_entry_package % (package, package)
 
         html = self._template_index % {'html': html}
         return  html
+
+    @cherrypy.expose
+    def package(self, package_id=""):
+        if package_id in package_list:
+            package = package_list[package_id]
+            return u"id: %(id)s name: %(name)s description: %(description)s install cmds: %(install_cmds)s uninstall cmds: %(uninstall_cmds)s upgrade cmds: %(upgrade_cmds)s" % {
+                "id": package.package_id,
+                "name": package.name,
+                "keywords": package.keywords,
+                "install_cmds": package.install_cmds,
+                "uninstall_cmds": package.uninstall_cmds,
+                "upgrade_cmds": package.upgrade_cmds,
+                "description": package.description
+            }
+        return u"Nothing found!"
 
     @cherrypy.expose
     def search(self, search_string=""):
         html = u""
         for package in package_list:
             if package.find(search_string) != -1:
-                html += u"<div>%s</div>" % package
+                html += self._template_list_entry_package % (package, package)
 
         html = self._template_index % {'html': html}
         return  html

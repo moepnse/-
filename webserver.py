@@ -88,7 +88,7 @@ except Exception as e:
 
 
 class WS:
-
+    _template_search = u'<form action="/search" method="post"><label>Search-String:</label><input type="text" name="search_string"><button type="submit">Search</button></form>'
     _template_index = u"""
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
 <html>
@@ -102,10 +102,11 @@ class WS:
         <!-- <link rel="stylesheet" type="text/css" href="/style.css"> -->
     </head>
     <body>
-        %(html)s
+        %(search)s
+        %%(html)s
     </body>
 </html>
-    """
+    """ % {"search": _template_search}
     _template_list_entry_package = u"<div><a href='/package/%s'>%s</a></div>"
 
     def __init__(self):
@@ -125,7 +126,7 @@ class WS:
     def package(self, package_id=""):
         if package_id in package_list:
             package = package_list[package_id]
-            return u"id: %(id)s name: %(name)s description: %(description)s install cmds: %(install_cmds)s uninstall cmds: %(uninstall_cmds)s upgrade cmds: %(upgrade_cmds)s" % {
+            html = u"id: %(id)s name: %(name)s description: %(description)s install cmds: %(install_cmds)s uninstall cmds: %(uninstall_cmds)s upgrade cmds: %(upgrade_cmds)s" % {
                 "id": package.package_id,
                 "name": package.name,
                 "keywords": package.keywords,
@@ -134,7 +135,9 @@ class WS:
                 "upgrade_cmds": package.upgrade_cmds,
                 "description": package.description
             }
-        return u"Nothing found!"
+        else:
+            html = u"Nothing found!"
+        return self._template_index % {'html': html}
 
     @cherrypy.expose
     def search(self, search_string=""):

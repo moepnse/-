@@ -142,10 +142,15 @@ class WS:
     @cherrypy.expose
     def search(self, search_string=""):
         html = u""
-        for package in package_list:
-            if package.find(search_string) != -1:
-                html += self._template_list_entry_package % (package, package)
-
+        for package_id in package_list:
+            if package_id.find(search_string) != -1:
+                html += self._template_list_entry_package % (package_id, package_id)
+            else:
+                package = package_list[package_id]
+                for keyword in package.keywords:
+                    if keyword.find(search_string) != -1:
+                        html += self._template_list_entry_package % (package_id, package_id)
+                        break
         html = self._template_index % {'html': html}
         return  html
 

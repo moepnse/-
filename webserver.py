@@ -210,3 +210,14 @@ if __name__ == '__main__':
         },
     }
     cherrypy.quickstart(WS(), '/', conf)
+else:
+    cherrypy.tree.mount(WS())
+    # CherryPy autoreload must be disabled for the flup server to work
+    cherrypy.config.update(
+        {
+            'engine.autoreload.on': False,
+            'tools.sessions.on': True,
+            'tools.sessions.storage_type': 'file',
+            'tools.sessions.storage_path': os.path.join(os.path.abspath(os.getcwd()), 'sessions'),
+        }
+    )

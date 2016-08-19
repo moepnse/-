@@ -1,5 +1,5 @@
 
-include([[C:\pi\config\error_codes.lua]])
+include({'config', 'error_codes.lua'})
 
 firefox_esr = {}
 
@@ -16,8 +16,8 @@ firefox_esr.install = function(l)
     register_package('package_installer', install_cmds, upgrade_cmds, uninstall_cmds)
 end
 
-include([[C:\pi\config\mozilla.lua]])
-include([[C:\pi\config\microsoft.lua]])
+include({'config', 'mozilla.lua'})
+include({'config', 'microsoft.lua'})
 
 do
     local UNINSTALL_CMD = 
@@ -228,7 +228,7 @@ packages = {
     }
 }
 
-include([[C:\pi\config\windows_registry_hacks.lua]])
+include({'config', 'windows_registry_hacks.lua'})
 
 do
     local installed, version, rev = is_in_installed_list("7zip")

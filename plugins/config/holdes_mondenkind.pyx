@@ -1508,11 +1508,18 @@ cdef int l_include(lua_State *L):
         #const char* path = luaL_checkstring(L, 1)
         bint status = True
         int ret_code
-        unicode path = lua_string_to_python_unicode(L, 1)
+        unicode path = u""
         object url
         PyObject* p_connection_list
         ConnectionList connection_list
         object protocol_handler
+        list new_list = []
+
+    if lua_isstring(L, 1):
+        path = lua_string_to_python_unicode(L, 1)
+    elif lua_istable(L, 1):
+        get_table_as_list(L, 1, new_list, None)
+        path = os.path.join(*new_list)
 
     lua_getglobal(L, 'p_connection_list')
     p_connection_list = <PyObject*>lua_touserdata (L, -1)

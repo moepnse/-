@@ -1,0 +1,23 @@
+body {
+    background-color: #6B5B48;
+    margin: 0;
+    color: #fff;
+}
+
+#packages_img {
+    position: fixed;
+    right: 0;
+    bottom: 0;
+}
+
+a, a:visited {
+    color: #ffffff;
+    text-decoration: none;
+    font-weight: bold;
+    padding-bottom: 4px;
+}
+
+a:hover {
+    border-bottom: 4px solid #fff;
+    padding-bottom: 0;
+}

@@ -99,9 +99,10 @@ class WS:
         <meta name="author" content="Richard Lamboj" />
         <!-- HTML 4.x -->
         <meta http-equiv="content-type" content="text/html; charset=utf-8">
-        <!-- <link rel="stylesheet" type="text/css" href="/style.css"> -->
+        <link rel="stylesheet" type="text/css" href="/style.css">
     </head>
     <body>
+        <img id="packages_img" src="imgs/packages_unicom_seite.png">
         %(search)s
         %%(html)s
     </body>
@@ -173,6 +174,14 @@ if __name__ == '__main__':
             'tools.staticdir.root': os.path.abspath(os.getcwd()),
             'tools.encode.on': True,
             'tools.encode.encoding"': "utf-8"
-        }
+        },
+        '/imgs': {
+            'tools.staticdir.on': True,
+            'tools.staticdir.dir': './imgs'
+        },
+        '/style.css': {
+            'tools.staticfile.on': True,
+            'tools.staticfile.filename': os.path.join(os.path.abspath(os.getcwd()), 'style.css')
+        },
     }
     cherrypy.quickstart(WS(), '/', conf)

@@ -110,6 +110,31 @@ class WS:
     """ % {"search": _template_search}
     _template_list_entry_package = u"<div><a href='/package/%s'>%s</a></div>"
 
+    _template_package_details = u"""<table>
+        <tbody>
+            <tr>
+                <td>id:</td><td>%(id)s</td>
+            </tr>
+            <tr>
+                <td>name:</td><td>%(name)s</td>
+            </tr>
+            <tr>
+                <td>description:</td><td>%(description)s</td>
+            </tr>
+            <tr>
+                <td>install cmds:</td><td>%(install_cmds)s</td>
+            </tr>
+            <tr>
+                <td>uninstall cmds:</td><td>%(uninstall_cmds)s</td>
+            </tr>
+            <tr>
+                <td>upgrade cmds:</td><td>%(upgrade_cmds)s</td>
+            </tr>
+            <tr>
+        </tbody>
+    </table>
+    """
+
     def __init__(self):
         if not os.path.exists("tmp"):
             os.makedirs("tmp")
@@ -127,7 +152,7 @@ class WS:
     def package(self, package_id=""):
         if package_id in package_list:
             package = package_list[package_id]
-            html = u"id: %(id)s name: %(name)s description: %(description)s install cmds: %(install_cmds)s uninstall cmds: %(uninstall_cmds)s upgrade cmds: %(upgrade_cmds)s" % {
+            html = self._template_package_details % {
                 "id": package.package_id,
                 "name": package.name,
                 "keywords": package.keywords,

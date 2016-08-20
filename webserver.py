@@ -103,7 +103,7 @@ class WS:
         <link rel="stylesheet" type="text/css" href="/style.css">
     </head>
     <body>
-        <img id="packages_img" src="imgs/packages_unicom_seite.png">
+        <img id="packages_img" src="/imgs/packages_unicom_seite.png">
         %(top)s
         %%(html)s
     </body>

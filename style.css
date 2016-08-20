@@ -56,20 +56,20 @@ a:hover {
     border: 0;
 }
 
-#package_list {
+#container {
     display: inline-block;
     border: 1px solid #CEB089;
     min-width: 350px;
     margin: 15px;
 }
 
-#package_list h1 {
+#container h1 {
     margin: 0;
     font-size: normal;
     background-color: #CEB089;
     color: #6B5B48;
 }
 
-#package_list > div{
+#container > div{
     margin: 2px 5px 2px 5px;
 }

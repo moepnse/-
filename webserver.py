@@ -109,7 +109,7 @@ class WS:
 </html>
     """ % {"top": _template_top_bar}
     _template_list_entry_package = u"<div><a href='/package/%s'>%s</a></div>"
-    _template_package_list = u'<div id="package_list"><h1>Packages</h1><div>%(package_list)s</div></div>'
+    _template_container = u'<div id="container"><h1>%(header)s</h1><div>%(html)s</div></div>'
     _template_package_details = u"""<table>
         <tbody>
             <tr>
@@ -145,7 +145,7 @@ class WS:
         for package in package_list:
             html += self._template_list_entry_package % (package, package)
 
-        html = self._template_index % {'html': self._template_package_list % {'package_list': html}}
+        html = self._template_index % {'html': self._template_container % {'header': 'Packages', 'html': html}}
         return  html
 
     @cherrypy.expose
@@ -163,7 +163,7 @@ class WS:
             }
         else:
             html = u"Nothing found!"
-        return self._template_index % {'html': html}
+        return self._template_index % {'html': self._template_container % {'header': 'Package Details', 'html': html}}
 
     @cherrypy.expose
     def search(self, search_string=""):
@@ -177,7 +177,7 @@ class WS:
                     if keyword.find(search_string) != -1:
                         html += self._template_list_entry_package % (package_id, package_id)
                         break
-        html = self._template_index % {'html': html}
+        html = self._template_index % {'html': self._template_container % {'header': 'Search Result', 'html': html}}
         return  html
 
 

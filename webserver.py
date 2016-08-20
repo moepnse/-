@@ -89,6 +89,7 @@ except Exception as e:
 
 class WS:
     _template_search = u'<form action="/search" method="post"><label>Search-String:</label><input type="text" name="search_string"><button type="submit">Search</button></form>'
+    _template_top_bar = u'<div id="top"><a href="/">packages</a>%(search)s</div>' % {"search": _template_search}
     _template_index = u"""
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
 <html>
@@ -103,11 +104,11 @@ class WS:
     </head>
     <body>
         <img id="packages_img" src="imgs/packages_unicom_seite.png">
-        %(search)s
+        %(top)s
         %%(html)s
     </body>
 </html>
-    """ % {"search": _template_search}
+    """ % {"top": _template_top_bar}
     _template_list_entry_package = u"<div><a href='/package/%s'>%s</a></div>"
 
     _template_package_details = u"""<table>

@@ -90,8 +90,7 @@ except Exception as e:
 class WS:
     _template_search = u'<form action="/search" method="post"><label>Search-String:</label><input type="text" name="search_string"><button type="submit">Search</button></form>'
     _template_top_bar = u'<div id="top"><a href="/">packages</a>%(search)s</div>' % {"search": _template_search}
-    _template_index = u"""
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+    _template_index = u"""<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
 <html>
     <head>
         <title>Packages</title>

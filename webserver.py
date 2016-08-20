@@ -109,7 +109,7 @@ class WS:
 </html>
     """ % {"top": _template_top_bar}
     _template_list_entry_package = u"<div><a href='/package/%s'>%s</a></div>"
-
+    _template_package_list = u'<div id="package_list"><h1>Packages</h1><div>%(package_list)s</div></div>'
     _template_package_details = u"""<table>
         <tbody>
             <tr>
@@ -145,7 +145,7 @@ class WS:
         for package in package_list:
             html += self._template_list_entry_package % (package, package)
 
-        html = self._template_index % {'html': html}
+        html = self._template_index % {'html': self._template_package_list % {'package_list': html}}
         return  html
 
     @cherrypy.expose

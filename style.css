@@ -8,6 +8,7 @@ body {
     position: fixed;
     right: 0;
     bottom: 0;
+    z-index: -1;
 }
 
 a, a:visited {
@@ -61,6 +62,7 @@ a:hover {
     border: 1px solid #CEB089;
     min-width: 350px;
     margin: 15px;
+    background-color: #6B5B48;
 }
 
 #container h1 {

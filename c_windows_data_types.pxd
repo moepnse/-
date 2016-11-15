@@ -2,7 +2,7 @@ IF UNAME_SYSNAME == "Linux":
     cdef extern from "win_def.h":
         pass
 
-cdef extern:
+cdef extern from *:
 #cdef extern from "BaseTsd.h":
 #    pass
 

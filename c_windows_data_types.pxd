@@ -1,14 +1,14 @@
 IF UNAME_SYSNAME == "Linux":
     cdef extern from "win_def.h":
         pass
+ELSE:
+    cdef extern from "BaseTsd.h":
+        pass
+
+    cdef extern from "WinDef.h":
+        pass
 
 cdef extern from *:
-#cdef extern from "BaseTsd.h":
-#    pass
-
-#cdef extern from "WinDef.h":
-#    pass
-
 #cdef extern from "WinNT.h":
     ctypedef Py_UNICODE WCHAR
     ctypedef const WCHAR* LPCWSTR

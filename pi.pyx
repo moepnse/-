@@ -11,6 +11,7 @@ __status__ = 'Development'
 
 
 # standard library imports
+import re
 import sys
 import platform
 import traceback
@@ -41,6 +42,7 @@ UPGRADE = "upgrade"
 REMOVE = "remove"
 UNINSTALL = "uninstall"
 SEARCH = "search"
+RE_SEARCH = "re_search"
 INFO = "info"
 LIST = "list"
 LIST_SOFTWARE = "list_software"
@@ -213,6 +215,8 @@ cdef main():
         uninstall(argv[2:])
     elif action == SEARCH:
         search(argv[2:])
+    elif action == RE_SEARCH:
+        re_search(argv[2:])
     elif action == INFO:
         info(argv[2:])
     elif action == LIST:
@@ -481,6 +485,41 @@ cdef search(search_patterns=[]):
             if search_pattern in package.keywords or search_pattern == package.package_id:
                 #_handle_dependencies(package['package_id'], self._packages)
                 packages_found[package.package_id] = package
+        #print package_id
+    if len(packages_found) > 0:
+        for package_id, package in packages_found.items():
+            if package_id in installed_list:
+                version, rev, date = installed_list[package_id]
+                out = "%s (%s) [I: %s (%s) | U: %s (%s)]:\n\t%s" % (package_id, package.name, package.installed, version, package.upgrade_available, package.version, package.description)
+            else:
+                out = "%s (%s) [I: %s | U: %s]:\n\t%s" % (package_id, package.name, package.installed,  package.upgrade_available, package.description)
+            print out
+    else:
+        print >>stdout, "Nothing found!"
+
+
+cdef re_search(search_patterns=[]):
+    cdef:
+        object package_id
+        object package
+        dict packages_found = {}
+        unicode search_pattern
+        object re_pattern
+        unicode keyword
+        object version
+        object rev
+        object date
+        object out
+    for search_pattern in search_patterns:
+        pattern = re.compile(search_pattern)
+        for package_id, package in package_list.items():
+            if pattern.search(package_id):
+                packages_found[package.package_id] = package
+                continue
+            for keyword in package.keywords:
+                if pattern.search(keyword):
+                    packages_found[package.package_id] = package
+                    continue
         #print package_id
     if len(packages_found) > 0:
         for package_id, package in packages_found.items():

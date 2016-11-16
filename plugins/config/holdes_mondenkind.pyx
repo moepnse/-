@@ -2160,6 +2160,7 @@ cdef int l_register_package (lua_State *L):
         list upgrade_cmds = []
         list uninstall_cmds = []
         list keywords = []
+        list dependencies_list = []
         unicode description = lua_string_to_python_unicode(L, 10)
         unicode icon = lua_string_to_python_unicode(L, 12)
         unicode icon_type = lua_string_to_python_unicode(L, 13)
@@ -2173,7 +2174,29 @@ cdef int l_register_package (lua_State *L):
     get_cmds(L, 8, package_list, upgrade_cmds, package_list._status_handler)
     get_cmds(L, 9, package_list, uninstall_cmds, package_list._status_handler)
     get_table_as_list(L, 11, keywords)
-    package_list[package_id] = Package(package_id, name, version, rev, installed, install_cmds, upgrade_available, upgrade_cmds, uninstall_cmds, description, keywords, icon, icon_type, package_list, package_list._connection_list, [], package_list._log, package_list._status_handler)
+    get_table_as_list(L, 14, dependencies_list, (
+                    None, 
+                    {   DICT: (
+                                None,
+                                {   "dependencies":
+                                        {   ARRAY: (
+                                                {   DICT: (
+                                                        None,
+                                                        {   "package_id": { STRING: None},
+                                                            "installed": { BOOLEAN: None}
+                                                        }
+                                                    )
+                                                }, 
+                                                None
+                                            )
+                                        }
+                                }
+                            )
+                        }
+                    )
+                )
+
+    package_list[package_id] = Package(package_id, name, version, rev, installed, install_cmds, upgrade_available, upgrade_cmds, uninstall_cmds, description, keywords, icon, icon_type, package_list, package_list._connection_list, dependencies_list, package_list._log, package_list._status_handler)
     return 1
 
 

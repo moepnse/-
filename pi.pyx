@@ -405,7 +405,7 @@ cdef info(packages=[]):
         bint found
 
     for package_id in packages:
-        found = _info(package_id, package_list)
+        found = _info(package_list, package_id)
         for _package_list in package_lists:
             found = _info(package_id, _package_list)
         if not found:

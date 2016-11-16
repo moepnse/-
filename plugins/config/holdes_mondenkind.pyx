@@ -2169,7 +2169,7 @@ cdef int l_register_package (lua_State *L):
 
     lua_getglobal(L, 'p_package_list')
     p_package_list = <PyObject*>lua_touserdata (L, -1)
-    package_list = <object>p_package_list        
+    package_list = <object>p_package_list
     get_cmds(L, 7, package_list, install_cmds, package_list._status_handler)
     get_cmds(L, 8, package_list, upgrade_cmds, package_list._status_handler)
     get_cmds(L, 9, package_list, uninstall_cmds, package_list._status_handler)

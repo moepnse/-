@@ -38,6 +38,7 @@ goto:eof
 :build_x86
     echo build_x86
     set MACHINE=X86
+    set PD=/D_WIN32
     set PYTHON_EXE=%PYTHON32_EXE%
     set PYTHON_INCLUDE_PATH=%PYTHON32_INCLUDE_PATH%
     set PYTHON_LIBS_PATH=%PYTHON32_LIBS_PATH%
@@ -51,6 +52,7 @@ goto:eof
 :build_x64
     echo build_x64
     set MACHINE=X64
+    set PD=/D_WIN64 /D_AMD64_
     set PYTHON_EXE=%PYTHON64_EXE%
     set PYTHON_INCLUDE_PATH=%PYTHON64_INCLUDE_PATH%
     set PYTHON_LIBS_PATH=%PYTHON64_LIBS_PATH%
@@ -197,7 +199,8 @@ goto:eof
         rc.exe %BRANDING%%~1.rc
         SET _LIBS = %_LIBS% %~1.res %~2 
     )
-    cl.exe  /nologo /Ox /MD /W3 /GS- /DNDEBUG -I%PYTHON_INCLUDE_PATH% /Tc%~1.c /link /LIBPATH:%PYTHON_LIBS_PATH% %_LIBS% /OUT:"%~1.exe" /SUBSYSTEM:CONSOLE /MACHINE:%MACHINE%
+
+    cl.exe  /nologo /Ox /MD /W3 /GS- /DNDEBUG %PD% -I%PYTHON_INCLUDE_PATH% /Tc%~1.c /link /LIBPATH:%PYTHON_LIBS_PATH% %_LIBS% /OUT:"%~1.exe" /SUBSYSTEM:CONSOLE /MACHINE:%MACHINE%
 
     REM link.exe %~2 /nologo /subsystem:console /machine:%MACHINE% /LIBPATH:c:\Python27\libs /LIBPATH:c:\Python27\PCbuild /out:"%~1.exe"  %~1.obj 
 

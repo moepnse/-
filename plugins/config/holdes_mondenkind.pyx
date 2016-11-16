@@ -2161,8 +2161,8 @@ cdef int l_register_package (lua_State *L):
         list uninstall_cmds = []
         list keywords = []
         unicode description = lua_string_to_python_unicode(L, 10)
-        unicode icon = lua_string_to_python_unicode(L, 11)
-        unicode icon_type = lua_string_to_python_unicode(L, 12)
+        unicode icon = lua_string_to_python_unicode(L, 12)
+        unicode icon_type = lua_string_to_python_unicode(L, 13)
         PyObject* p_package_list
         PackageList package_list
 

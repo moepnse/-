@@ -7,7 +7,7 @@ from Cython.Build import cythonize
 
 packages = ("libs", "libs.handlers", "libs.win", "plugins.logging", "plugins.config", "plugins.protocol_handlers")
 cmdclass = {'build_ext': build_ext}
-compile_args = []
+compile_args = os.environ['PD'].split(" ")
 extra_link_args = [r'/MACHINE:%s' % os.environ['MACHINE']] if "win" in sys.platform else []
 library_dir = [os.environ['PYTHON_LIBS_PATH']] if "win" in sys.platform else []
 include_dirs = [os.environ['PYTHON_INCLUDE_PATH']] if "win" in sys.platform else [os.path.dirname(os.path.realpath(__file__))]

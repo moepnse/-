@@ -185,26 +185,36 @@ except Exception as e:
 
 cdef main():
 
+    cdef:
+        str action
+        str filesystem_encoding
+        str arg
+        list argv
+
     #install_list = install_list_factory(settings.install_list)
 
     print "settings path: %s" % settings.path
     if len(sys.argv) == 1:
         print __version__
         return True
+
     action = sys.argv[1]
 
+    filesystem_encoding = sys.getfilesystemencoding()
+    argv = [arg.decode(sys.getfilesystemencoding()) for arg in sys.argv]
+
     if action == INSTALL:
-        install(sys.argv[2:])
+        install(argv[2:])
     elif action == UPGRADE:
-        upgrade(sys.argv[2:])
+        upgrade(argv[2:])
     elif action == REMOVE:
-        uninstall(sys.argv[2:])
+        uninstall(argv[2:])
     elif action == UNINSTALL:
-        uninstall(sys.argv[2:])
+        uninstall(argv[2:])
     elif action == SEARCH:
-        search(sys.argv[2:])
+        search(argv[2:])
     elif action == INFO:
-        info(sys.argv[2:])
+        info(argv[2:])
     elif action == LIST:
         list_packages()
     elif action == LIST_SOFTWARE:

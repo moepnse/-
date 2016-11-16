@@ -99,7 +99,7 @@ do
     upgrade_cmds = {KILL_FF_CMD, INSTALL_CMD}
     uninstall_cmds = {KILL_FF_CMD, UNINSTALL_CMD}
 
-    register_package('firefox_esr', [[Mozilla Firefox]], "45.2.0", "1", firefox_esr_is_installed(), firefox_esr_is_upgrade_avalaible(), install_cmds, upgrade_cmds, uninstall_cmds, "", {})
+    register_package('firefox_esr', [[Mozilla Firefox]], "45.2.0", "1", firefox_esr_is_installed(), firefox_esr_is_upgrade_avalaible(), install_cmds, upgrade_cmds, uninstall_cmds, "", {}, "", "", {{package_id = "firefox", installed = false}})
 end
 
 set_package_check_functions('firefox_esr', 'firefox_esr_is_installed', 'firefox_esr_is_upgrade_avalaible')
@@ -198,7 +198,7 @@ do
     upgrade_cmds = {KILL_FF_CMD, INSTALL_CMD}
     uninstall_cmds = {KILL_FF_CMD, UNINSTALL_CMD}
 
-    register_package('firefox', [[Mozilla Firefox]], "50.0.0", "1", firefox_is_installed(), firefox_is_upgrade_avalaible(), install_cmds, upgrade_cmds, uninstall_cmds, "", {})
+    register_package('firefox', [[Mozilla Firefox]], "50.0.0", "1", firefox_is_installed(), firefox_is_upgrade_avalaible(), install_cmds, upgrade_cmds, uninstall_cmds, "", {}, "", "", {{package_id = "firefox_esr", installed = false}})
 end
 
 set_package_check_functions('firefox', 'firefox_is_installed', 'firefox_is_upgrade_avalaible')

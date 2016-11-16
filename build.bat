@@ -183,6 +183,8 @@ goto:eof
     xcopy /Y %~dp0*.pyd %~dp0package\%MACHINE%\
     xcopy /Y %~dp0*.manifest %~dp0package\%MACHINE%\
     xcopy /Y %~dp0*.reg %~dp0package\%MACHINE%\
+    xcopy /Y %~dp0pi_settings.path %~dp0package\%MACHINE%\
+    xcopy /Y %~dp0settings.path %~dp0package\%MACHINE%\
     xcopy /Y /EXCLUDE:exclude.lst %~dp0*.bat %~dp0package\%MACHINE%\
     xcopy /Y %~dp0*.conf %~dp0package\%MACHINE%\
     xcopy /Y %~dp0set_environment.py %~dp0package\%MACHINE%\

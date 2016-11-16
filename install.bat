@@ -10,6 +10,16 @@ REM    Symbolic Link
 set DEPENDENCIES_SOURCE=pev
 set PI_PATH=%HOMEDRIVE%\pi
 
+IF "%PROCESSOR_ARCHITECTURE%" EQU "amd64" (
+    "%SYSTEMROOT%\SysWOW64\cacls.exe" "%SYSTEMROOT%\SysWOW64\config\system" >nul 2>&1
+) ELSE (
+    "%SYSTEMROOT%\system32\cacls.exe" "%SYSTEMROOT%\system32\config\system" >nul 2>&1
+)
+IF %ERRORLEVEL% NEQ 0 (
+    echo "Error: You do not have administrator rights!"
+    goto :eof
+)
+
 echo Installing Dependencies...
 call %~dp0dependencies\install_dependencies.bat
 if not %PI_PATH% == %~dp0 (

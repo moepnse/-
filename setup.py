@@ -93,7 +93,7 @@ ext_modules = [
         include_dirs = include_dirs + [os.path.join('dependencies', 'lua-5.3.0', 'src')],
         #include_dirs = include_dirs + ([os.path.join('dependencies', 'lua-5.3.0', 'src')] if "win" in sys.platform else []),
         #libraries = (['Advapi32', 'Netapi32', 'Version']  if "win" in sys.platform else []) + ['lua5.3.0', 'luac'],
-        libraries = (['Advapi32', 'Netapi32', 'Version']  if "win" in sys.platform else []) + ['lua'],
+        libraries = (['Advapi32', 'Netapi32', 'Version']  if "win" in sys.platform else []) + ['lua5.3.0'],
         library_dirs = library_dir + [os.path.join('dependencies', 'lua-5.3.0', 'src')]
         #library_dirs = library_dir + ([os.path.join('dependencies', 'lua-5.3.0', 'src')] if "win" in sys.platform else [])
     ),

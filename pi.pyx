@@ -242,6 +242,7 @@ def show_help_text():
 upgrade package_id [package_id2]  ... \tupgrade packages
 uninstall package_id [package_id2] ... \tuninstall packages
 search keyword [keyword2] ... \t\tsearch packages
+re_search expression [expression] ... \tregular expression based package search
 info package_id [package_id2] ... \tshow package information
 list \t\t\t\t\tlist available packages
 show_installed \t\t\t\tshow installed packages

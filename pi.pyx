@@ -388,13 +388,32 @@ cdef list_software():
         print >>stdout, u"%s %s %s %s %s"% (product.display_name, product.display_version, product.version_major, product.version_minor, product.version)
 
 
+cdef unicode _create_dependencies_out(list dependencies_list):
+        cdef:
+            dict dependency
+            list depence_list = []
+            list conflicts_list = []
+            unicode depence_on = u""
+            unicode conflicts_with = u""
+
+        for dependency in dependencies_list:
+            if dependency['installed']:
+                depence_list.append(dependency['package_id'])
+            else:
+                conflicts_list.append(dependency['package_id'])
+
+        depence_on = u" ".join(depence_list)
+        conflicts_with = u" ".join(conflicts_list)
+
+        return u"depence on: %s\r\nconflicts with: %s" % (depence_on, conflicts_with)
+
 cdef bint _info(package_list, package_id):
     cdef:
         bint found = False
     if package_id in package_list:
         found = True
         package = package_list[package_id]
-        print >>stdout, "ID: %s\r\nName: %s\r\nInstall Cmds: %s\r\nUpgrade Cmds: %s\r\nUinstall Cmds: %s\r\nDependencies: %s\r\nInstalled: %s" % (package_id, package.name, repr(package.install_cmds), repr(package.upgrade_cmds), repr(package.uninstall_cmds), repr(package.dependencies_list), INSTALLED[package.installed])
+        print >>stdout, "ID: %s\r\nName: %s\r\nInstall Cmds: %s\r\nUpgrade Cmds: %s\r\nUinstall Cmds: %s\r\n%s\r\nInstalled: %s" % (package_id, package.name, repr(package.install_cmds), repr(package.upgrade_cmds), repr(package.uninstall_cmds), _create_dependencies_out(package.dependencies_list), INSTALLED[package.installed])
     return found
 
 

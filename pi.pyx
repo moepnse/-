@@ -394,7 +394,7 @@ cdef bint _info(package_list, package_id):
     if package_id in package_list:
         found = True
         package = package_list[package_id]
-        print >>stdout, "ID: %s\r\nName: %s\r\nInstall Cmds: %s\r\nUpgrade Cmds: %s\r\nUinstall Cmds: %s\r\nInstalled: %s" % (package_id, package.name, repr(package.install_cmds), repr(package.upgrade_cmds), repr(package.uninstall_cmds), INSTALLED[package.installed])
+        print >>stdout, "ID: %s\r\nName: %s\r\nInstall Cmds: %s\r\nUpgrade Cmds: %s\r\nUinstall Cmds: %s\r\nDependencies: %s\r\nInstalled: %s" % (package_id, package.name, repr(package.install_cmds), repr(package.upgrade_cmds), repr(package.uninstall_cmds), repr(package.dependencies_list), INSTALLED[package.installed])
     return found
 
 

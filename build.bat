@@ -1,11 +1,12 @@
 @echo off
 
-set WIN_INCLUDE_PATH=%ProgramFiles%\Microsoft SDKs\Windows\v6.0A\Include
-set WIN_LIBS_PATH=%ProgramFiles%\Microsoft SDKs\Windows\v6.0A\Libs
-rem FIXME
-set WIN_INCLUDE_PATH=C:\Programm^ Files\Microsoft^ SDKs\Windows\v6.0A\Include
-rem FIXME
-set WIN_LIBS_PATH=C:\Programm^ Files\Microsoft^ SDKs\Windows\v6.0A\Libs
+set WIN_SDK_PATH=%ProgramFiles%\Microsoft SDKs\Windows\v6.0A
+set WIN_INCLUDE_PATH=%WIN_SDK_PATH%\Include
+set WIN_LIBS_PATH=%WIN_SDK_PATH%\Lib
+set VS_PATH=%ProgramFiles(x86)%\Microsoft Visual Studio 9.0
+set VS_VC_PATH=%VS_PATH%\VC
+set VS_INCLUDE_PATH=%VS_VC_PATH%\Include
+set VS_LIBS_PATH=%VS_VC_PATH%\Lib
 set PYTHON32_PATH=%HOMEDRIVE%\Python27_32
 set PYTHON32_EXE=%PYTHON32_PATH%\python.exe
 set PYTHON32_INCLUDE_PATH=%PYTHON32_PATH%\include
@@ -19,7 +20,9 @@ set CYTHON64=%PYTHON64_PATH%\Lib\site-packages\cython.py
 set LUA_INCLUDE_PATH=%~dp0dependencies\lua-5.3.0\src
 set LUA_LIBS_PATH=%~dp0dependencies\lua-5.3.0\src
 set OLD_LIB=%LIB%
+set OLD_LIBPATH=%LIBPATH%
 set OLD_INCLUDE=%INCLUDE%
+set OLD_PATH=%PATH%
 
 set BRANDING=brandings\unicom\
 
@@ -30,19 +33,22 @@ IF /I "%1"=="all" (
     call :build_x64 %2
 )
 
-rem set LIB=%OLD_LIB%
-rem set INCLUDE=%OLD_INCLUDE%
+set LIB=%OLD_LIB%
+set LIBPATH=%OLD_LIBPATH%
+set INCLUDE=%OLD_INCLUDE%
+set PATH=%OLD_PATH%
 
 goto:eof
 
 :build_x86
     echo build_x86
     set MACHINE=X86
-    set PD=/D_WIN32
+    set PD=/D_WIN32 /D_X86_
     set PYTHON_EXE=%PYTHON32_EXE%
     set PYTHON_INCLUDE_PATH=%PYTHON32_INCLUDE_PATH%
     set PYTHON_LIBS_PATH=%PYTHON32_LIBS_PATH%
     set CYTHON=%CYTHON32%
+    set "PATH=%VS_PATH%\Common7\IDE;%VS_VC_PATH%\Bin;%WIN_SDK_PATH%\bin;%PATH%"
     call :set_paths
     IF /I "%1"=="LUA" call :build_lua
     IF /I "%1"=="ALL" call :build_lua
@@ -57,6 +63,9 @@ goto:eof
     set PYTHON_INCLUDE_PATH=%PYTHON64_INCLUDE_PATH%
     set PYTHON_LIBS_PATH=%PYTHON64_LIBS_PATH%
     set CYTHON=%CYTHON64%
+    set "PATH=%VS_PATH%\Common7\IDE;%VS_VC_PATH%\Bin\amd64;%WIN_SDK_PATH%\bin;%PATH%"
+    set "WIN_LIBS_PATH=%WIN_LIBS_PATH%\x64"
+    set "VS_LIBS_PATH=%VS_LIBS_PATH%\amd64"
     call :set_paths
     IF /I "%1"=="LUA" call :build_lua
     IF /I "%1"=="ALL" call :build_lua
@@ -80,27 +89,54 @@ goto:eof
     rem i.e.
     rem IF ERRORLEVEL 0 will return TRUE when the errorlevel is 64 
 
-    echo.%LIB% | findstr /C:"%WIN_LIBS_PATH%" 1>nul
-
-    if errorlevel 0 set LIB=%LIB%%WIN_LIBS_PATH%;
-
-    echo.%INCLUDE% | findstr /C:"%WIN_INCLUDE_PATH%" 1>nul
-
-    if errorlevel 0 (
-        set INCLUDE=%INCLUDE%%WIN_INCLUDE_PATH%;
+    rem reset PATH environment variable
+    for /f "usebackq tokens=1,2*" %%a in (`reg query "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Environment" /v "PATH"`) do (
+        if %errorlevel% == 0 (
+            rem set "%%a=%%c"
+        )
     )
 
+    echo "Win libs"
+    echo.%LIB% | findstr /C:"%WIN_LIBS_PATH%" 1>nul
+
+    if errorlevel 0 set "LIB=%LIB%%WIN_LIBS_PATH%;"
+
+    echo.%LIBPATH% | findstr /C:"%WIN_LIBS_PATH%" 1>nul
+
+    if errorlevel 0 set "LIBPATH=%LIBPATH%%WIN_LIBS_PATH%;"
+
+    echo "Win include"
+    echo.%INCLUDE% | findstr /C:"%WIN_INCLUDE_PATH%" 1>nul
+
+    if errorlevel 0 set "INCLUDE=%INCLUDE%%WIN_INCLUDE_PATH%;"
+
+    echo "VS libs"
+    echo.%LIB% | findstr /C:"%VS_LIBS_PATH%" 1>nul
+
+    if errorlevel 0 set "LIB=%LIB%%VS_LIBS_PATH%;"
+
+    echo.%LIBPATH% | findstr /C:"%VS_LIBS_PATH%" 1>nul
+
+    if errorlevel 0 set "LIBPATH=%LIBPATH%%VS_LIBS_PATH%;"
+
+    echo "VS include"
+    echo.%INCLUDE% | findstr /C:"%VS_INCLUDE_PATH%" 1>nul
+
+    if errorlevel 0 set "INCLUDE=%INCLUDE%%VS_INCLUDE_PATH%;"
+
+    echo "Python LIBS"
     echo.%LIB% | findstr /C:"%PYTHON_LIBS_PATH%" 1>nul
 
-    if errorlevel 0 set LIB=%LIB%%PYTHON_LIBS_PATH%;
+    if errorlevel 0 set "LIB=%LIB%%PYTHON_LIBS_PATH%;"
 
+    echo "Python Include"
     echo.%INCLUDE% | findstr /C:"%PYTHON_INCLUDE_PATH%" 1>nul
 
-    if errorlevel 0 set INCLUDE=%INCLUDE%%PYTHON_INCLUDE_PATH%;
+    if errorlevel 0 set "INCLUDE=%INCLUDE%%PYTHON_INCLUDE_PATH%;
 
     echo.%INCLUDE% | findstr /C:"%LUA_INCLUDE_PATH%" 1>nul
 
-    if errorlevel 0 set INCLUDE=%INCLUDE%%LUA_INCLUDE_PATH%;
+    if errorlevel 0 set "INCLUDE=%INCLUDE%%LUA_INCLUDE_PATH%;
 
 
     echo.%LIB% | findstr /C:"%LUA_LIBS_PATH%" 1>nul
@@ -202,7 +238,7 @@ goto:eof
         SET _LIBS = %_LIBS% %~1.res %~2 
     )
 
-    cl.exe  /nologo /Ox /MD /W3 /GS- /DNDEBUG %PD% -I%PYTHON_INCLUDE_PATH% /Tc%~1.c /link /LIBPATH:%PYTHON_LIBS_PATH% %_LIBS% /OUT:"%~1.exe" /SUBSYSTEM:CONSOLE /MACHINE:%MACHINE%
+    cl.exe  /nologo /Ox /MD /W3 /GS- /DNDEBUG %PD% -I"%PYTHON_INCLUDE_PATH%" /Tc%~1.c /link /LIBPATH:"%PYTHON_LIBS_PATH%" %_LIBS% /OUT:"%~1.exe" /SUBSYSTEM:CONSOLE /MACHINE:%MACHINE%
 
     REM link.exe %~2 /nologo /subsystem:console /machine:%MACHINE% /LIBPATH:c:\Python27\libs /LIBPATH:c:\Python27\PCbuild /out:"%~1.exe"  %~1.obj 
 

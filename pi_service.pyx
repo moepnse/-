@@ -371,7 +371,7 @@ cdef bint get_domain_info(DSROLE_PRIMARY_DOMAIN_INFO_BASIC **info):
 
     dw = DsRoleGetPrimaryDomainInformation(NULL, DsRolePrimaryDomainInfoBasic, <PBYTE *>info)
     if dw != ERROR_SUCCESS:
-        print >>sys.stderr, "DsRoleGetPrimaryDomainInformation() failed with error code: %d" % GetLastError
+        print >>sys.stderr, "DsRoleGetPrimaryDomainInformation() failed with error code: %d" % GetLastError()
         return False
     return True
 

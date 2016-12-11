@@ -719,7 +719,7 @@ cdef extern from *:
 
 #cdef extern from "IntSafe.h":
 
-    DWORD GetLastError() nogil
+    DWORD __stdcall GetLastError() nogil
 
     void SetLastError(
         DWORD dwErrCode
@@ -1755,7 +1755,7 @@ cdef extern from *:
     ctypedef _DSROLE_OPERATION_STATE_INFO DSROLE_OPERATION_STATE_INFO
     ctypedef _DSROLE_OPERATION_STATE_INFO *PDSROLE_OPERATION_STATE_INFO
 
-    DWORD DsRoleGetPrimaryDomainInformation(
+    DWORD __stdcall DsRoleGetPrimaryDomainInformation(
         LPCWSTR lpServer,
         DSROLE_PRIMARY_DOMAIN_INFO_LEVEL InfoLevel,
         PBYTE *Buffer 

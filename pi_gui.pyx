@@ -105,32 +105,9 @@ class ActionField(wx.Panel):
         self._lb_actions.Append(("upgrade", self._package.name, self._package.version))
 
 
-class ActionsSizer(wx.BoxSizer):
-    def __init__(self):
-        wx.BoxSizer.__init__(self, wx.VERTICAL)
-
-
 class ActionFieldSizer(wx.BoxSizer):
     def __init__(self):
         wx.BoxSizer.__init__(self, wx.HORIZONTAL)
-
-
-class ActionsHSPanel(wx.Panel):
-    def __init__(self, parent):
-
-        wx.Panel.__init__(self, parent)
-
-        self._lb_actions = ActionList(self, 3)
-        self._lb_actions.InsertColumn(0, "Action")
-        self._lb_actions.InsertColumn(1, "Package Name")
-        self._lb_actions.InsertColumn(2, "Version")
-
-        self._bmp_handle_actions = wx.Bitmap("imgs/icons/16x16/h.png", wx.BITMAP_TYPE_ANY)
-        self._cmd_handle_actions = wx.BitmapButton(self, id=wx.ID_ANY,  bitmap=self._bmp_handle_actions)
-
-        self._action_sizer = ActionsSizer()
-        self.SetSizer(self._action_sizer)
-        self._action_sizer.AddMany(((self._lb_actions, 1, wx.EXPAND), (self._cmd_handle_actions, 0, wx.EXPAND)))
 
 
 class MainWindow(wx.Frame):
@@ -161,9 +138,12 @@ class MainWindow(wx.Frame):
         self._lb_packages.InsertColumn(5, "Description")
         self._lb_packages.InsertColumn(6, "Action")
 
-        self._actions_hs_panel = ActionsHSPanel(self._h_splitter)
+        self._lb_actions = ActionList(self._h_splitter, 3)
+        self._lb_actions.InsertColumn(0, "Action")
+        self._lb_actions.InsertColumn(1, "Package Name")
+        self._lb_actions.InsertColumn(2, "Version")
 
-        self._h_splitter.SplitHorizontally(self._lb_packages, self._actions_hs_panel)
+        self._h_splitter.SplitHorizontally(self._lb_packages, self._lb_actions)
         self._h_splitter.SetSashGravity(0.5)
         self._action_list = []
         for package_id, package in package_list.iteritems():
@@ -181,12 +161,11 @@ class MainWindow(wx.Frame):
             else:
                 colour = wx.Colour(214,219, 99)
             self._lb_packages.SetItemBackgroundColour(index, colour)
-            action_field = ActionField(self._lb_packages, package, self._actions_hs_panel._lb_actions)
+            action_field = ActionField(self._lb_packages, package, self._lb_actions)
             action_field.SetBackgroundColour(colour)
             self._lb_packages.SetItemWindow(index, col=6, wnd=action_field, expand=True)
 
         self.Show()
-
 
 app = wx.App(False)
 win = MainWindow(None)

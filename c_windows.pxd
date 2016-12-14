@@ -107,16 +107,16 @@ IF UNAME_SYSNAME == "Windows":
 cdef extern from *:
     DWORD MAX_STR_BLOCKREASON = 256
 
-    BOOL ShutdownBlockReasonCreate(
+    BOOL __stdcall ShutdownBlockReasonCreate(
         HWND hWnd,
         LPCWSTR pwszReason) nogil
 
-    BOOL ShutdownBlockReasonQuery(
+    BOOL __stdcall ShutdownBlockReasonQuery(
         HWND hWnd,
         LPWSTR pwszBuff,
         DWORD *pcchBuff) nogil
 
-    BOOL ShutdownBlockReasonDestroy(
+    BOOL __stdcall ShutdownBlockReasonDestroy(
         HWND hWnd)
 
 #cdef extern from "WinNT.h":
@@ -590,26 +590,26 @@ cdef extern from *:
     ctypedef _OVERLAPPED OVERLAPPED
     ctypedef _OVERLAPPED *LPOVERLAPPED;
 
-    BOOL SetEvent(
+    BOOL __stdcall SetEvent(
         HANDLE hEvent
     ) nogil
 
-    BOOL ResetEvent(
+    BOOL __stdcall ResetEvent(
         HANDLE hEvent
     ) nogil
 
-    BOOL PulseEvent(
+    BOOL __stdcall PulseEvent(
         HANDLE hEvent
     ) nogil
 
-    HANDLE CreateEventW(
+    HANDLE __stdcall CreateEventW(
         LPSECURITY_ATTRIBUTES lpEventAttributes,
         BOOL bManualReset,
         BOOL bInitialState,
         LPCWSTR lpName
     ) nogil
 
-    BOOL DuplicateTokenEx(
+    BOOL __stdcall DuplicateTokenEx(
         HANDLE hExistingToken,
         DWORD dwDesiredAccess,
         LPSECURITY_ATTRIBUTES lpTokenAttributes,
@@ -617,27 +617,27 @@ cdef extern from *:
         TOKEN_TYPE TokenType,
         PHANDLE phNewToken) nogil
 
-    BOOL LookupPrivilegeValueW(
+    BOOL __stdcall LookupPrivilegeValueW(
         LPCWSTR lpSystemName,
         LPCWSTR lpName,
         PLUID   lpLuid
     ) nogil
 
-    BOOL OpenProcessToken (
+    BOOL __stdcall OpenProcessToken (
         HANDLE ProcessHandle,
         DWORD DesiredAccess,
         PHANDLE TokenHandle
     ) nogil
 
-    HANDLE OpenProcess(
+    HANDLE __stdcall OpenProcess(
         DWORD dwDesiredAccess,
         BOOL bInheritHandle,
         DWORD dwProcessId
     ) nogil
 
-    HANDLE GetCurrentProcess() nogil
+    HANDLE __stdcall GetCurrentProcess() nogil
 
-    BOOL GetTokenInformation (
+    BOOL __stdcall GetTokenInformation (
         HANDLE TokenHandle,
         TOKEN_INFORMATION_CLASS TokenInformationClass,
         LPVOID TokenInformation,
@@ -645,7 +645,7 @@ cdef extern from *:
         PDWORD ReturnLength
     ) nogil
 
-    BOOL SetTokenInformation (
+    BOOL __stdcall SetTokenInformation (
         HANDLE TokenHandle,
         TOKEN_INFORMATION_CLASS TokenInformationClass,
         LPVOID TokenInformation,
@@ -653,7 +653,7 @@ cdef extern from *:
     ) nogil
 
 
-    BOOL AdjustTokenPrivileges (
+    BOOL __stdcall AdjustTokenPrivileges (
         HANDLE TokenHandle,
         BOOL DisableAllPrivileges,
         PTOKEN_PRIVILEGES NewState,
@@ -662,7 +662,7 @@ cdef extern from *:
         PDWORD ReturnLength
     ) nogil
 
-    BOOL ReportEventW (
+    BOOL __stdcall ReportEventW (
         HANDLE     hEventLog,
         WORD       wType,
         WORD       wCategory,
@@ -674,7 +674,7 @@ cdef extern from *:
         LPVOID lpRawData
     ) nogil
 
-    BOOL GetComputerNameW (
+    BOOL __stdcall GetComputerNameW (
         LPWSTR lpBuffer,
         LPDWORD nSize
     ) nogil
@@ -694,25 +694,25 @@ cdef extern from *:
 
     ctypedef _COMPUTER_NAME_FORMAT COMPUTER_NAME_FORMAT
 
-    #BOOL GetComputerNameExW (
+    #BOOL __stdcall GetComputerNameExW (
     #    COMPUTER_NAME_FORMAT NameType,
     #    LPWSTR lpBuffer,
     #    LPDWORD nSize
     #) nogil
 
-    BOOL GetComputerNameExW (
+    BOOL __stdcall GetComputerNameExW (
         DWORD NameType,
         LPWSTR lpBuffer,
         LPDWORD nSize
     ) nogil
 
-    BOOL GetComputerNameExA (
+    BOOL __stdcall GetComputerNameExA (
         COMPUTER_NAME_FORMAT NameType,
         LPSTR lpBuffer,
         LPDWORD nSize
     ) nogil
 
-    HANDLE GetStdHandle(
+    HANDLE __stdcall GetStdHandle(
         DWORD nStdHandle
     ) nogil
 
@@ -721,7 +721,7 @@ cdef extern from *:
 
     DWORD __stdcall GetLastError() nogil
 
-    void SetLastError(
+    void __stdcall SetLastError(
         DWORD dwErrCode
     ) nogil
 
@@ -729,7 +729,7 @@ cdef extern from *:
     DWORD DELETE
 
 #cdef extern from "WinReg.h":
-    BOOL InitiateSystemShutdownW(
+    BOOL __stdcall InitiateSystemShutdownW(
         LPWSTR lpMachineName,
         LPWSTR lpMessage,
         DWORD dwTimeout,
@@ -737,7 +737,7 @@ cdef extern from *:
         BOOL bRebootAfterShutdown
     ) nogil
 
-    BOOL AbortSystemShutdownW(
+    BOOL __stdcall AbortSystemShutdownW(
         LPWSTR lpMachineName
     ) nogil
 
@@ -853,22 +853,22 @@ cdef extern from *:
     DWORD SERVICE_INTERROGATE            = 0x0080
     DWORD SERVICE_USER_DEFINED_CONTROL   = 0x0100
 
-    BOOL CloseServiceHandle(
+    BOOL __stdcall CloseServiceHandle(
         SC_HANDLE   hSCObject
     ) nogil
 
-    BOOL ControlService(
+    BOOL __stdcall ControlService(
         SC_HANDLE           hService,
         DWORD               dwControl,
         LPSERVICE_STATUS    lpServiceStatus
     ) nogil
 
-    BOOL QueryServiceStatus(
+    BOOL __stdcall QueryServiceStatus(
         SC_HANDLE           hService,
         LPSERVICE_STATUS    lpServiceStatus
     ) nogil
 
-    BOOL QueryServiceStatusEx(
+    BOOL __stdcall QueryServiceStatusEx(
         SC_HANDLE           hService,
         SC_STATUS_TYPE      InfoLevel,
         LPBYTE              lpBuffer,
@@ -876,23 +876,23 @@ cdef extern from *:
         LPDWORD             pcbBytesNeeded
     ) nogil
 
-    SC_HANDLE OpenServiceW(
+    SC_HANDLE __stdcall OpenServiceW(
         SC_HANDLE           hSCManager,
         LPCWSTR             lpServiceName,
         DWORD               dwDesiredAccess
     ) nogil
 
-    BOOL DeleteService(
+    BOOL __stdcall DeleteService(
         SC_HANDLE   hService
     ) nogil
 
-    SC_HANDLE OpenSCManagerW(
+    SC_HANDLE __stdcall OpenSCManagerW(
         LPCWSTR lpMachineName,
         LPCWSTR lpDatabaseName,
         DWORD dwDesiredAccess
     ) nogil
 
-    SC_HANDLE CreateServiceW(
+    SC_HANDLE __stdcall CreateServiceW(
         SC_HANDLE   hSCManager,
         LPCWSTR     lpServiceName,
         LPCWSTR     lpDisplayName,
@@ -915,7 +915,7 @@ cdef extern from *:
     DWORD SERVICE_TYPE_ALL
     DWORD SERVICE_WIN32
 
-    HANDLE CreateNamedPipe(
+    HANDLE __stdcall CreateNamedPipe(
         LPCTSTR lpName,
         DWORD dwOpenMode,
         DWORD dwPipeMode,
@@ -949,16 +949,16 @@ cdef extern from *:
     ctypedef _OVERLAPPED *LPOVERLAPPED
     ctypedef DWORD *LPDWORD
 
-    bint ConnectNamedPipe(
+    bint __stdcall ConnectNamedPipe(
         HANDLE hNamedPipe,
         LPOVERLAPPED lpOverlapped
     ) nogil
 
-    bint DisconnectNamedPipe(
+    bint __stdcall DisconnectNamedPipe(
         HANDLE hNamedPipe
     ) nogil
 
-    bint WriteFile(
+    bint __stdcall WriteFile(
         HANDLE hFile,
         LPCVOID lpBuffer,
         DWORD nNumberOfBytesToWrite,
@@ -966,7 +966,7 @@ cdef extern from *:
         LPOVERLAPPED lpOverlapped
     ) nogil
 
-    bint ReadFile(
+    bint __stdcall ReadFile(
         HANDLE hFile,
         LPVOID lpBuffer,
         DWORD nNumberOfBytesToRead,
@@ -974,7 +974,7 @@ cdef extern from *:
         LPOVERLAPPED lpOverlapped
     ) nogil
 
-    HANDLE CreateFile(
+    HANDLE __stdcall CreateFile(
         LPCTSTR lpFileName,
         DWORD dwDesiredAccess,
         DWORD dwShareMode,
@@ -984,7 +984,7 @@ cdef extern from *:
         HANDLE hTemplateFile
     ) nogil
 
-    bint CloseHandle(
+    bint __stdcall CloseHandle(
         HANDLE hObject
     ) nogil
 
@@ -1001,7 +1001,7 @@ cdef extern from *:
 
     HANDLE INVALID_HANDLE_VALUE
 
-    DWORD WaitForSingleObject(
+    DWORD __stdcall WaitForSingleObject(
         HANDLE hHandle,
         DWORD dwMilliseconds
     ) nogil
@@ -1022,7 +1022,7 @@ cdef extern from *:
     ctypedef LPWSTR LPTST
     ctypedef LPWSTR LPTSTR
 
-    UINT WinExec(
+    UINT __stdcall WinExec(
             LPCSTR lpCmdLine,
             UINT uCmdShow
     ) nogil
@@ -1043,27 +1043,27 @@ cdef extern from *:
     ctypedef NETRESOURCEW NETRESOURCE
     ctypedef LPNETRESOURCEW *LPNETRESOURCE
 
-    DWORD WNetAddConnection2(
+    DWORD  WNetAddConnection2(
         LPNETRESOURCE lpNetResource,
         LPCTSTR lpPassword,
         LPCTSTR lpUsername,
         DWORD dwFlags
     ) nogil
 
-    DWORD WNetAddConnection2W(
+    DWORD __stdcall WNetAddConnection2W(
         LPNETRESOURCEW lpNetResource,
         LPCWSTR       lpPassword,
         LPCWSTR       lpUserName,
         DWORD          dwFlags
     ) nogil
 
-    DWORD WNetCancelConnection2(
+    DWORD __stdcall WNetCancelConnection2(
         LPCTSTR lpName,
         DWORD dwFlags,
         bint fForce
     ) nogil
 
-    DWORD WNetCancelConnection2W(
+    DWORD __stdcall WNetCancelConnection2W(
         LPCWSTR lpName,
         DWORD    dwFlags,
         bint     fForce
@@ -1149,7 +1149,7 @@ cdef extern from *:
     DWORD ACCESS_PERM
     DWORD ACCESS_ALL 
 
-    NET_API_STATUS NetShareEnum(
+    NET_API_STATUS __stdcall NetShareEnum(
         LPWSTR servername,
         DWORD level,
         LPBYTE *bufptr,
@@ -1159,7 +1159,7 @@ cdef extern from *:
         LPDWORD resume_handle
     ) nogil
 
-    NET_API_STATUS NetApiBufferFree(
+    NET_API_STATUS __stdcall NetApiBufferFree(
         LPVOID Buffer
     ) nogil
 
@@ -1237,7 +1237,7 @@ cdef extern from *:
     ctypedef _PROCESS_INFORMATION PROCESS_INFORMATION
     ctypedef _PROCESS_INFORMATION *LPPROCESS_INFORMATION
 
-    bint CreateProcess(
+    bint __stdcall CreateProcess(
         LPCTSTR lpApplicationName,
         LPTSTR lpCommandLine,
         LPSECURITY_ATTRIBUTES lpProcessAttributes,
@@ -1250,7 +1250,7 @@ cdef extern from *:
         LPPROCESS_INFORMATION lpProcessInformation
     ) nogil
 
-    bint CreateProcessW(
+    bint __stdcall CreateProcessW(
         LPCWSTR lpApplicationName,
         LPWSTR lpCommandLine,
         LPSECURITY_ATTRIBUTES lpProcessAttributes,
@@ -1263,7 +1263,7 @@ cdef extern from *:
         LPPROCESS_INFORMATION lpProcessInformation
     ) nogil
 
-    BOOL CreateProcessAsUserW (
+    BOOL __stdcall CreateProcessAsUserW (
         HANDLE hToken,
         LPCWSTR lpApplicationName,
         LPWSTR lpCommandLine,
@@ -1283,23 +1283,23 @@ cdef extern from *:
     DWORD CREATE_NEW_CONSOLE = 0x00000010
     DWORD CREATE_UNICODE_ENVIRONMENT = 0x00000400
 
-    bint GetExitCodeProcess(
+    bint __stdcall GetExitCodeProcess(
         HANDLE hProcess,
         LPDWORD lpExitCode
     ) nogil
 
     DWORD INFINITE
 
-    bint DeregisterEventSource(
+    bint __stdcall DeregisterEventSource(
         HANDLE hEventLog
     ) nogil
 
-    HANDLE RegisterEventSource(
+    HANDLE __stdcall RegisterEventSource(
         LPCTSTR lpUNCServerName,
         LPCTSTR lpSourceName
     ) nogil
 
-    bint ReportEvent(
+    bint __stdcall ReportEvent(
         HANDLE hEventLog,
         WORD wType,
         WORD wCategory,
@@ -1318,7 +1318,7 @@ cdef extern from *:
     DWORD EVENTLOG_INFORMATION_TYPE
     DWORD EVENTLOG_WARNING_TYPE
 
-    bint CopyFile(
+    bint __stdcall CopyFile(
         LPCTSTR lpExistingFileName,
         LPCTSTR lpNewFileName,
         bint bFailIfExists
@@ -1390,7 +1390,7 @@ cdef extern from *:
         size_t cnt
     )
 
-    VOID Sleep(
+    VOID __stdcall Sleep(
         DWORD dwMilliseconds
     ) nogil
 
@@ -1411,40 +1411,40 @@ cdef extern from *:
 
     ctypedef tagVS_FIXEDFILEINFO VS_FIXEDFILEINFO
 
-    BOOL GetFileVersionInfo(
+    BOOL __stdcall GetFileVersionInfo(
         LPCTSTR lptstrFilename,
         DWORD dwHandle,
         DWORD dwLen,
         LPVOID lpData
     ) nogil
 
-    BOOL GetFileVersionInfoW(
+    BOOL __stdcall GetFileVersionInfoW(
         LPCWSTR lptstrFilename, 
         DWORD dwHandle,
         DWORD dwLen,
         LPVOID lpData
         ) nogil
 
-    BOOL VerQueryValue(
+    BOOL __stdcall VerQueryValue(
         LPCVOID pBlock,
         LPCTSTR lpSubBlock,
         LPVOID *lplpBuffer,
         PUINT puLen
     ) nogil
 
-    BOOL VerQueryValueW(
+    BOOL __stdcall VerQueryValueW(
         LPCVOID pBlock,
         LPCWSTR lpSubBlock,
         LPVOID * lplpBuffer,
         PUINT puLen
     ) nogil
 
-    DWORD GetFileVersionInfoSize(
+    DWORD __stdcall GetFileVersionInfoSize(
         LPCTSTR lptstrFilename,
         LPDWORD lpdwHandle
     ) nogil
 
-    DWORD GetFileVersionInfoSizeW(
+    DWORD __stdcall GetFileVersionInfoSizeW(
         LPCWSTR lptstrFilename,
         LPDWORD lpdwHandle
     ) nogil
@@ -1475,17 +1475,17 @@ cdef extern from *:
        WORD wValue
     )
 
-    DWORD GetVersion() nogil
+    DWORD __stdcall GetVersion() nogil
 
     #ctypedef BOOL (CALLBACK* NAMEENUMPROCW)(LPWSTR, LPARAM)
     #ctypedef NAMEENUMPROCW   WINSTAENUMPROCW
 
-    #BOOL EnumWindowStationsW(
+    #BOOL __stdcall EnumWindowStationsW(
     #    WINSTAENUMPROCW lpEnumFunc,
     #    LPARAM lParam
     #) nogil
 
-    BOOL DuplicateTokenEx(
+    BOOL __stdcall DuplicateTokenEx(
         HANDLE hExistingToken,
         DWORD dwDesiredAccess,
         LPSECURITY_ATTRIBUTES lpTokenAttributes,
@@ -1505,7 +1505,7 @@ cdef extern from *:
     DWORD TOKEN_ADJUST_SESSIONID = 0x0100
     DWORD TOKEN_ALL_ACCESS
 
-    DWORD GetModuleFileNameW(
+    DWORD __stdcall GetModuleFileNameW(
         HMODULE hModule,
         LPWCH lpFilename,
         DWORD nSize
@@ -1527,22 +1527,22 @@ IF UNAME_SYSNAME == "Windows":
 
 
 cdef extern from *:
-    BOOL CreateEnvironmentBlock(
+    BOOL __stdcall CreateEnvironmentBlock(
         LPVOID *lpEnvironment,
         HANDLE  hToken,
         BOOL    bInherit
     ) nogil
 
-    BOOL DestroyEnvironmentBlock(
+    BOOL __stdcall DestroyEnvironmentBlock(
         LPVOID  lpEnvironment
     ) nogil
 
-    BOOL GetProfilesDirectoryW(
+    BOOL __stdcall GetProfilesDirectoryW(
         LPWSTR lpProfilesDir,
         LPDWORD lpcchSize
     ) nogil
 
-    BOOL GetUserProfileDirectoryW(
+    BOOL __stdcall GetUserProfileDirectoryW(
         HANDLE  hToken,
         LPWSTR lpProfileDir,
         LPDWORD lpcchSize
@@ -1599,7 +1599,7 @@ cdef extern from *:
         PHANDLE phToken
     ) nogil
 
-    DWORD WTSGetActiveConsoleSessionId() nogil
+    DWORD __stdcall WTSGetActiveConsoleSessionId() nogil
 
     struct _WTS_SESSION_INFOW:
         DWORD SessionId                 # session id
@@ -1609,7 +1609,7 @@ cdef extern from *:
     ctypedef _WTS_SESSION_INFOW WTS_SESSION_INFOW
     ctypedef _WTS_SESSION_INFOW* PWTS_SESSION_INFOW
 
-    BOOL WTSEnumerateSessionsW(
+    BOOL __stdcall WTSEnumerateSessionsW(
         HANDLE hServer,
         DWORD Reserved,
         DWORD Version,
@@ -1617,7 +1617,7 @@ cdef extern from *:
         DWORD * pCount
     ) nogil
 
-    BOOL WTSQuerySessionInformationW(
+    BOOL __stdcall WTSQuerySessionInformationW(
         HANDLE hServer,
         DWORD SessionId,
         WTS_INFO_CLASS WTSInfoClass,
@@ -1625,7 +1625,7 @@ cdef extern from *:
         DWORD * pBytesReturned
     ) nogil
 
-    VOID WTSFreeMemory(PVOID pMemory) nogil
+    VOID __stdcall WTSFreeMemory(PVOID pMemory) nogil
 
     HANDLE WTS_CURRENT_SERVER_HANDLE = NULL
 
@@ -1643,20 +1643,20 @@ IF UNAME_SYSNAME == "Windows":
         pass
 
 cdef extern from *:
-    BOOL EnumProcesses (
+    BOOL __stdcall EnumProcesses (
         DWORD * lpidProcess,
         DWORD cb,
         LPDWORD lpcbNeeded
     ) nogil
 
-    BOOL EnumProcessModules(
+    BOOL __stdcall EnumProcessModules(
         HANDLE hProcess,
         HMODULE *lphModule,
         DWORD cb,
         LPDWORD lpcbNeeded
     ) nogil
 
-    DWORD GetModuleBaseNameW(
+    DWORD __stdcall GetModuleBaseNameW(
         HANDLE hProcess,
         HMODULE hModule,
         LPWSTR lpBaseName,
@@ -1761,7 +1761,7 @@ cdef extern from *:
         PBYTE *Buffer 
     ) nogil
 
-    VOID DsRoleFreeMemory(
+    VOID __stdcall DsRoleFreeMemory(
         PVOID    Buffer
      ) nogil
 
@@ -1839,7 +1839,7 @@ cdef extern from *:
     # Joins a machine to the domain.
     #
     # ctypedef DWORD NET_API_STATUS
-    NET_API_STATUS NetJoinDomain(
+    NET_API_STATUS __stdcall NetJoinDomain(
         LPCWSTR lpServer,
         LPCWSTR lpDomain,
         LPCWSTR lpAccountOU,
@@ -1848,14 +1848,14 @@ cdef extern from *:
         DWORD   fJoinOptions
         ) nogil
 
-    NET_API_STATUS NetUnjoinDomain(
+    NET_API_STATUS __stdcall NetUnjoinDomain(
         LPCWSTR lpServer,
         LPCWSTR lpAccount,
         LPCWSTR lpPassword,
         DWORD   fUnjoinOptions
         ) nogil
 
-    NET_API_STATUS NetRenameMachineInDomain(
+    NET_API_STATUS __stdcall NetRenameMachineInDomain(
         LPCWSTR lpServer,
         LPCWSTR lpNewMachineName,
         LPCWSTR lpAccount,
@@ -1867,7 +1867,7 @@ cdef extern from *:
     #
     # Determine the validity of a name
     #
-    NET_API_STATUS NetValidateName(
+    NET_API_STATUS __stdcall NetValidateName(
         LPCWSTR             lpServer,
         LPCWSTR             lpName,
         LPCWSTR             lpAccount,
@@ -1878,7 +1878,7 @@ cdef extern from *:
     #
     # Determines whether a workstation is joined to a domain or not
     #
-    NET_API_STATUS NetGetJoinInformation(
+    NET_API_STATUS __stdcall NetGetJoinInformation(
         LPCWSTR                lpServer,
         LPWSTR                *lpNameBuffer,
         PNETSETUP_JOIN_STATUS  BufferType
@@ -1888,7 +1888,7 @@ cdef extern from *:
     #
     # Determines the list of OUs that the client can create a machine account in
     #
-    NET_API_STATUS NetGetJoinableOUs(
+    NET_API_STATUS __stdcall NetGetJoinableOUs(
         LPCWSTR     lpServer,
         LPCWSTR     lpDomain,
         LPCWSTR     lpAccount,
@@ -1903,7 +1903,7 @@ cdef extern from *:
 
     DWORD NET_IGNORE_UNSUPPORTED_FLAGS  = 0x01
 
-    NET_API_STATUS NetAddAlternateComputerName(
+    NET_API_STATUS __stdcall NetAddAlternateComputerName(
         LPCWSTR Server,
         LPCWSTR AlternateName,
         LPCWSTR DomainAccount,
@@ -1911,7 +1911,7 @@ cdef extern from *:
         ULONG Reserved
         ) nogil
 
-    NET_API_STATUS NetRemoveAlternateComputerName(
+    NET_API_STATUS __stdcall NetRemoveAlternateComputerName(
         LPCWSTR Server,
         LPCWSTR AlternateName,
         LPCWSTR DomainAccount,
@@ -1919,7 +1919,7 @@ cdef extern from *:
         ULONG Reserved
         ) nogil
 
-    NET_API_STATUS NetSetPrimaryComputerName(
+    NET_API_STATUS __stdcall NetSetPrimaryComputerName(
         LPCWSTR Server,
         LPCWSTR PrimaryName,
         LPCWSTR DomainAccount,
@@ -1941,7 +1941,13 @@ cdef extern from *:
     ctypedef _NET_COMPUTER_NAME_TYPE NET_COMPUTER_NAME_TYPE
     ctypedef _NET_COMPUTER_NAME_TYPE *PNET_COMPUTER_NAME_TYPE;
 
-    NET_API_STATUS NetEnumerateComputerNames(
+    #if (_MSC_VER >= 800) || defined(_STDCALL_SUPPORTED)
+        #define NET_API_FUNCTION    __stdcall
+    #else
+        #define NET_API_FUNCTION
+    #endif
+
+    NET_API_STATUS __stdcall NetEnumerateComputerNames(
         LPCWSTR Server,
         NET_COMPUTER_NAME_TYPE NameType,
         ULONG Reserved,
@@ -1992,7 +1998,7 @@ cdef extern from *:
 
     HKEY PROVIDER_KEEPS_VALUE_LENGTH = 0x1
 
-    LSTATUS RegOpenKeyExW (
+    LSTATUS __stdcall RegOpenKeyExW (
         HKEY hKey,
         LPCWSTR lpSubKey,
         DWORD ulOptions,
@@ -2000,17 +2006,17 @@ cdef extern from *:
         PHKEY phkResult
     ) nogil
 
-    LSTATUS RegCloseKey (
+    LSTATUS __stdcall RegCloseKey (
         HKEY hKey
     ) nogil
 
-    LSTATUS RegCreateKeyW (
+    LSTATUS __stdcall RegCreateKeyW (
         HKEY hKey,
         LPCWSTR lpSubKey,
         PHKEY phkResult
     ) nogil
 
-    LSTATUS RegCreateKeyExW (
+    LSTATUS __stdcall RegCreateKeyExW (
         HKEY hKey,
         LPCWSTR lpSubKey,
         DWORD Reserved,
@@ -2022,31 +2028,31 @@ cdef extern from *:
         LPDWORD lpdwDisposition
     ) nogil
 
-    LSTATUS RegDeleteKeyW (
+    LSTATUS __stdcall RegDeleteKeyW (
         HKEY hKey,
         LPCWSTR lpSubKey
     ) nogil
 
-    LSTATUS RegDeleteKeyExW (
+    LSTATUS __stdcall RegDeleteKeyExW (
         HKEY hKey,
         LPCWSTR lpSubKey,
         REGSAM samDesired,
         DWORD Reserved
     ) nogil
 
-    LSTATUS RegDeleteValueW (
+    LSTATUS __stdcall RegDeleteValueW (
         HKEY hKey,
         LPCWSTR lpValueName
     ) nogil
 
-    LSTATUS RegQueryValueW (
+    LSTATUS __stdcall RegQueryValueW (
         HKEY hKey,
         LPCWSTR lpSubKey,
         LPWSTR lpData,
         PLONG lpcbData
     ) nogil
 
-    LSTATUS RegQueryValueExW (
+    LSTATUS __stdcall RegQueryValueExW (
         HKEY hKey,
         LPCWSTR lpValueName,
         LPDWORD lpReserved,
@@ -2055,26 +2061,26 @@ cdef extern from *:
         LPDWORD lpcbData
     ) nogil
 
-    LSTATUS RegReplaceKeyW (
+    LSTATUS __stdcall RegReplaceKeyW (
         HKEY hKey,
         LPCWSTR lpSubKey,
         LPCWSTR lpNewFile,
         LPCWSTR lpOldFile
     ) nogil
 
-    LSTATUS RegRestoreKeyW (
+    LSTATUS __stdcall RegRestoreKeyW (
         HKEY hKey,
         LPCWSTR lpFile,
         DWORD dwFlags
     ) nogil
 
-    LSTATUS RegSaveKeyW (
+    LSTATUS __stdcall RegSaveKeyW (
         HKEY hKey,
         LPCWSTR lpFile,
         const LPSECURITY_ATTRIBUTES lpSecurityAttributes
     ) nogil
 
-    LSTATUS RegSetValueW (
+    LSTATUS __stdcall RegSetValueW (
         HKEY hKey,
         LPCWSTR lpSubKey,
         DWORD dwType,
@@ -2082,7 +2088,7 @@ cdef extern from *:
         DWORD cbData
     ) nogil
 
-    LSTATUS RegSetValueExW (
+    LSTATUS __stdcall RegSetValueExW (
         HKEY hKey,
         LPCWSTR lpValueName,
         DWORD Reserved,
@@ -2091,13 +2097,13 @@ cdef extern from *:
         DWORD cbData
     ) nogil
 
-    LSTATUS RegDeleteKeyValueW (
+    LSTATUS __stdcall RegDeleteKeyValueW (
        HKEY     hKey,
        LPCWSTR lpSubKey,
        LPCWSTR lpValueName
     ) nogil
 
-    LSTATUS RegSetKeyValueW (
+    LSTATUS __stdcall RegSetKeyValueW (
         HKEY     hKey,
         LPCWSTR  lpSubKey,
         LPCWSTR  lpValueName,
@@ -2106,18 +2112,18 @@ cdef extern from *:
         DWORD    cbData
     ) nogil
 
-    LSTATUS RegDeleteTreeW (
+    LSTATUS __stdcall RegDeleteTreeW (
         HKEY     hKey,
         LPCWSTR  lpSubKey
     ) nogil
 
-    LSTATUS RegCopyTreeW (
+    LSTATUS __stdcall RegCopyTreeW (
         HKEY     hKeySrc,
         LPCWSTR  lpSubKey,
         HKEY     hKeyDest
     ) nogil
 
-    LSTATUS RegGetValueW (
+    LSTATUS __stdcall RegGetValueW (
         HKEY    hkey,
         LPCWSTR  lpSubKey,
         LPCWSTR  lpValue,
@@ -2127,7 +2133,7 @@ cdef extern from *:
         LPDWORD pcbData
     ) nogil
 
-    LSTATUS RegSaveKeyExW (
+    LSTATUS __stdcall RegSaveKeyExW (
         HKEY hKey,
         LPCWSTR lpFile,
         const LPSECURITY_ATTRIBUTES lpSecurityAttributes,
@@ -2162,7 +2168,7 @@ cdef extern from *:
 
     WORD COMMON_LVB_SBCSDBCS        = 0x0300 # SBCS or DBCS flag.
 
-    BOOL SetConsoleTextAttribute(
+    BOOL __stdcall SetConsoleTextAttribute(
         HANDLE hConsoleOutput,
         WORD wAttributes
     ) nogil

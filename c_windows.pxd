@@ -915,8 +915,8 @@ cdef extern from *:
     DWORD SERVICE_TYPE_ALL
     DWORD SERVICE_WIN32
 
-    HANDLE __stdcall CreateNamedPipe(
-        LPCTSTR lpName,
+    HANDLE __stdcall CreateNamedPipeW(
+        LPCWSTR lpName,
         DWORD dwOpenMode,
         DWORD dwPipeMode,
         DWORD nMaxInstances,

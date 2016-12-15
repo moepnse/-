@@ -34,7 +34,7 @@ from c_windows cimport SetConsoleTextAttribute, GetStdHandle, STD_OUTPUT_HANDLE,
 from libs.handlers.config cimport StatusHandler as BaseStatusHandler, STATUS_SOURCE, ss__cmd, ss__connection_handler, ss__protocol, STATUS_TYPES, st__info, st__success, st__warn, st__error
 from libs.handlers.config import ChecksumViolation
 from libs.handlers.protocol import FileNotFound, ConnectionError, AuthenticationError
-from libs.handlers.dependencies cimport handle_dependencies
+from libs.handlers.dependencies cimport handle_dependencies, remove_depending_packages
 from libs.win.software cimport SoftwareList
 
 
@@ -525,6 +525,7 @@ cdef _handle_actions(action_list):
             elif dict_package["action"] == "uninstall":
                 if not package.installed:
                     print "Nothing todo, %s (%s) is not installed!" % (package_id, package.name)
+                    continue
                 print "Uninstalling package: %s" % package_id
                 status, cmd_list = package_list.uninstall(package_id)
                 print "status: %d, executed cmds: %s" % (status, cmd_list)
@@ -604,19 +605,20 @@ cdef upgrade(packages=[]):
             print >>stdout, "Could not found package %s!" % package_id
 
 
-cdef _uninstall(package_list, package_id):
+cdef _uninstall(_package_list, package_id):
     cdef:
         object package
         int status
         list cmd_list
-    if package_id in package_list.keys():
-        package = package_list[package_id]
+        list action_list = []
+    if package_id in _package_list.keys():
+        package = _package_list[package_id]
         if not package.installed:
             print "Nothing todo, %s (%s) is not installed!" % (package_id, package.name)
-        print "Uninstalling package: %s" % package_id
-        status, cmd_list = package_list.uninstall(package_id)
-        print "status: %d, executed cmds: %s" % (status, cmd_list)
-        print "Done"
+        else:
+            remove_depending_packages(package_id, action_list, package_list, package_lists)
+            action_list.append({'package_list': package_list, 'action': u'uninstall', 'package_id': package_id})
+            _handle_actions(action_list)
         return True
     return False
 

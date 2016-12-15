@@ -74,3 +74,24 @@ cdef _remove_packages_with_conflicting_dependencies(unicode package_id, unicode 
                     if a_entry["package_id"] == dependency["package_id"] and a_entry["action"]  == {True: u"install", False: u"uninstall"}[dependency["installed"]]:
                         del action_list[index]
                         index = index -1
+
+
+def _remove_depending_packages(package_id, action_list, _package_list, package_list, package_lists):
+    cdef:
+        object _package_id
+        object package
+        dict dependency
+    for _package_id in _package_list:
+        package = _package_list[_package_id]
+        for dependency in package.dependencies:
+            if dependency['package_id'] == package_id and dependency['installed'] == True:
+                remove_depending_packages(_package_id, action_list, package_list, package_lists)
+                action_list.append({'package_list': _package_list, "package_id": _package_id, "action": "uninstall"})
+
+
+cdef remove_depending_packages(package_id, action_list, package_list, package_lists):
+    cdef:
+        object _package_list
+    _remove_depending_packages(package_id, action_list, package_list, package_list, package_lists)
+    for _package_list in package_lists:
+        _remove_depending_packages(package_id, action_list, _package_list, package_list, package_lists)

@@ -34,6 +34,7 @@ from c_windows cimport SetConsoleTextAttribute, GetStdHandle, STD_OUTPUT_HANDLE,
 from libs.handlers.config cimport StatusHandler as BaseStatusHandler, STATUS_SOURCE, ss__cmd, ss__connection_handler, ss__protocol, STATUS_TYPES, st__info, st__success, st__warn, st__error
 from libs.handlers.config import ChecksumViolation
 from libs.handlers.protocol import FileNotFound, ConnectionError, AuthenticationError
+from libs.handlers.dependencies cimport handle_dependencies
 from libs.win.software cimport SoftwareList
 
 
@@ -432,65 +433,6 @@ cdef info(packages=[]):
             print >>stdout, "Package %s could not be found!" % package_id
 
 
-cdef __handle_dependencies(package_list, package_id, action_list):
-    cdef:
-        object package
-        dict dependency
-        unicode dep_package_id
-    if package_id in package_list:
-        package = _get_package(package_id)
-        for dependency in package.dependencies:
-            if not "package_id" in dependency:
-                #self._log.log_err(u"Error: package_id attribute is missing in dependency!")
-                continue
-            if not "installed" in dependency:
-                #self._log.log_err(u"Error: installed attribute is missing in dependency!")
-                continue
-            dep_package_id = dependency["package_id"]
-            _handle_dependencies(dep_package_id, action_list)
-            if dependency['installed'] == False:
-                dep_action = u"uninstall"
-            elif dependency['installed'] == True:
-                dep_action = u"install"
-            _remove_packages_with_conflicting_dependencies(dep_package_id, dep_action, action_list)
-            action_list.append({"package_id": dep_package_id, "action": dep_action})
-
-
-cdef _handle_dependencies(package_id, action_list):
-    """
-    action_list = {
-        [
-            {   package_id:"winrar",
-                action: "install",
-            }
-        ]
-    }
-    """
-    cdef:
-        object _package_list
-    __handle_dependencies(package_list, package_id, action_list)
-    for _package_list in package_lists:
-        __handle_dependencies(_package_list, package_id, action_list)
-
-
-cdef _remove_packages_with_conflicting_dependencies(unicode package_id, unicode action, action_list):
-    cdef:
-        dict dict_package
-        object package
-        dict dependency
-        int index
-        dict a_entry
-    for dict_package in action_list:
-        package = _get_package(dict_package['package_id'])
-        for dependency in package.dependencies:
-            if package_id == dependency['package_id'] and dependency["installed"] == {u"install": False, u"uninstall": True}[action]:
-                for index in range(0, len(action_list)):
-                    a_entry = action_list[index]
-                    if a_entry["package_id"] == dependency["package_id"] and a_entry["action"]  == {True: u"install", False: u"uninstall"}[dependency["installed"]]:
-                        del action_list[index]
-                        index = index -1
-
-
 cdef search(search_patterns=[]):
     cdef:
         object package_id
@@ -554,18 +496,6 @@ cdef re_search(search_patterns=[]):
         print >>stdout, "Nothing found!"
 
 
-cdef object _get_package(package_id):
-    cdef:
-        object _package_list
-    if package_id in package_list:
-        return package_list[package_id]
-
-    for _package_list in package_lists:
-        if package_id in _package_list:
-            return _package_list[package_id]
-    return None
-
-
 cdef _handle_actions(action_list):
     cdef:
         object package_id
@@ -615,7 +545,7 @@ cdef _install(package_list, package_id):
         list action_list = []
     if not package_id in package_list.keys():
         return False
-    _handle_dependencies(package_id, action_list)
+    handle_dependencies(package_id, action_list, package_list, package_lists)
     action_list.append({'package_list': package_list, 'action': u'install', 'package_id': package_id})
     _handle_actions(action_list)
     return True

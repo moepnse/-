@@ -51,6 +51,13 @@ ext_modules = [
         libraries = ['Wtsapi32', 'Kernel32', 'Advapi32', 'Userenv'] if "win" in sys.platform else [],
         library_dirs = library_dir
     ),
+    Extension('libs.handlers.dependencies',
+        sources=[os.path.join(r'libs', 'handlers', 'dependencies.pyx')],
+        extra_compile_args=compile_args,
+        include_dirs = include_dirs,
+        libraries = [],
+        library_dirs = library_dir
+    ),
     Extension('libs.win.system',
         sources=[os.path.join(r'libs', 'win', 'system.pyx')],
         extra_compile_args=compile_args,

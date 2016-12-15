@@ -14,7 +14,7 @@ import wx
 # application/library imports
 from package_installer import get_application_path, INSTALLING, UPGRADING, REMOVING, INSTALLED, UPGRADED, REMOVED, FAILED, UNKNOWN, SEND_STATUS, SEND_INFO, SEND_INFO_SUCCESS, SEND_INFO_WARN, SEND_INFO_ERROR, SEND_DONE
 from c_windows_data_types cimport LPVOID, DWORD, HANDLE
-from c_windows cimport ReadFile, CreateFile, CloseHandle, OPEN_EXISTING, GENERIC_READ, WaitForSingleObject, WAIT_OBJECT_0, WAIT_TIMEOUT, INVALID_HANDLE_VALUE, GetLastError
+from c_windows cimport ReadFile, CreateFileW, CloseHandle, OPEN_EXISTING, GENERIC_READ, WaitForSingleObject, WAIT_OBJECT_0, WAIT_TIMEOUT, INVALID_HANDLE_VALUE, GetLastError
 from cpython.ref cimport PyObject
 
 
@@ -162,7 +162,7 @@ cdef class NamedPipeHandler:
 
     cdef:
         HANDLE _ph
-        str _pipe_name
+        unicode _pipe_name
         int _pipe_wait_timeout
         unsigned char _steps
         unsigned char _version
@@ -170,7 +170,7 @@ cdef class NamedPipeHandler:
         object _log
 
     def __cinit__(self):
-        self._pipe_name = r'\\.\pipe\pi_status_gui'
+        self._pipe_name = unicode(r'\\.\pipe\pi_status_gui')
         self._pipe_wait_timeout = 2000
         #self._open()
 
@@ -178,7 +178,7 @@ cdef class NamedPipeHandler:
         self._log = log
 
     cpdef open(self):
-        self._ph = CreateFile(self._pipe_name,
+        self._ph = CreateFileW(self._pipe_name,
             GENERIC_READ,
             0, 
             NULL, # No special security requirements

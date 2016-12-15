@@ -21,7 +21,7 @@ from libc.stdlib cimport malloc, free
 
 # application/library cimports
 from c_windows_data_types cimport DWORD, BOOL, ULONG, LPCWSTR, LPWSTR, LPCTSTR, wchar_t, size_t, LPVOID, HANDLE
-from c_windows cimport CopyFile, STARTF_USESTDHANDLES, STARTF_USESHOWWINDOW, SW_HIDE, CREATE_NEW_CONSOLE, CreateProcessW, CloseHandle, INFINITE, WaitForSingleObject, GetExitCodeProcess, GetLastError, PROCESS_INFORMATION, STARTUPINFOW, NETRESOURCE, INFINITE, wcscpy, wcslen, wcscpy_s, SecureZeroMemory, CREATE_UNICODE_ENVIRONMENT, CreateEnvironmentBlock, GetUserProfileDirectoryW, CreateProcessAsUserW, PWTS_SESSION_INFOW, WTSQueryUserToken, DuplicateTokenEx,LPSECURITY_ATTRIBUTES, WTSActive, WTS_CURRENT_SERVER_HANDLE,  TOKEN_ASSIGN_PRIMARY, TOKEN_ALL_ACCESS, SecurityImpersonation, TokenPrimary, WTSEnumerateSessionsW, WTS_SESSION_INFOW, LOBYTE, HIBYTE, LOWORD, GetVersion 
+from c_windows cimport CopyFileW, STARTF_USESTDHANDLES, STARTF_USESHOWWINDOW, SW_HIDE, CREATE_NEW_CONSOLE, CreateProcessW, CloseHandle, INFINITE, WaitForSingleObject, GetExitCodeProcess, GetLastError, PROCESS_INFORMATION, STARTUPINFOW, NETRESOURCE, INFINITE, wcscpy, wcslen, wcscpy_s, SecureZeroMemory, CREATE_UNICODE_ENVIRONMENT, CreateEnvironmentBlock, GetUserProfileDirectoryW, CreateProcessAsUserW, PWTS_SESSION_INFOW, WTSQueryUserToken, DuplicateTokenEx,LPSECURITY_ATTRIBUTES, WTSActive, WTS_CURRENT_SERVER_HANDLE,  TOKEN_ASSIGN_PRIMARY, TOKEN_ALL_ACCESS, SecurityImpersonation, TokenPrimary, WTSEnumerateSessionsW, WTS_SESSION_INFOW, LOBYTE, HIBYTE, LOWORD, GetVersion 
 from libs.handlers.config cimport STATUS_SOURCE, ss__cmd, ss__connection_handler, ss__protocol, STATUS_TYPES, st__info, st__success, st__warn, st__error
 
 
@@ -340,7 +340,7 @@ cdef class BaseHandler:
         self.connect()
 
         IF UNAME_SYSNAME == "Windows":
-            if not CopyFile(source, target, 0):
+            if not CopyFileW(source, target, 0):
                 self._log_err(u"[protocol/%s] CopyFile failed with Error: %d" % (self._plugin_name, GetLastError()))
 
     def __exit__(self, type, value, traceback):

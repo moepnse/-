@@ -974,8 +974,8 @@ cdef extern from *:
         LPOVERLAPPED lpOverlapped
     ) nogil
 
-    HANDLE __stdcall CreateFile(
-        LPCTSTR lpFileName,
+    HANDLE __stdcall CreateFileW(
+        LPCWSTR lpFileName,
         DWORD dwDesiredAccess,
         DWORD dwShareMode,
         LPSECURITY_ATTRIBUTES lpSecurityAttributes,
@@ -1318,9 +1318,9 @@ cdef extern from *:
     DWORD EVENTLOG_INFORMATION_TYPE
     DWORD EVENTLOG_WARNING_TYPE
 
-    bint __stdcall CopyFile(
-        LPCTSTR lpExistingFileName,
-        LPCTSTR lpNewFileName,
+    bint __stdcall CopyFileW(
+        LPCWSTR lpExistingFileName,
+        LPCWSTR lpNewFileName,
         bint bFailIfExists
     ) nogil
 

@@ -93,6 +93,30 @@ set_package_check_functions('7zip', 'sevenzip_is_installed', 'sevenzip_is_upgrad
 --REG_QWORD_LITTLE_ENDIAN
 -- http://www.howtogeek.com/howto/37920/the-50-best-registry-hacks-that-make-windows-better/
 packages = {
+    {   package_id = "dep_test__parent",
+        is_installed = 
+            function()
+                return true
+            end,
+        is_upgrade_available = function()
+            return false
+        end,
+        ret_codes = windows_error_codes
+    },
+    {   package_id = "dep_test__child",
+        is_installed = 
+            function()
+                return true
+            end,
+        is_upgrade_available = function()
+            return false
+        end,
+        ret_codes = windows_error_codes,
+        dependencies = {
+            {   package_id = "dep_test__parent", 
+                installed = true}
+            }
+    },
     {   package_id = "winrar",
         is_installed = 
             function()

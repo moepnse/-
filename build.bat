@@ -43,7 +43,7 @@ goto:eof
 :build_x86
     echo build_x86
     set MACHINE=X86
-    set PD=/D_WIN32 /D_X86_
+    set PD=/D_WIN32 /D_X86_ /DUNICODE
     set PYTHON_EXE=%PYTHON32_EXE%
     set PYTHON_INCLUDE_PATH=%PYTHON32_INCLUDE_PATH%
     set PYTHON_LIBS_PATH=%PYTHON32_LIBS_PATH%
@@ -58,7 +58,7 @@ goto:eof
 :build_x64
     echo build_x64
     set MACHINE=X64
-    set PD=/D_WIN64 /D_AMD64_
+    set PD=/D_WIN64 /D_AMD64_ /DUNICODE
     set PYTHON_EXE=%PYTHON64_EXE%
     set PYTHON_INCLUDE_PATH=%PYTHON64_INCLUDE_PATH%
     set PYTHON_LIBS_PATH=%PYTHON64_LIBS_PATH%

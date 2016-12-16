@@ -24,7 +24,7 @@ cdef class FileInfo:
                 DWORD dw_handle
                 DWORD dw_len
                 UINT buf_len
-                LPCVOID lp_data
+                LPVOID lp_data
                 LPWSTR lp_buffer
                 LPCWSTR cw_path = <LPCWSTR>self._path
                 VS_FIXEDFILEINFO *p_file_info
@@ -34,7 +34,7 @@ cdef class FileInfo:
             if not dw_len:
                 return -1;
 
-            lp_data = <LPCVOID>malloc(dw_len)
+            lp_data = <LPVOID>malloc(dw_len)
             if  not lp_data:
                 return -1;
             if not GetFileVersionInfoW(cw_path, dw_handle, dw_len, lp_data):

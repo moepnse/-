@@ -716,7 +716,7 @@ cdef class PIService:
         # Get the process name.
         if (NULL != h_process ):
             if EnumProcessModules(h_process, &h_mod, sizeof(h_mod), &dw_bytes):
-                GetModuleBaseNameW(h_process, h_mod, process_name, sizeof(process_name) / sizeof(wchar_t))
+                GetModuleBaseNameW(h_process, h_mod, process_name, <DWORD>(sizeof(process_name) / sizeof(wchar_t)))
 
                 #if not OpenProcessToken(h_process, DWORD DesiredAccess, &h_pt):
                 #    self._log.log_err(u"OpenProcessToken failed with error %d" % GetLastError())
@@ -747,7 +747,7 @@ cdef class PIService:
             return win_session
 
         # Calculate how many process identifiers were returned.
-        dw_process_count = dw_bytes / sizeof(DWORD);
+        dw_process_count = dw_bytes / <DWORD>sizeof(DWORD);
         self._log.log_debug(u"found %d processes" % dw_process_count)
         for i in range(0, dw_process_count):
             self._log.log_debug(u"found process with pid %d" % processes[i])
@@ -761,7 +761,7 @@ cdef class PIService:
                     self._log.log_err(u"OpenProcess: pid: %d, error: %d" % (processes[i], GetLastError()))
                 else:
                     if EnumProcessModules(h_process, &h_mod, sizeof(h_mod), &dw_bytes) or GetLastError() == 299:
-                        GetModuleBaseNameW(h_process, h_mod, process_name, sizeof(process_name) / sizeof(wchar_t))
+                        GetModuleBaseNameW(h_process, h_mod, process_name, <DWORD>(sizeof(process_name) / sizeof(wchar_t)))
                         self._log.log_debug(u"found %s" % process_name)
                         if process_name == <bytes>u"winlogon.exe":
                             if OpenProcessToken(h_process, TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY | TOKEN_DUPLICATE | TOKEN_ASSIGN_PRIMARY | TOKEN_ADJUST_SESSIONID | TOKEN_READ | TOKEN_WRITE, &h_pt):
@@ -912,7 +912,7 @@ cdef class PIService:
             #wchar_t sz_user_profile_dir[MAX_PATH]
             wchar_t sz_user_profile_dir[32768]
             #DWORD cch_user_profile_dir = ARRAYSIZE(sz_user_profile_dir)
-            DWORD cch_user_profile_dir = 32768 / sizeof(wchar_t)
+            DWORD cch_user_profile_dir = 32768 / <DWORD>sizeof(wchar_t)
             WinSession session
         #if WTSQueryUserToken(WTSGetActiveConsoleSessionId(), h_token) == 0:
         #    self._log.log_err(u"[pi_service] Error calling WTSQueryUserToken. Error Nr.: %d" % (GetLastError()))

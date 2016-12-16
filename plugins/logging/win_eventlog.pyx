@@ -9,7 +9,7 @@ from libs.handlers.logging cimport BaseHandler
 import libs.handlers.logging
 import libs.common
 from c_windows_data_types cimport WCHAR, DWORD, WORD, HANDLE, LPCWSTR
-from c_windows cimport RegisterEventSource, ReportEventW, DeregisterEventSource, GetLastError, EVENTLOG_SUCCESS, EVENTLOG_AUDIT_FAILURE, EVENTLOG_AUDIT_SUCCESS, EVENTLOG_ERROR_TYPE, EVENTLOG_INFORMATION_TYPE, EVENTLOG_WARNING_TYPE
+from c_windows cimport RegisterEventSourceW, ReportEventW, DeregisterEventSource, GetLastError, EVENTLOG_SUCCESS, EVENTLOG_AUDIT_FAILURE, EVENTLOG_AUDIT_SUCCESS, EVENTLOG_ERROR_TYPE, EVENTLOG_INFORMATION_TYPE, EVENTLOG_WARNING_TYPE
 from cpython.ref cimport PyObject
 
 log_interface = "win_event_log"
@@ -26,7 +26,7 @@ cdef class WinEventLogHandler(BaseHandler):
 
     def __cinit__(self):
         self._app_name = 'PI'
-        self._h_event_log = RegisterEventSource(NULL, self._app_name)
+        self._h_event_log = RegisterEventSourceW(NULL, self._app_name)
 
     def __init__(self, **kwargs):
         #libs.handlers.logging.BaseHandler.__init__(self)

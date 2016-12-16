@@ -1294,12 +1294,12 @@ cdef extern from *:
         HANDLE hEventLog
     ) nogil
 
-    HANDLE __stdcall RegisterEventSource(
-        LPCTSTR lpUNCServerName,
-        LPCTSTR lpSourceName
+    HANDLE __stdcall RegisterEventSourceW(
+        LPCWSTR lpUNCServerName,
+        LPCWSTR lpSourceName
     ) nogil
 
-    bint __stdcall ReportEvent(
+    bint __stdcall ReportEventW(
         HANDLE hEventLog,
         WORD wType,
         WORD wCategory,
@@ -1307,7 +1307,7 @@ cdef extern from *:
         PSID lpUserSid,
         WORD wNumStrings,
         DWORD dwDataSize,
-        LPCTSTR *lpStrings,
+        LPCWSTR *lpStrings,
         LPVOID lpRawData
     ) nogil
 

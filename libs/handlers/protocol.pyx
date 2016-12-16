@@ -36,8 +36,8 @@ cdef unicode ireplace(unicode text, unicode old, unicode new):
     case insensitive replace
     """
     cdef:
-        int idx = 0
-        int index_l
+        Py_ssize_t idx = 0
+        Py_ssize_t index_l
     while idx < len(text):
         index_l = text.lower().find(old.lower(), idx)
         if index_l == -1:

@@ -145,7 +145,7 @@ cdef class Host(BaseVersion):
         public list _packages
         public list _profiles
         public list _all_packages
-        public int _len
+        public Py_ssize_t _len
 
     #cpdef bint ipv4_is(self, str ip)
 

@@ -2675,7 +2675,7 @@ cdef list get_version(lua_State* L):
         const char* version
     lua_getglobal(L, "version")
     if lua_isinteger(L, -1):
-        dw_version = lua_tointeger(L, -1)
+        dw_version = <DWORD>lua_tointeger(L, -1)
         return (HIWORD(dw_version), LOWORD(dw_version))
     elif lua_isstring(L, -1):
         version = lua_tostring(L, -1)

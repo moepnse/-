@@ -68,7 +68,7 @@ cdef extern from "lualib.h":
     #ctypedef LUA_KCONTEXT lua_KContext
 
     ctypedef float lua_Number
-    ctypedef int lua_Integer
+    ctypedef long long lua_Integer
     ctypedef unsigned int lua_Unsigned
     ctypedef ptrdiff_t lua_KContext
     #ctypedef intptr_t lua_KContext

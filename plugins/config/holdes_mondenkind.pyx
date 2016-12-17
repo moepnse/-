@@ -1339,7 +1339,7 @@ cdef int l_split(lua_State *L):
         unicode u_string
         const char* delimiter
         unicode u_delimiter = u" "
-        int count = -1
+        Py_ssize_t count = -1
         list tmp
         int stack_element_count = lua_gettop(L)
         int i = 0

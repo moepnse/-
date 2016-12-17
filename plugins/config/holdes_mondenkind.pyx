@@ -1339,7 +1339,7 @@ cdef int l_split(lua_State *L):
         unicode u_string
         const char* delimiter
         unicode u_delimiter = u" "
-        Py_ssize_t count = -1
+        long long count = -1
         list tmp
         int stack_element_count = lua_gettop(L)
         int i = 0
@@ -1692,7 +1692,7 @@ cdef int handle_cmd_args(lua_State *L, list parameters):
     return True
 
 
-cdef int handle_cmd_s_o_e_code(lua_State *L, Py_ssize_t error_code, dict error_codes):
+cdef int handle_cmd_s_o_e_code(lua_State *L, long long error_code, dict error_codes):
     """
     {
         id = "ERROR_SUCCESS",
@@ -1731,7 +1731,7 @@ cdef int handle_cmd_s_o_e_codes(lua_State *L, dict error_codes):
     }
     """
     cdef:
-        Py_ssize_t error_code
+        long long error_code
         unicode u_description = u""
     # first key
     lua_pushnil(L)

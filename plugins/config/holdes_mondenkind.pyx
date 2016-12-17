@@ -2068,8 +2068,8 @@ cdef int get_cmds(lua_State *L, int table, PackageList package_list, object cmds
     """
 
     cdef:
-        int i = 1
-        int n
+        size_t i = 1
+        size_t n
         int ref
         unicode cmd = u""
         const char* md5 = ""

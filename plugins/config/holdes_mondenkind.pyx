@@ -2953,7 +2953,7 @@ cdef class Settings(BaseSettings):
             self._display_target = CURRENT_USER
         elif self._u_display_target == u"winlogon":
             self._display_target = WINLOGON
-        self._interval = self._lua_get_int("interval")
+        self._interval = <unsigned long>self._lua_get_int("interval")
         self._target_source = self._lua_get_string("target_source")
         self._status_gui_cmd = self._lua_get_string("status_gui")
 

@@ -121,7 +121,7 @@ cdef class Settings(Base):
         public unsigned char _run
         public unicode _u_display_target
         public unsigned char _display_target
-        public int _interval
+        public unsigned long _interval
 
 
 cdef class LogList(BaseVersion):

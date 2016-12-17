@@ -2745,7 +2745,7 @@ cdef class LuaCmd(Cmd):
         # retrieve result
         if not lua_isinteger(self._l, -1):
             pass
-        ret_code = lua_tointeger(self._l, -1)
+        ret_code = <unsigned long>lua_tointeger(self._l, -1)
         if ret_code in self._success_codes:
             self._ret_code_type = libs.handlers.config.RET_CODE_SUCCESS
             self._ret_code_description = self._success_codes.get(ret_code, u"")

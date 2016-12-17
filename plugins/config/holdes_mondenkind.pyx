@@ -2967,7 +2967,7 @@ cdef class Settings(BaseSettings):
             return lua_string_to_python_unicode(self._l, -1)
         return u""
 
-    cdef int _lua_get_int(self, const char *var_name):
+    cdef long long _lua_get_int(self, const char *var_name):
         lua_getglobal(self._l, var_name)
         if lua_isinteger(self._l, -1):
             return lua_tointeger(self._l, -1)

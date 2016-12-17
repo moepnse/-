@@ -354,7 +354,7 @@ cdef int l_winreg_set_value(lua_State *L):
             DWORD type = <DWORD>lua_tointeger(L, 4)
             RegValue reg_value
             LONG ret_val
-            DWORD size
+            Py_ssize_t size
 
         if lua_isboolean(L , 5):
             reg_value.b_data = <bint>lua_toboolean(L, 5)
@@ -376,7 +376,7 @@ cdef int l_winreg_set_value(lua_State *L):
                 0,
                 type,
                 <const BYTE *>&(reg_value.data),
-                size
+                <DWORD>size
             )
             RegCloseKey(h_key)
         lua_pushinteger(L, ret_val)

@@ -207,13 +207,13 @@ cdef main():
     argv = [arg.decode(sys.getfilesystemencoding()) for arg in sys.argv]
 
     if action == INSTALL:
-        install(argv[2:])
+        do("install", argv[2:])
     elif action == UPGRADE:
-        upgrade(argv[2:])
+        do("upgrade", argv[2:])
     elif action == REMOVE:
-        uninstall(argv[2:])
+        do("uninstall", argv[2:])
     elif action == UNINSTALL:
-        uninstall(argv[2:])
+        do("uninstall", argv[2:])
     elif action == SEARCH:
         search(argv[2:])
     elif action == RE_SEARCH:
@@ -577,17 +577,17 @@ proceed? [Y|N]""" % {
             print "?"
 
 
-cdef _install(package_list, package_id, list action_list):
+cdef _do(str action, package_list, package_id, list action_list):
     cdef:
         object package
     if not package_id in package_list.keys():
         return False
     handle_dependencies(package_id, action_list, package_list, package_lists)
-    action_list.append({'package_list': package_list, 'action': u'install', 'package_id': package_id})
+    action_list.append({'package_list': package_list, 'action': action, 'package_id': package_id})
     return True
 
 
-cdef install(packages=[]):
+cdef do(str action, packages=[]):
     cdef:
         object package_id
         object package
@@ -595,85 +595,17 @@ cdef install(packages=[]):
         bint found = False
         object _package_list
     for package_id in packages:
-        found = _install(package_list, package_id, action_list)
+        found = _do(action, package_list, package_id, action_list)
         if found:
             continue
         for _package_list in package_lists:
-            found = _install(_package_list, package_id, action_list)
+            found = _do(action, _package_list, package_id, action_list)
             if found:
                 break
         if not found:
             print "Package with id: %s not found!" % package_id
     if _proceed(action_list):
         _handle_actions(action_list)
-
-cdef _upgrade(package_list, package_id):
-    cdef:
-        object package
-        int status
-        list cmd_list
-    if package_id in package_list.keys():
-        package = package_list[package_id]
-        if not package.upgrade_available:
-            print "Nothing todo, %s (%s) is up2date!" % (package_id, package.name)
-            return True
-        print "Upgrading package: %s" % package_id
-        status, cmd_list = package_list.upgrade(package_id)
-        print "status: %d, executed cmds: %s" % (status, cmd_list)
-        return True
-    return False
-
-
-cdef upgrade(packages=[]):
-    cdef:
-        object package_id
-        object _package_list
-        bint found
-    for package_id in packages:
-        found = _upgrade(package_list, package_id)
-        if found:
-            continue
-        for _package_list in package_lists:
-            found = _upgrade(_package_list, package_id)
-            if found:
-                break
-        if not found:
-            print >>stdout, "Could not found package %s!" % package_id
-
-
-cdef _uninstall(_package_list, package_id):
-    cdef:
-        object package
-        int status
-        list cmd_list
-        list action_list = []
-    if package_id in _package_list.keys():
-        package = _package_list[package_id]
-        if not package.installed:
-            print "Nothing todo, %s (%s) is not installed!" % (package_id, package.name)
-        else:
-            remove_depending_packages(package_id, action_list, package_list, package_lists)
-            action_list.append({'package_list': package_list, 'action': u'uninstall', 'package_id': package_id})
-            _handle_actions(action_list)
-        return True
-    return False
-
-
-cdef uninstall(packages=[]):
-    cdef:
-        object package_id
-        bint found
-        object _package_list
-    for package_id in packages:
-        found = _uninstall(package_list, package_id)
-        if found:
-            continue
-        for _package_list in package_lists:
-            found = _uninstall(_package_list, package_id)
-            if found:
-                break
-        if not found:
-            print >>stdout, "Could not found package %s!" % package_id
 
 
 cdef _show_installed(package_list):

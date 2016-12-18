@@ -540,6 +540,43 @@ cdef _handle_actions(action_list):
     print "Done"
 
 
+cdef bint _proceed(list action_list):
+    cdef:
+        list install_list = []
+        list uninstall_list = []
+        list upgrade_list = []
+    for dict_package in action_list:
+        if dict_package['action'] == "install":
+            install_list.append(dict_package['package_id'])
+        elif dict_package['action'] == "uninstall":
+            uninstall_list.append(dict_package['package_id'])
+        elif dict_package['action'] == "upgrade":
+            upgrade_list.append(dict_package['package_id'])
+        install_packages = ", ".join(install_list)
+        remove_packages = ", ".join(uninstall_list)
+        upgrade_packages = ", ".join(upgrade_list)
+        actions = """Install Packages: 
+%(install_list)s
+Upgrade Packages:
+%(upgrade_list)s
+Remove Packages:
+%(remove_list)s
+proceed? [Y|N]""" % {
+    "install_list": install_packages,
+    "upgrade_list": upgrade_packages,
+    "remove_list": remove_packages
+}
+    print actions
+    while True:
+        _input = raw_input()
+        if _input == "Y":
+            return True
+        elif _input == "N":
+            return False
+        else:
+            print "?"
+
+
 cdef _install(package_list, package_id):
     cdef:
         object package
@@ -548,7 +585,8 @@ cdef _install(package_list, package_id):
         return False
     handle_dependencies(package_id, action_list, package_list, package_lists)
     action_list.append({'package_list': package_list, 'action': u'install', 'package_id': package_id})
-    _handle_actions(action_list)
+    if _proceed(action_list):
+        _handle_actions(action_list)
     return True
 
 

@@ -577,16 +577,13 @@ proceed? [Y|N]""" % {
             print "?"
 
 
-cdef _install(package_list, package_id):
+cdef _install(package_list, package_id, list action_list):
     cdef:
         object package
-        list action_list = []
     if not package_id in package_list.keys():
         return False
     handle_dependencies(package_id, action_list, package_list, package_lists)
     action_list.append({'package_list': package_list, 'action': u'install', 'package_id': package_id})
-    if _proceed(action_list):
-        _handle_actions(action_list)
     return True
 
 
@@ -598,16 +595,17 @@ cdef install(packages=[]):
         bint found = False
         object _package_list
     for package_id in packages:
-        found = _install(package_list, package_id)
+        found = _install(package_list, package_id, action_list)
         if found:
             continue
         for _package_list in package_lists:
-            found = _install(_package_list, package_id)
+            found = _install(_package_list, package_id, action_list)
             if found:
                 break
         if not found:
             print "Package with id: %s not found!" % package_id
-
+    if _proceed(action_list):
+        _handle_actions(action_list)
 
 cdef _upgrade(package_list, package_id):
     cdef:

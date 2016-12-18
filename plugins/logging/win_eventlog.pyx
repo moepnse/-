@@ -17,7 +17,7 @@ log_interface = "win_event_log"
 #cdef class WinEventLogHandler(libs.handlers.logging.BaseHandler):
 cdef class WinEventLogHandler(BaseHandler):
 
-    cdef public object _app_name
+    cdef public unicode _app_name
     cdef HANDLE _h_event_log
     cdef public object _log_info_target
     cdef public object _log_warn_target
@@ -25,7 +25,7 @@ cdef class WinEventLogHandler(BaseHandler):
     cdef public object _log_debug_target
 
     def __cinit__(self):
-        self._app_name = 'PI'
+        self._app_name = u'PI'
         self._h_event_log = RegisterEventSourceW(NULL, self._app_name)
 
     def __init__(self, **kwargs):

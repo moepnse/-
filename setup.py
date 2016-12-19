@@ -23,6 +23,13 @@ ext_modules = [
         libraries = [],
         library_dirs = library_dir
     ),
+    Extension('libs.aimg',
+        sources=[os.path.join(r'libs', 'aimg.pyx')],
+        extra_compile_args=compile_args,
+        include_dirs = include_dirs,
+        libraries = [],
+        library_dirs = library_dir
+    ),
     Extension('libs.handlers.plugin_handler',
         sources=[os.path.join(r'libs', 'handlers', 'plugin_handler.pyx')],
         extra_compile_args=compile_args,

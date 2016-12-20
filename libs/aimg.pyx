@@ -8,6 +8,15 @@ import struct
 # application/library imports
 
 
+class EOF(Exception):
+
+    def __init__(self, path):
+        self._path = path
+
+    def __str__(self):
+        return repr(self._path)
+
+
 class AnimatedImgFrame:
 
     def __init__(self, duration, img_type, img):

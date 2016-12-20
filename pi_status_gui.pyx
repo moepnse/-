@@ -67,15 +67,6 @@ class StdInThread(threading.Thread):
             self._pi_status_gui._lb_packages.SetItemColumnImage(self._pi_status_gui._lb_packages.GetItemCount() - 1, 0, self._pi_status_gui._status_img_mapping[action])
 
 
-class EOF(Exception):
-
-    def __init__(self, path):
-        self._path = path
-
-    def __str__(self):
-        return repr(self._path)
-
-
 cdef class NamedPipeHandler:
 
     cdef:

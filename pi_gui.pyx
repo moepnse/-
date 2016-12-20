@@ -21,10 +21,12 @@ import wx.lib.mixins.listctrl as listmix
 from wx.lib.agw import ultimatelistctrl as ULC
 
 # application/library imports
+from pi_gui import PIStatusGUI
 from package_installer import get_application_path, settings_factory, install_list_factory, installed_list_factory, package_list_factory, host_list_factory, connection_list_factory, log_list_factory, Log, get_ph_plugins, get_log_plugins, get_settings_config_path
 import libs
 
 from libs.handlers.config cimport StatusHandler as BaseStatusHandler, STATUS_SOURCE, ss__cmd, ss__connection_handler, ss__protocol, STATUS_TYPES, st__info, st__success, st__warn, st__error
+from libs.handlers.dependencies cimport handle_dependencies
 
 
 class StatusHandler(BaseStatusHandler):
@@ -96,13 +98,13 @@ class ActionField(wx.Panel):
         self.Bind(wx.EVT_BUTTON, self._cmd_upgrade_on_button, self._cmd_upgrade)
 
     def _cmd_install_on_button(self, e):
-        self._lb_actions.Append(("install", self._package.name, self._package.version))
+        self._lb_actions.Append(("install", self._package.package_id, self._package.name, self._package.version))
 
     def _cmd_uninstall_on_button(self, e):
-        self._lb_actions.Append(("uninstall", self._package.name, self._package.version))
+        self._lb_actions.Append(("uninstall", self._package.package_id, self._package.name, self._package.version))
 
     def _cmd_upgrade_on_button(self, e):
-        self._lb_actions.Append(("upgrade", self._package.name, self._package.version))
+        self._lb_actions.Append(("upgrade", self._package.package_id, self._package.name, self._package.version))
 
 
 class ActionsSizer(wx.BoxSizer):
@@ -116,14 +118,18 @@ class ActionFieldSizer(wx.BoxSizer):
 
 
 class ActionsHSPanel(wx.Panel):
-    def __init__(self, parent):
+    def __init__(self, parent, package_list, package_lists=[]):
+
+        self._package_list = package_list
+        self._package_lists = package_lists
 
         wx.Panel.__init__(self, parent)
 
         self._lb_actions = ActionList(self, 3)
         self._lb_actions.InsertColumn(0, "Action")
-        self._lb_actions.InsertColumn(1, "Package Name")
-        self._lb_actions.InsertColumn(2, "Version")
+        self._lb_actions.InsertColumn(1, "Package ID")
+        self._lb_actions.InsertColumn(2, "Package Name")
+        self._lb_actions.InsertColumn(3, "Version")
 
         self._bmp_handle_actions = wx.Bitmap("imgs/icons/16x16/h.png", wx.BITMAP_TYPE_ANY)
         self._cmd_handle_actions = wx.BitmapButton(self, id=wx.ID_ANY,  bitmap=self._bmp_handle_actions)
@@ -131,6 +137,21 @@ class ActionsHSPanel(wx.Panel):
         self._action_sizer = ActionsSizer()
         self.SetSizer(self._action_sizer)
         self._action_sizer.AddMany(((self._lb_actions, 1, wx.EXPAND), (self._cmd_handle_actions, 0, wx.EXPAND)))
+        self.Bind(wx.EVT_BUTTON, self.__cmd_handle_actions_on_button, self._cmd_handle_actions)
+
+    def __cmd_handle_actions_on_button(self, e):
+        acd = ActionConfirmDialog(None)
+        for row in range(self._lb_actions.GetItemCount()):
+            action_list = []
+            #index = self._lb_actions.GetItemData(row)
+            #package_id = self._mapping[index]
+            package_id = self._lb_actions.GetItem(row, 1).GetText()
+            action = self._lb_actions.GetItem(row, 0).GetText()
+            handle_dependencies(package_id, action_list, self._package_list, self._package_lists)
+            for dict_package in action_list:
+                acd.add_package(dict_package['package_id'], dict_package['action'])
+            acd.add_package(package_id, action)
+        acd.Show()
 
 
 class MainWindow(wx.Frame):
@@ -150,6 +171,8 @@ class MainWindow(wx.Frame):
         else:
             host_list = host_list_factory(settings.host_list, log) 
 
+        self._package_list = package_list
+
         self._h_splitter = wx.SplitterWindow(self)
 
         self._lb_packages = PackageList(self._h_splitter, 7)
@@ -161,11 +184,12 @@ class MainWindow(wx.Frame):
         self._lb_packages.InsertColumn(5, "Description")
         self._lb_packages.InsertColumn(6, "Action")
 
-        self._actions_hs_panel = ActionsHSPanel(self._h_splitter)
+        self._actions_hs_panel = ActionsHSPanel(self._h_splitter, package_list)
 
         self._h_splitter.SplitHorizontally(self._lb_packages, self._actions_hs_panel)
         self._h_splitter.SetSashGravity(0.5)
         self._action_list = []
+        self._mapping = []
         for package_id, package in package_list.iteritems():
             if package_id in installed_list:
                 installed_package = installed_list[package_id]
@@ -175,7 +199,8 @@ class MainWindow(wx.Frame):
                 installed_version = ""
                 installed_rev = ""
             index = self._lb_packages.Append((package_id if len(package.name.strip()) == 0 else package.name, package.version, package.rev, installed_version, installed_rev, package.description))
-            self._lb_packages.SetItemData(index, package_id)
+            self._mapping.append(package_id)
+            self._lb_packages.SetItemData(index, len(self._mapping) - 1)
             if index % 2:
                 colour = wx.Colour(255,255,255)
             else:
@@ -186,6 +211,32 @@ class MainWindow(wx.Frame):
             self._lb_packages.SetItemWindow(index, col=6, wnd=action_field, expand=True)
 
         self.Show()
+
+
+class ActionConfirmDialog(wx.Frame):
+    def __init__(self, parent, *args, **kwargs):
+        wx.Frame.__init__(self, parent, *args, **kwargs)
+        self._sizer = wx.BoxSizer(wx.VERTICAL)
+        self._lb_actions = ActionList(self, 2)
+        self._lb_actions.InsertColumn(0, "Package ID")
+        self._lb_actions.InsertColumn(1, "Action")
+
+        self._bmp_handle_actions = wx.Bitmap("imgs/icons/16x16/h.png", wx.BITMAP_TYPE_ANY)
+        self._cmd_handle_actions = wx.BitmapButton(self, id=wx.ID_ANY,  bitmap=self._bmp_handle_actions)
+
+        self.SetSizer(self._sizer)
+        self._sizer.AddMany(((self._lb_actions, 1, wx.EXPAND), (self._cmd_handle_actions, 0, wx.EXPAND)))
+        self.Show()
+        self.Bind(wx.EVT_BUTTON, self.__cmd_handle_actions_on_button, self._cmd_handle_actions)
+
+    def __cmd_handle_actions_on_button(self, e):
+        log = Log(info, err, debug)
+        pi_status_gui = PIStatusGUI()
+        pi_status_gui.Show()
+
+    def add_package(self, package_id, action):
+        index = self._lb_actions.Append((package_id, action))
+        self._lb_actions.SetItemData(index, package_id)
 
 
 app = wx.App(False)

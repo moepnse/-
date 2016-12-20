@@ -51,6 +51,13 @@ ext_modules = [
         libraries = [],
         library_dirs = library_dir
     ),
+    Extension('libs.handlers.status',
+        sources=[os.path.join(r'libs', 'handlers', 'status.pyx')],
+        extra_compile_args=compile_args,
+        include_dirs = include_dirs,
+        libraries = [],
+        library_dirs = library_dir
+    ),
     Extension('libs.handlers.logging',
         sources=[os.path.join(r'libs', 'handlers', 'logging.pyx')],
         extra_compile_args=compile_args,

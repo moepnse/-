@@ -37,10 +37,3 @@ cdef unicode un_camel(unicode str):
     if new_str[0] == u"_":
         new_str = new_str[1:]
     return new_str
-
-
-def get_application_path():
-    cdef char* application_path
-    application_path = sys.executable
-    #print "Application path: %s" % application_path
-    return os.path.dirname(os.path.abspath(application_path)) 

@@ -2,10 +2,6 @@
 
 # standard library imports
 import os
-import sys
-import time
-import struct
-import threading
 import StringIO
 
 # third party imports

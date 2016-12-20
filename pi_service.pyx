@@ -29,6 +29,7 @@ from libs.handlers.config import RETURN_ID, RET_CODE_UNKNOWN, RET_CODE_SUCCESS, 
 from libs.handlers.protocol import FileNotFound, ConnectionError, AuthenticationError
 import libs.win.commandline
 import libs.win.winreg
+from libs.common import get_application_path
 
 
 # standard library cimports

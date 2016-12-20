@@ -17,7 +17,8 @@ import win32event
 import pywintypes
 
 # application/library imports
-from package_installer import get_application_path, INSTALLING, UPGRADING, REMOVING, INSTALLED, UPGRADED, REMOVED, FAILED, UNKNOWN, SEND_STATUS, SEND_INFO, SEND_INFO_SUCCESS, SEND_INFO_ERROR
+from libs.common import get_application_path
+from package_installer import INSTALLING, UPGRADING, REMOVING, INSTALLED, UPGRADED, REMOVED, FAILED, UNKNOWN, SEND_STATUS, SEND_INFO, SEND_INFO_SUCCESS, SEND_INFO_ERROR
 
 
 class EOF(Exception):

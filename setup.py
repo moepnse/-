@@ -23,6 +23,13 @@ ext_modules = [
         libraries = [],
         library_dirs = library_dir
     ),
+    Extension('libs.pi_status_gui',
+        sources=[os.path.join(r'libs', 'pi_status_gui.pyx')],
+        extra_compile_args=compile_args,
+        include_dirs = include_dirs,
+        libraries = [],
+        library_dirs = library_dir
+    ),
     Extension('libs.aimg',
         sources=[os.path.join(r'libs', 'aimg.pyx')],
         extra_compile_args=compile_args,

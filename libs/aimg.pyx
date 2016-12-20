@@ -1,3 +1,13 @@
+# -*- coding: utf-8 -*-
+
+# standard library imports
+import struct
+
+# third party imports
+
+# application/library imports
+
+
 class AnimatedImgFrame:
 
     def __init__(self, duration, img_type, img):

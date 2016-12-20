@@ -10,7 +10,7 @@ import wx
 # application/library imports
 from libs.handlers.status import INSTALLING, UPGRADING, REMOVING, INSTALLED, UPGRADED, REMOVED, FAILED, UNKNOWN
 from libs.common import get_application_path
-from libs.aimg import AnimatedImg
+from libs.aimg import AnimatedImg, AnimatedImgFrame
 
 
 class wxAnimatedImg(AnimatedImg):

@@ -13,8 +13,8 @@ import wx
 
 # application/library imports
 from libs.common import get_application_path
-from package_installer import INSTALLING, UPGRADING, REMOVING, INSTALLED, UPGRADED, REMOVED, FAILED, UNKNOWN, SEND_STATUS, SEND_INFO, SEND_INFO_SUCCESS, SEND_INFO_WARN, SEND_INFO_ERROR, SEND_DONE
 from libs.aimg import AnimatedImg
+from libs.handlers.status import INSTALLING, UPGRADING, REMOVING, INSTALLED, UPGRADED, REMOVED, FAILED, UNKNOWN, SEND_STATUS, SEND_INFO, SEND_INFO_SUCCESS, SEND_INFO_WARN, SEND_INFO_ERROR, SEND_DONE
 from c_windows_data_types cimport LPVOID, DWORD, HANDLE
 from c_windows cimport ReadFile, CreateFileW, CloseHandle, OPEN_EXISTING, GENERIC_READ, WaitForSingleObject, WAIT_OBJECT_0, WAIT_TIMEOUT, INVALID_HANDLE_VALUE, GetLastError
 from cpython.ref cimport PyObject

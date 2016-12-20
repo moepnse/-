@@ -10,45 +10,12 @@ import subprocess
 # third party imports
 
 # application/library imports
+from libs.handler.status import INSTALLING, UPGRADING, REMOVING, INSTALLED, UPGRADED, REMOVED, FAILED, UNKNOWN, SEND_STATUS, SEND_INFO, SEND_DONE, SEND_INFO_SUCCESS, SEND_INFO_WARN, SEND_INFO_ERROR
 from libs.handlers.config import RETURN_PACKAGE, RETURN_ID, RET_CODE_UNKNOWN, RET_CODE_SUCCESS, RET_CODE_ERROR, RET_CODE_ALREADY_INSTALLED, RET_CODE_ALREADY_REMOVED, PackageList
 import libs.handlers.plugin_handler
 
-"""
-cdef:
-    unsigned char INSTALLING = 0
-    unsigned char UPGRADING = 1
-    unsigned char REMOVING = 2
-    unsigned char INSTALLED = 3
-    unsigned char UPGRADED = 4
-    unsigned char REMOVED = 5
-    unsigned char FAILED = 6
-    unsigned char UNKNOWN = 7
-
-    unsigned char SEND_STATUS = 1
-    unsigned char SEND_INFO = 2
-
-    unsigned char SEND_INFO_SUCCESS = 0
-    unsigned char SEND_INFO_ERROR = 1
-"""
-
-INSTALLING = 1
-UPGRADING = 2
-REMOVING = 3
-INSTALLED = 4
-UPGRADED = 5
-REMOVED = 6
-FAILED = 7
-UNKNOWN = 8
 
 connections = {}
-
-SEND_STATUS = 1
-SEND_INFO = 2
-SEND_DONE = 3
-
-SEND_INFO_SUCCESS = 1
-SEND_INFO_WARN = 2
-SEND_INFO_ERROR = 3
 
 
 class Log(object):

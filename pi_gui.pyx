@@ -105,7 +105,7 @@ class AtionHandlerThread(threading.Thread):
                     ret_code = RET_CODE_PACKAGE_NOT_FOUND
                 #print status, package_id
                 if ret_code != RET_CODE_PACKAGE_NOT_FOUND:
-                    self._pi_status_gui.update_package_status_by_id(status, package_id)
+                    self._pi_status_gui.update_package_status_by_id(package_id, status)
                 if ret_code == RET_CODE_ALREADY_INSTALLED:
                     self._pi_status_gui.add_info(SEND_INFO_SUCCESS, u"Already installed!")
                 elif ret_code == RET_CODE_ALREADY_REMOVED:

@@ -362,7 +362,6 @@ class ActionConfirmDialog(wx.Frame):
         pi_status_gui.Show()
         action_list = []
         for row in range(self._lb_actions.GetItemCount()):
-            action_list = []
             #index = self._lb_actions.GetItemData(row)
             #package_id = self._mapping[index]
             package_id = self._lb_actions.GetItem(row, 0).GetText()

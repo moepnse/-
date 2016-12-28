@@ -8,7 +8,7 @@ import StringIO
 import wx
 
 # application/library imports
-from libs.handlers.status import INSTALLING, UPGRADING, REMOVING, INSTALLED, UPGRADED, REMOVED, FAILED, UNKNOWN
+from libs.handlers.status import INSTALLING, UPGRADING, REMOVING, INSTALLED, UPGRADED, REMOVED, FAILED, UNKNOWN, SEND_STATUS, SEND_INFO, SEND_INFO_SUCCESS, SEND_INFO_WARN, SEND_INFO_ERROR, SEND_DONE
 from libs.common import get_application_path
 from libs.aimg import AnimatedImg, AnimatedImgFrame
 
@@ -76,6 +76,7 @@ class SimpleProgressBar(wx.Panel):
 class PIStatusGUI(wx.Frame):
     def __init__(self, log):
         wx.Frame.__init__(self, None, -1, "Package Installer", style = wx.FRAME_SHAPED | wx.SIMPLE_BORDER)
+        self._package_status_mapping = {}
         self._log = log
         #self._nph = NamedPipeHandler()
         #self._ph = win32file.CreateFile(r'\\.\pipe\pi_status_gui',
@@ -290,3 +291,32 @@ class PIStatusGUI(wx.Frame):
     def OnLeftUp(self, evt):
         if self.HasCapture():
             self.ReleaseMouse()
+
+    def add_package_status(self, package_id, package_name, status):
+        package_status_index = self._lb_packages.GetItemCount()
+        self._package_status_mapping[package_id] = package_status_index
+        if status == INSTALLING:
+            self._lb_packages.Append(("Installing %s (%s)..." % (package_name, package_id),))
+        elif status == REMOVING:
+            self._lb_packages.Append(("Removing %s (%s)..." % (package_name, package_id),))
+        elif status == UPGRADING:
+            self._lb_packages.Append(("Upgrading %s (%s)..." % (package_name, package_id),))
+        self._lb_packages.SetItemColumnImage(package_status_index, 0, self._status_img_mapping[status])
+        self._pb_status.progress += 1
+        return package_status_index
+
+    def update_package_status_by_id(self, package_id, status):
+        package_status_index = self._package_status_mapping[package_id]
+        self.update_package_status_by_index(package_status_index, status)
+
+    def update_package_status_by_index(self, index, status):
+        self._lb_packages.SetItemColumnImage(index, 0, self._status_img_mapping[status])
+        self._pb_status.progress += 1
+
+    def add_info(self, unsigned char info_type, info_text):
+        self._lb_packages.Append((info_text,))
+        if info_type == <unsigned char>SEND_INFO_ERROR:
+            icon = self._ix_img_index
+        elif info_type == <unsigned char>SEND_INFO_SUCCESS:
+            icon = self._ih_img_index
+        self._lb_packages.SetItemColumnImage(self._lb_packages.GetItemCount() - 1, 0, icon)

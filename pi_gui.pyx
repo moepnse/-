@@ -71,7 +71,7 @@ class AtionHandlerThread(threading.Thread):
                 #action = package['action']
                 if package_id in self._package_list.keys():
                     if action == 'install':
-                        self._pi_status_gui._lb_packages.Append(("Installing %s (%s)..." % (package_name, package_id),))
+                        self._pi_status_gui.add_package_status(package_id, package_name, INSTALLING)
                         ret_code, cmd_list = self._package_list.install(package_id)
                         if ret_code in (RET_CODE_SUCCESS, RET_CODE_ALREADY_INSTALLED):
                             status = INSTALLED
@@ -80,7 +80,7 @@ class AtionHandlerThread(threading.Thread):
                         else:
                             status = FAILED
                     elif action == 'upgrade':
-                        self._pi_status_gui._lb_packages.Append(("Upgrading %s (%s)..." % (package_name, package_id),))
+                        self._pi_status_gui.add_package_status(package_id, package_name, UPGRADING)
                         ret_code, cmd_list = self._package_list.upgrade(package_id)
                         if ret_code in (RET_CODE_SUCCESS, RET_CODE_ALREADY_INSTALLED):
                             status = UPGRADED
@@ -90,7 +90,7 @@ class AtionHandlerThread(threading.Thread):
                             status = FAILED
 
                     elif action == 'remove' or action == 'uninstall':
-                        self._pi_status_gui._lb_packages.Append(("Removing %s (%s)..." % (package_name, package_id),))
+                        self._pi_status_gui.add_package_status(package_id, package_name, REMOVING)
                         ret_code, cmd_list = self._package_list.uninstall(package_id)
                         if ret_code in (RET_CODE_SUCCESS, RET_CODE_ALREADY_REMOVED):
                             status = REMOVED
@@ -105,15 +105,15 @@ class AtionHandlerThread(threading.Thread):
                     ret_code = RET_CODE_PACKAGE_NOT_FOUND
                 #print status, package_id
                 if ret_code != RET_CODE_PACKAGE_NOT_FOUND:
-                    self._pi_status_gui._lb_packages.Append(("Package %s (%s) not found!" % (package_name, package_id),))
+                    self._pi_status_gui.update_package_status_by_id(status, package_id)
                 if ret_code == RET_CODE_ALREADY_INSTALLED:
-                    self._pi_status_gui._lb_packages.Append((u"Already installed!",))
+                    self._pi_status_gui.add_info(SEND_INFO_SUCCESS, u"Already installed!")
                 elif ret_code == RET_CODE_ALREADY_REMOVED:
-                    self._pi_status_gui._lb_packages.Append((u"Already removed!", ))
+                    self._pi_status_gui.add_info(SEND_INFO_SUCCESS, u"Already removed!")
                 elif ret_code == RET_CODE_PACKAGE_NOT_FOUND:
-                    self._pi_status_gui._lb_packages.Append((u"Package with id: %s not found!" % package_id, ))
+                    self._pi_status_gui.add_info(SEND_INFO_ERROR, u"Package with id: %s not found!" % package_id)
                 else:
-                    self._pi_status_gui._lb_packages.Append((u'Status Code: %d' % ret_code, ))
+                    self._pi_status_gui.add_info(SEND_INFO_ERROR, u'Status Code: %d' % ret_code)
 
                 """
                 if self._send_cmd_infos:
@@ -143,15 +143,15 @@ class AtionHandlerThread(threading.Thread):
                     #self._send_info(u"%s %s" % (package_id, str(e)), SEND_INFO_ERROR)
                 #print >>stderr, "Error: ", e
             except (AuthenticationError, ConnectionError, FileNotFound, ChecksumViolation), e:
-                if self._status_gui:
-                    self._send_status(FAILED, package_id)
+                    self._pi_status_gui.update_package_status_by_id(package_id, FAILED)
                     #self._send_info(u"%s %s" % (package_id, str(e)), SEND_INFO_ERROR)
                 #print >>stderr, "Error: ", e
             except Exception as e:
                 print str(e)
                 print traceback.format_exc()
                 #self._send_status(FAILED, package_id)
-                self._pi_status_gui._lb_packages.Append((u"%s %s" % (package_id, str(e)), ))
+                self._pi_status_gui.update_package_status_by_id(package_id, FAILED)
+                self._pi_status_gui.add_info(<unsigned char>SEND_INFO_ERROR, u"%s %s" % (package_id, str(e)))
 
 
 

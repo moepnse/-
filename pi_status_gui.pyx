@@ -208,29 +208,18 @@ class NamedPipeThread(threading.Thread):
                         package_name = struct.unpack('!%ds' % package_name_length, data)[0]
                         self._log.log_debug(u"package_name: %s" % package_name)
                         if action in (INSTALLING, REMOVING, UPGRADING):
-                            package_status_index = self._pi_status_gui._lb_packages.GetItemCount()
-                        if action == INSTALLING:
-                            self._pi_status_gui._lb_packages.Append(("Installing %s (%s)..." % (package_name, package_id),))
-                        elif action == REMOVING:
-                            self._pi_status_gui._lb_packages.Append(("Removing %s (%s)..." % (package_name, package_id),))
-                        elif action == UPGRADING:
-                            self._pi_status_gui._lb_packages.Append(("Upgrading %s (%s)..." % (package_name, package_id),))
+                            package_status_index = self._pi_status_gui.add_package_status(package_id, package_name, action)
+                        elif action in (INSTALLED, UPGRADED, REMOVED, FAILED, UNKNOWN):
+                            self._pi_status_gui.update_package_status_by_id(package_id, action)
                         else:
                             self._log.log_err(u"Action %d unknown!" % action)
-                        self._pi_status_gui._lb_packages.SetItemColumnImage(package_status_index, 0, self._pi_status_gui._status_img_mapping[action])
-                        self._pi_status_gui._pb_status.progress += 1
                     elif response_type == SEND_INFO:
                         data = self._nph.read(5)
                         info_type, info_text_length = struct.unpack('!BI', data)
                         self._log.log_debug(u"info_text_length: %d" % <DWORD>info_text_length)
                         data = self._nph.read(<DWORD>info_text_length)
                         info_text = struct.unpack('!%ds' % info_text_length, data)[0]
-                        self._pi_status_gui._lb_packages.Append((info_text,))  
-                        if info_type == <unsigned char>SEND_INFO_ERROR:
-                            icon = self._pi_status_gui._ix_img_index
-                        elif info_type == <unsigned char>SEND_INFO_SUCCESS:
-                            icon = self._pi_status_gui._ih_img_index
-                        self._pi_status_gui._lb_packages.SetItemColumnImage(self._pi_status_gui._lb_packages.GetItemCount() - 1, 0, icon)
+                        self._pi_status_gui.add_status(info_type, info_text)
                     elif response_type == SEND_DONE:
                         self._log.log_info(u"pi_service is done!")
                         self._nph.close()

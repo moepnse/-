@@ -339,22 +339,28 @@ class MainWindow(wx.Frame):
         self.Show()
 
 
-class ActionConfirmDialog(wx.Frame):
-    def __init__(self, parent, package_list, *args, **kwargs):
-        wx.Frame.__init__(self, parent, title="Confirm changes", *args, **kwargs)
+class ActionConfirmDialogButtons(wx.Panel):
+
+    def __init__(self, parent, lb_actions, package_list, *args, **kwargs):
+        wx.Panel.__init__(self, parent, *args, **kwargs)
+        self._lb_actions = lb_actions
         self._package_list = package_list
-        self._sizer = wx.BoxSizer(wx.VERTICAL)
-        self._lb_actions = ActionList(self, 2)
-        self._lb_actions.InsertColumn(0, "Package ID")
-        self._lb_actions.InsertColumn(1, "Action")
+        self._h_sizer = wx.BoxSizer(wx.HORIZONTAL)
 
         self._bmp_handle_actions = wx.Bitmap("imgs/icons/16x16/h.png", wx.BITMAP_TYPE_ANY)
         self._cmd_handle_actions = wx.BitmapButton(self, id=wx.ID_ANY,  bitmap=self._bmp_handle_actions)
 
-        self.SetSizer(self._sizer)
-        self._sizer.AddMany(((self._lb_actions, 1, wx.EXPAND), (self._cmd_handle_actions, 0, wx.EXPAND)))
+        self._bmp_cancel = wx.Bitmap("imgs/icons/16x16/x.png", wx.BITMAP_TYPE_ANY)
+        self._cmd_cancel= wx.BitmapButton(self, id=wx.ID_ANY,  bitmap=self._bmp_cancel)
+
+        self.SetSizer(self._h_sizer)
+        self._h_sizer.AddMany(((self._cmd_handle_actions, 1, wx.EXPAND), (self._cmd_cancel, 1, wx.EXPAND)))
         self.Show()
         self.Bind(wx.EVT_BUTTON, self.__cmd_handle_actions_on_button, self._cmd_handle_actions)
+        self.Bind(wx.EVT_BUTTON, self.__cmd_cancel_on_button, self._cmd_cancel)
+
+    def __cmd_cancel_on_button(self, e):
+        self.Parent.Close()
 
     def __cmd_handle_actions_on_button(self, e):
         log = None
@@ -369,6 +375,22 @@ class ActionConfirmDialog(wx.Frame):
             action_list.append({'package_id': package_id, 'action': action})
         aht = AtionHandlerThread(pi_status_gui, log, self._package_list, action_list)
         aht.start()
+
+
+class ActionConfirmDialog(wx.Frame):
+
+    def __init__(self, parent, package_list, *args, **kwargs):
+        wx.Frame.__init__(self, parent, title="Confirm changes", *args, **kwargs)
+        self._package_list = package_list
+        self._v_sizer = wx.BoxSizer(wx.VERTICAL)
+        self._lb_actions = ActionList(self, 2)
+        self._lb_actions.InsertColumn(0, "Package ID")
+        self._lb_actions.InsertColumn(1, "Action")
+
+        self.SetSizer(self._v_sizer)
+        self._acdb = ActionConfirmDialogButtons(self, self._lb_actions, package_list)
+        self._v_sizer.AddMany(((self._lb_actions, 1, wx.EXPAND), (self._acdb, 0, wx.EXPAND)))
+        self.Show()
 
     def add_package(self, package_id, action):
         index = self._lb_actions.Append((package_id, action))

@@ -4370,7 +4370,7 @@ class InstalledList(libs.handlers.config.InstalledList):
     def __init__(self, installed_list_path, log, **kwargs):
         libs.handlers.config.InstalledList.__init__(self, installed_list_path, log)
         db_path = kwargs.get("db_path", "installed_packages.db")
-        self._conn = sqlite3.connect(db_path)
+        self._conn = sqlite3.connect(db_path, check_same_thread=False)
         # default sqlite cursor
         self._c = self._conn.cursor()
         # sqlite cursor for iteration

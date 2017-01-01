@@ -64,7 +64,7 @@ cdef class BaseHandler:
     def __cinit__(self):
         self._url_prefix = url_prefix
 
-    def __init__(self, object log, object status_handler, object url, object username=None, object password=None, bint log_info=True, bint log_warn=True, bint log_err=True, bint log_debug=False):
+    def __init__(self, object log, object status_handler, object url, object username=None, object password=None, bint log_info=True, bint log_warn=True, bint log_err=True, bint log_debug=False, **kargs):
         self._log = log
         self._status_handler = status_handler
         self._url = url

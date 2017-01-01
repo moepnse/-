@@ -51,7 +51,7 @@ cdef class SMBHandler(BaseHandler):
 
     def connect(self):
         cdef:
-            NETRESOURCEW nr        
+            NETRESOURCEW nr
             DWORD ret_val
             object url
         url = self._strip_url_prefix(self._url)

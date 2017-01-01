@@ -49,6 +49,7 @@ from c_iphlpapi cimport GetAdaptersAddresses
 from c_ws2tcpip cimport getnameinfo
 from c_windows cimport SERVICE_ACCEPT_SHUTDOWN, SERVICE_ACCEPT_STOP, SERVICE_CONTROL_SHUTDOWN, SERVICE_CONTROL_STOP, SERVICE_RUNNING, SERVICE_START_PENDING, SERVICE_STATUS, SERVICE_STATUS_HANDLE, SERVICE_STOPPED, SERVICE_STOP_PENDING, SERVICE_TABLE_ENTRY, SERVICE_TABLE_ENTRYW, SERVICE_WIN32, SERVICE_WIN32_OWN_PROCESS, SERVICE_WIN32_SHARE_PROCESS, SERVICE_INTERACTIVE_PROCESS, SERVICE_TYPE_ALL, LPSERVICE_MAIN_FUNCTIONW, LPSERVICE_MAIN_FUNCTIONW, LPHANDLER_FUNCTION, GetLastError, SetServiceStatus, RegisterServiceCtrlHandlerW,  StartServiceCtrlDispatcherW, CreateNamedPipeW, PIPE_ACCESS_DUPLEX, PIPE_ACCESS_OUTBOUND, PIPE_TYPE_MESSAGE, PIPE_READMODE_MESSAGE, PIPE_TYPE_BYTE, PIPE_WAIT, HANDLE, WriteFile, DisconnectNamedPipe, ConnectNamedPipe, WinExec, INVALID_HANDLE_VALUE, STARTF_USESTDHANDLES, STARTF_USESHOWWINDOW, SW_HIDE, CREATE_NEW_CONSOLE, CreateProcessW, CloseHandle, WaitForSingleObject, GetExitCodeProcess, PROCESS_INFORMATION, STARTUPINFOW, NETRESOURCE, INFINITE, wcscpy, wcslen, wcscpy_s, SecureZeroMemory, CREATE_UNICODE_ENVIRONMENT, WTSQueryUserToken, WTSGetActiveConsoleSessionId, CreateProcessAsUserW, GetVersion, LOBYTE, HIBYTE, LOWORD, HIWORD, CreateEnvironmentBlock, DuplicateTokenEx, TOKEN_ASSIGN_PRIMARY, TOKEN_ALL_ACCESS, _SECURITY_IMPERSONATION_LEVEL, WTS_SESSION_INFOW, WTSActive, WTSConnected, WTSConnectQuery, WTSShadow, WTSDisconnected, WTSIdle, WTSListen, WTSReset, WTSDown, WTSInit, WTS_CONNECTSTATE_CLASS, PWTS_SESSION_INFOW, WTSEnumerateSessionsW, WTS_CURRENT_SERVER_HANDLE, LPSECURITY_ATTRIBUTES, _WTS_CONNECTSTATE_CLASS, _SECURITY_IMPERSONATION_LEVEL, _TOKEN_TYPE, SecurityImpersonation, TokenPrimary, WTSQuerySessionInformationW, WTSFreeMemory, _wcsicmp, WTSUserName, WTSDomainName, ERROR_INVALID_PARAMETER, SetLastError, ERROR_INVALID_PARAMETER, GetUserProfileDirectoryW, DestroyEnvironmentBlock, MAX_PATH, SC_HANDLE, GetModuleFileNameW, OpenSCManagerW, CreateServiceW, SC_MANAGER_CONNECT, SC_MANAGER_CREATE_SERVICE, SERVICE_ERROR_NORMAL, SERVICE_QUERY_STATUS, SERVICE_STOP, DELETE, ControlService, CloseServiceHandle, QueryServiceStatus, DeleteService, Sleep, OpenServiceW, SERVICE_DEMAND_START, SERVICE_AUTO_START, GetModuleBaseNameW, EnumProcesses, EnumProcessModules, OpenProcess, PROCESS_QUERY_INFORMATION, PROCESS_VM_READ, HMODULE, TOKEN_QUERY, TOKEN_IMPERSONATE, TOKEN_DUPLICATE, OpenProcessToken, PROCESS_ALL_ACCESS, TOKEN_ADJUST_PRIVILEGES, TOKEN_QUERY, TOKEN_DUPLICATE, TOKEN_ASSIGN_PRIMARY, TOKEN_ADJUST_SESSIONID, TOKEN_READ, TOKEN_WRITE, TOKEN_PRIVILEGES, LUID, AdjustTokenPrivileges, DuplicateTokenEx, LookupPrivilegeValueW, SE_DEBUG_NAME, SE_PRIVILEGE_ENABLED, MAXIMUM_ALLOWED, SecurityIdentification,  SetTokenInformation, TokenSessionId, PTOKEN_PRIVILEGES, SetEvent, CreateEventW, OVERLAPPED, InitiateSystemShutdownW, AbortSystemShutdownW, GetCurrentProcess, SE_SHUTDOWN_NAME,  CTRL_SHUTDOWN_EVENT, CTRL_C_EVENT, SERVICE_CONTROL_PRESHUTDOWN, SERVICE_ACCEPT_PRESHUTDOWN, ShutdownBlockReasonCreate, QWORD, DSROLE_PRIMARY_DOMAIN_INFO_BASIC, DsRoleGetPrimaryDomainInformation, DsRolePrimaryDomainInfoBasic, ERROR_SUCCESS, BUFSIZ, MAKEWORD
 #from c_windows cimport IsWindowsVistaOrGreater
+from libs.handlers.dependencies cimport handle_dependencies, remove_depending_packages
 
 
 cdef:
@@ -1244,56 +1245,6 @@ cdef class PIService:
         #self._p.stdin.write(data)
         #self._p.stdin.flush()
 
-    def _handle_dependencies(self, package_id, action_list):
-        """
-        action_list = {
-            [
-                {   package_id:"winrar",
-                    installed: False,
-                }
-            ]
-        }
-        """
-        cdef:
-            object package
-            dict dependency
-            unicode dep_package_id
-        if package_id in self._package_list:
-            package = self._package_list[package_id]
-            for dependency in package.dependencies:
-                if not "package_id" in dependency:
-                    self._log.log_err(u"Error: package_id attribute is missing in dependency!")
-                    continue
-                if not "installed" in dependency:
-                    self._log.log_err(u"Error: installed attribute is missing in dependency!")
-                    continue
-                dep_package_id = dependency["package_id"]
-                self._handle_dependencies(dep_package_id, action_list)
-                if dependency['installed'] == False:
-                    dep_action = u"uninstall"
-                elif dependency['installed'] == True:
-                    dep_action = u"install"
-                self._remove_packages_with_conflicting_dependencies(dep_package_id, dep_action, action_list)
-                action_list.append({"package_id": dep_package_id, "action": dep_action})
-
-    #def _remove_packages_with_broken_dependencies(self, package_id):
-    def _remove_packages_with_conflicting_dependencies(self, unicode package_id, unicode action, action_list):
-        cdef:
-            dict dict_package
-            object package
-            dict dependency
-            int index
-            dict a_entry
-        for dict_package in action_list:
-            package = self._package_list[dict_package['package_id']]
-            for dependency in package.dependencies:
-                if package_id == dependency['package_id'] and dependency["installed"] == {u"install": False, u"uninstall": True}[action]:
-                    for index in range(0, len(action_list)):
-                        a_entry = action_list[index]
-                        if a_entry["package_id"] == dependency["package_id"] and a_entry["action"]  == {True: u"install", False: u"uninstall"}[dependency["installed"]]:
-                            del action_list[index]
-                            index = index -1
-
     def add_dependencies_to_action_list(self, action_list):
         pass
 
@@ -1313,7 +1264,7 @@ cdef class PIService:
                 continue
             for package in host.get_packages():
                 #package = {'action': u'install', 'package_id': u'7zip'}
-                self._handle_dependencies(package['package_id'], self._packages)
+                handle_dependencies(package['package_id'], self._packages, self._package_list)
                 self._packages.append(package)
             for profile in host.get_profiles():
                 self._profiles.append(profile)

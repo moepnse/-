@@ -1600,6 +1600,7 @@ def test():
 
 cdef main():
     cdef:
+        unicode log_path
         PWSTR SERVICE_NAME = <LPWSTR>u"pi_service"
 
         # Displayed name of the service
@@ -1663,8 +1664,9 @@ cdef main():
             else:
                 uninstall_service(SERVICE_NAME)
     else:
-        sys.stdout = FileHandler(r"C:\pi_cython\pi_service.out", 'w')
-        sys.stderr = FileHandler(r"C:\pi_cython\pi_service.err", 'w')
+        log_path = get_application_path()
+        sys.stdout = FileHandler(os.path.join(log_path, r"pi_service.out"), 'w')
+        sys.stderr = FileHandler(os.path.join(log_path, r"pi_service.err"), 'w')
         init_service()
 
     #sys.stdout = open(r"C:\alice.pi.log", "w")

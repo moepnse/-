@@ -41,7 +41,7 @@ cdef __handle_dependencies(_package_list, package_id, action_list, package_list,
             action_list.append({'package_list': _package_list, "package_id": dep_package_id, "action": dep_action})
 
 
-cdef handle_dependencies(package_id, action_list, package_list, package_lists):
+cdef handle_dependencies(package_id, action_list, package_list, package_lists=[]):
     """
     action_list = {
         [

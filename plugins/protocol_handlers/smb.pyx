@@ -41,7 +41,7 @@ cdef class SMBHandler(BaseHandler):
     def __init__(self, log, status_handler, unicode url, username=None, password=None, log_info=True, log_warn=True, log_err=True, log_debug=False, **kwargs):
         #libs.handlers.protocol.BaseHandler.__init__(self, log, url, username=username, password=password, log_info=log_info, log_warn=log_warn, log_err=log_err, log_debug=log_debug)
         self._url_prefix = url_prefix
-        BaseHandler.__init__(self, log, status_handler, url, username=username, password=password, log_info=log_info, log_warn=log_warn, log_err=log_err, log_debug=log_debug)
+        BaseHandler.__init__(self, log, status_handler, url, username=username, password=password, log_info=log_info, log_warn=log_warn, log_err=log_err, log_debug=log_debug, **kwargs)
 
         self._connected = False
         self._buffer_data = kwargs.get("buffer_data", False)

@@ -37,7 +37,7 @@ cdef class HTTPHandler(BaseHandler):
     def __init__(self, log, status_handler, url, username=None, password=None, **kwargs):
         #libs.handlers.protocol.BaseHandler.__init__(self, log, url, username, password)
         self._url_prefix = url_prefix
-        BaseHandler.__init__(self, log, status_handler, url, username, password)
+        BaseHandler.__init__(self, log, status_handler, url, username, password, **kwargs)
         self._url_prefix2 = "https"
         self._cache_path = u"cache\http"
         self._use_cache = True

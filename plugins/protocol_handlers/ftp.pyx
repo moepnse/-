@@ -16,7 +16,7 @@ cdef class FTPHandler(BaseHandler):
 
     def __init__(self, url, username, password, **kwargs):
         #libs.handlers.protocol.BaseHandler.__init__(self, url, username, password)
-        BaseHandler.__init__(self, url, username, password)
+        BaseHandler.__init__(self, url, username, password, **kwargs)
 
 def register_handler(plugins):
     plugins[url_prefix[:-3]] = FTPHandler

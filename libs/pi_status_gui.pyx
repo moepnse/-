@@ -9,6 +9,7 @@ import wx
 
 # application/library imports
 from libs.handlers.status import INSTALLING, UPGRADING, REMOVING, INSTALLED, UPGRADED, REMOVED, FAILED, UNKNOWN, SEND_STATUS, SEND_INFO, SEND_INFO_SUCCESS, SEND_INFO_WARN, SEND_INFO_ERROR, SEND_DONE
+from libs.handlers.config cimport st__info, st__success, st__warn, st__error
 from libs.common import get_application_path
 from libs.aimg import AnimatedImg, AnimatedImgFrame
 
@@ -315,8 +316,14 @@ class PIStatusGUI(wx.Frame):
 
     def add_info(self, unsigned char info_type, info_text):
         self._lb_packages.Append((info_text,))
-        if info_type == <unsigned char>SEND_INFO_ERROR:
+        if info_type == st__info:
+            icon = self._i_img_index
+        elif info_type == st__error:
             icon = self._ix_img_index
-        elif info_type == <unsigned char>SEND_INFO_SUCCESS:
+        elif info_type == st__success:
             icon = self._ih_img_index
+        elif info_type == st__warn:
+            icon = self._ix_img_index
+        else:
+            icon = self._u_img_index
         self._lb_packages.SetItemColumnImage(self._lb_packages.GetItemCount() - 1, 0, icon)

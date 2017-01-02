@@ -156,8 +156,18 @@ class AtionHandlerThread(threading.Thread):
 
 
 class StatusHandler(BaseStatusHandler):
+
+    def __init__(self):
+        self._status_gui = None
+
+    def set_status_gui(self, status_gui):
+        self._status_gui = status_gui
+
     def set_status(self, int source_id, int status_type, unicode status_source_name, int status_id, unicode description):
-        return BaseStatusHandler.set_status(self, source_id, status_type, status_source_name, status_id, description)
+        status_id =  BaseStatusHandler.set_status(self, source_id, status_type, status_source_name, status_id, description)
+        if self._status_gui is not None:
+            self._status_gui.add_info(status_type, description)
+        return status_id
 
     def update_status(self, int old_status_id, int status_type, int status_id, unicode description):
         pass
@@ -244,9 +254,10 @@ class ActionFieldSizer(wx.BoxSizer):
 
 
 class ActionsHSPanel(wx.Panel):
-    def __init__(self, parent, package_list, package_lists=[]):
+    def __init__(self, parent, package_list, status_handler, package_lists=[]):
 
         self._package_list = package_list
+        self._status_handler = status_handler
         self._package_lists = package_lists
 
         wx.Panel.__init__(self, parent)
@@ -266,7 +277,7 @@ class ActionsHSPanel(wx.Panel):
         self.Bind(wx.EVT_BUTTON, self.__cmd_handle_actions_on_button, self._cmd_handle_actions)
 
     def __cmd_handle_actions_on_button(self, e):
-        acd = ActionConfirmDialog(None, self._package_list)
+        acd = ActionConfirmDialog(None, self._package_list, self._status_handler)
         for row in range(self._lb_actions.GetItemCount()):
             action_list = []
             #index = self._lb_actions.GetItemData(row)
@@ -283,15 +294,15 @@ class ActionsHSPanel(wx.Panel):
 class MainWindow(wx.Frame):
     def __init__(self, *args, **kwargs):
         wx.Frame.__init__(self, title="Package Installer", *args, **kwargs)
-        status_hanlder = StatusHandler()
+        status_handler = StatusHandler()
         settings = settings_factory(get_settings_config_path('pi_settings.path'))
         plugins = get_ph_plugins()
         log_plugins = get_log_plugins()
         log_targets = log_list_factory(settings.log_list, log_plugins)
         log = Log(log_targets)
-        connection_list = connection_list_factory(settings.connection_list, plugins, log, status_hanlder)
+        connection_list = connection_list_factory(settings.connection_list, plugins, log, status_handler)
         installed_list = installed_list_factory(settings.installed_list, log)
-        package_list = package_list_factory(settings.package_list, connection_list, installed_list, log, status_hanlder)
+        package_list = package_list_factory(settings.package_list, connection_list, installed_list, log, status_handler)
         if settings.target_source == 'install_list':
             install_list = install_list_factory(settings.install_list, connection_list, log)
         else:
@@ -310,7 +321,7 @@ class MainWindow(wx.Frame):
         self._lb_packages.InsertColumn(5, "Description")
         self._lb_packages.InsertColumn(6, "Action")
 
-        self._actions_hs_panel = ActionsHSPanel(self._h_splitter, package_list)
+        self._actions_hs_panel = ActionsHSPanel(self._h_splitter, package_list, status_handler)
 
         self._h_splitter.SplitHorizontally(self._lb_packages, self._actions_hs_panel)
         self._h_splitter.SetSashGravity(0.5)
@@ -341,10 +352,11 @@ class MainWindow(wx.Frame):
 
 class ActionConfirmDialogButtons(wx.Panel):
 
-    def __init__(self, parent, lb_actions, package_list, *args, **kwargs):
+    def __init__(self, parent, lb_actions, package_list, status_handler, *args, **kwargs):
         wx.Panel.__init__(self, parent, *args, **kwargs)
         self._lb_actions = lb_actions
         self._package_list = package_list
+        self._status_handler = status_handler
         self._h_sizer = wx.BoxSizer(wx.HORIZONTAL)
 
         self._bmp_handle_actions = wx.Bitmap("imgs/icons/16x16/h.png", wx.BITMAP_TYPE_ANY)
@@ -365,6 +377,7 @@ class ActionConfirmDialogButtons(wx.Panel):
     def __cmd_handle_actions_on_button(self, e):
         log = None
         pi_status_gui = PIStatusGUI(log)
+        self._status_handler.set_status_gui(pi_status_gui)
         pi_status_gui.Show()
         action_list = []
         for row in range(self._lb_actions.GetItemCount()):
@@ -379,7 +392,7 @@ class ActionConfirmDialogButtons(wx.Panel):
 
 class ActionConfirmDialog(wx.Frame):
 
-    def __init__(self, parent, package_list, *args, **kwargs):
+    def __init__(self, parent, package_list, status_handler, *args, **kwargs):
         wx.Frame.__init__(self, parent, title="Confirm changes", *args, **kwargs)
         self._package_list = package_list
         self._v_sizer = wx.BoxSizer(wx.VERTICAL)
@@ -388,7 +401,7 @@ class ActionConfirmDialog(wx.Frame):
         self._lb_actions.InsertColumn(1, "Action")
 
         self.SetSizer(self._v_sizer)
-        self._acdb = ActionConfirmDialogButtons(self, self._lb_actions, package_list)
+        self._acdb = ActionConfirmDialogButtons(self, self._lb_actions, package_list, status_handler)
         self._v_sizer.AddMany(((self._lb_actions, 1, wx.EXPAND), (self._acdb, 0, wx.EXPAND)))
         self.Show()
 

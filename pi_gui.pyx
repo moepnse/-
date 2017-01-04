@@ -26,7 +26,7 @@ from wx.lib.agw import ultimatelistctrl as ULC
 from package_installer import get_config_plugins, installed_list_factory, settings_factory, package_list_factory, profile_list_factory, install_list_factory, connection_list_factory, log_list_factory, host_list_factory, Log, get_ph_plugins, get_log_plugins, get_settings_config_path
 from libs.pi_status_gui import PIStatusGUI
 from package_installer import get_application_path, settings_factory, install_list_factory, installed_list_factory, package_list_factory, host_list_factory, connection_list_factory, log_list_factory, Log, get_ph_plugins, get_log_plugins
-from libs.handlers.config import RETURN_ID, RET_CODE_UNKNOWN, RET_CODE_SUCCESS, RET_CODE_ERROR, RET_CODE_ALREADY_INSTALLED, RET_CODE_ALREADY_REMOVED, RET_CODE_PACKAGE_NOT_FOUND, ChecksumViolation
+from libs.handlers.config import RETURN_ID, RET_CODE_UNKNOWN, RET_CODE_SUCCESS, RET_CODE_ERROR, RET_CODE_ALREADY_INSTALLED, RET_CODE_ALREADY_REMOVED, RET_CODE_PACKAGE_NOT_FOUND, RET_CODE_DEPENDENCY_NOT_SATISFIABLE, ChecksumViolation
 from libs.handlers.protocol import FileNotFound, ConnectionError, AuthenticationError
 from libs.handlers.status import INSTALLING, UPGRADING, REMOVING, INSTALLED, UPGRADED, REMOVED, FAILED, UNKNOWN, SEND_STATUS, SEND_INFO, SEND_INFO_SUCCESS, SEND_INFO_WARN, SEND_INFO_ERROR, SEND_DONE
 from libs.common import get_application_path
@@ -34,7 +34,7 @@ from libs.common import get_application_path
 import libs
 
 from libs.handlers.config cimport StatusHandler as BaseStatusHandler, STATUS_SOURCE, ss__cmd, ss__connection_handler, ss__protocol, STATUS_TYPES, st__info, st__success, st__warn, st__error
-from libs.handlers.dependencies cimport handle_dependencies
+from libs.handlers.dependencies cimport handle_dependencies, check_dependencies, add_package_status, check_if_package_is_needed
 
 
 class AtionHandlerThread(threading.Thread):
@@ -61,6 +61,7 @@ class AtionHandlerThread(threading.Thread):
             unicode file = u""
             unicode path = u""
             unicode cmd_info = u""
+            dict package_status_mapping = {}
 
         for package in self._action_list:
             package_id = package['package_id']
@@ -72,37 +73,49 @@ class AtionHandlerThread(threading.Thread):
                 if package_id in self._package_list.keys():
                     if action == 'install':
                         self._pi_status_gui.add_package_status(package_id, package_name, INSTALLING)
-                        ret_code, cmd_list = self._package_list.install(package_id)
-                        if ret_code in (RET_CODE_SUCCESS, RET_CODE_ALREADY_INSTALLED):
-                            status = INSTALLED
-                        elif ret_code == RET_CODE_UNKNOWN:
-                            status = UNKNOWN
+                        if check_dependencies(package_status_mapping, self._package_list[package_id]):
+                            ret_code, cmd_list = self._package_list.install(package_id)
+                            if ret_code in (RET_CODE_SUCCESS, RET_CODE_ALREADY_INSTALLED):
+                                status = INSTALLED
+                            elif ret_code == RET_CODE_UNKNOWN:
+                                status = UNKNOWN
+                            else:
+                                status = FAILED
                         else:
+                            ret_code = RET_CODE_DEPENDENCY_NOT_SATISFIABLE
                             status = FAILED
                     elif action == 'upgrade':
                         self._pi_status_gui.add_package_status(package_id, package_name, UPGRADING)
-                        ret_code, cmd_list = self._package_list.upgrade(package_id)
-                        if ret_code in (RET_CODE_SUCCESS, RET_CODE_ALREADY_INSTALLED):
-                            status = UPGRADED
-                        elif ret_code == RET_CODE_UNKNOWN:
-                            status = UNKNOWN
+                        if check_dependencies(package_status_mapping, self._package_list[package_id]):
+                            ret_code, cmd_list = self._package_list.upgrade(package_id)
+                            if ret_code in (RET_CODE_SUCCESS, RET_CODE_ALREADY_INSTALLED):
+                                status = UPGRADED
+                            elif ret_code == RET_CODE_UNKNOWN:
+                                status = UNKNOWN
+                            else:
+                                status = FAILED
                         else:
+                            ret_code = RET_CODE_DEPENDENCY_NOT_SATISFIABLE
                             status = FAILED
-
                     elif action == 'remove' or action == 'uninstall':
                         self._pi_status_gui.add_package_status(package_id, package_name, REMOVING)
-                        ret_code, cmd_list = self._package_list.uninstall(package_id)
-                        if ret_code in (RET_CODE_SUCCESS, RET_CODE_ALREADY_REMOVED):
-                            status = REMOVED
-                        elif ret_code == RET_CODE_UNKNOWN:
-                            status = UNKNOWN
+                        if not check_if_package_is_needed(package_status_mapping, package, self._package_list):
+                            ret_code, cmd_list = self._package_list.uninstall(package_id)
+                            if ret_code in (RET_CODE_SUCCESS, RET_CODE_ALREADY_REMOVED):
+                                status = REMOVED
+                            elif ret_code == RET_CODE_UNKNOWN:
+                                status = UNKNOWN
+                            else:
+                                status = FAILED
                         else:
+                            ret_code = RET_CODE_DEPENDENCY_NOT_SATISFIABLE
                             status = FAILED
                     else:
                         status = FAILED
                 else:
                     status = FAILED
                     ret_code = RET_CODE_PACKAGE_NOT_FOUND
+                add_package_status(package_status_mapping, package_id, False if status == FAILED else True)
                 #print status, package_id
                 if ret_code != RET_CODE_PACKAGE_NOT_FOUND:
                     self._pi_status_gui.update_package_status_by_id(package_id, status)
@@ -112,6 +125,8 @@ class AtionHandlerThread(threading.Thread):
                     self._pi_status_gui.add_info(SEND_INFO_SUCCESS, u"Already removed!")
                 elif ret_code == RET_CODE_PACKAGE_NOT_FOUND:
                     self._pi_status_gui.add_info(SEND_INFO_ERROR, u"Package with id: %s not found!" % package_id)
+                elif ret_code == RET_CODE_DEPENDENCY_NOT_SATISFIABLE:
+                    self._pi_status_gui.add_info(SEND_INFO_ERROR, u"Package with id: %s has dependency problems!" % package_id)
                 else:
                     self._pi_status_gui.add_info(SEND_INFO_ERROR, u'Status Code: %d' % ret_code)
 

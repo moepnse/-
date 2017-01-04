@@ -35,7 +35,7 @@ from c_windows cimport SetConsoleTextAttribute, GetStdHandle, STD_OUTPUT_HANDLE,
 from libs.handlers.config cimport StatusHandler as BaseStatusHandler, STATUS_SOURCE, ss__cmd, ss__connection_handler, ss__protocol, STATUS_TYPES, st__info, st__success, st__warn, st__error
 from libs.handlers.config import ChecksumViolation
 from libs.handlers.protocol import FileNotFound, ConnectionError, AuthenticationError
-from libs.handlers.dependencies cimport handle_dependencies, remove_depending_packages
+from libs.handlers.dependencies cimport handle_dependencies, remove_depending_packages, check_dependencies, add_package_status, check_if_package_is_needed
 from libs.win.software cimport SoftwareList
 
 
@@ -505,6 +505,8 @@ cdef _handle_actions(action_list):
         list cmd_list
         dict dict_package
         object package_list
+        dict package_status_mapping = {}
+        bint success
     for dict_package in action_list:
         try:
             if not "action" in dict_package:
@@ -520,16 +522,23 @@ cdef _handle_actions(action_list):
                     print "Nothing todo, %s (%s) is allready installed!" % (package_id, package.name)
                     continue
                 print "Installing package: %s" % package_id
-                status, cmd_list = package_list.install(package_id)
-                print "status: %d, executed cmds: %s" % (status, cmd_list)
-
+                if not check_if_package_is_needed(package_status_mapping, package, package_list):
+                    status, cmd_list = package_list.install(package_id)
+                    print "status: %d, executed cmds: %s" % (status, cmd_list)
+                else:
+                    success = False
+                    print >>stderr, "Dependency Problem!"
             elif dict_package["action"] == "uninstall":
                 if not package.installed:
                     print "Nothing todo, %s (%s) is not installed!" % (package_id, package.name)
                     continue
                 print "Uninstalling package: %s" % package_id
-                status, cmd_list = package_list.uninstall(package_id)
-                print "status: %d, executed cmds: %s" % (status, cmd_list)
+                if not check_if_package_is_needed(package_status_mapping, package, package_list):
+                    status, cmd_list = package_list.uninstall(package_id)
+                    print "status: %d, executed cmds: %s" % (status, cmd_list)
+                else:
+                    success = False
+                    print >>stderr, "Dependency Problem!"
         except ChecksumViolation, e:
             print >>stderr, "Error: Checksum violation!"
         except FileNotFound, e:
@@ -538,6 +547,7 @@ cdef _handle_actions(action_list):
             print >>stderr, "Error: ", e
         except AuthenticationError, e:
             print >>stderr, "Error: ", e
+        add_package_status(package_status_mapping, package_id, success)
     print "Done"
 
 

@@ -95,3 +95,50 @@ cdef remove_depending_packages(package_id, action_list, package_list, package_li
     _remove_depending_packages(package_id, action_list, package_list, package_list, package_lists)
     for _package_list in package_lists:
         _remove_depending_packages(package_id, action_list, _package_list, package_list, package_lists)
+
+
+cdef add_package_status(dict package_status_mapping, unicode package_id, bint success):
+    package_status_mapping[package_id] = success
+
+
+cdef bint check_dependencies(dict package_status_mapping, object package):
+    cdef:
+        object dep
+        unicode package_id
+
+    for dep in package.dependencies:
+        package_id = dep['package_id']
+        if not package_status_mapping[package_id]:
+            return False
+    return True
+
+
+cdef bint _is_a_dependency(object package1, object package2):
+    cdef:
+        list dep
+
+    for dep in package1.dependencies:
+        if dep['package_id'] == package2.package_id:
+            return True
+    return False
+
+
+cdef bint _check_if_package_is_needed(dict package_status_mapping, object package, list package_list):
+    for _package in package_list:
+        if _is_a_dependency(_package, package):
+            if _package.package_id in package_status_mapping and package_status_mapping[_package.package_id]:
+                continue
+            return True
+    return False
+
+
+cdef bint check_if_package_is_needed(dict package_status_mapping, object package, package_list, package_lists=[]):
+    cdef:
+        object dep
+        list _package_list
+    if _check_if_package_is_needed(package_status_mapping, package, package_list):
+        return True
+    for _package_list in package_lists:
+        if _check_if_package_is_needed(package_status_mapping, package, _package_list):
+            return True
+    return False

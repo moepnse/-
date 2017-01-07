@@ -360,15 +360,17 @@ cdef class Cmd(BaseCmd):
             placeholder = u'%s %s'
         return placeholder % (path, ' '.join([unicode(parameter) for parameter in parameters]))
 
-    cdef unsigned long _execute(self, object parameters=[]) except *:
+    cdef long long _execute(self, object parameters=[]) except *:
         cdef:
-            unsigned long ret_code = 0
+            long long ret_code = -1
         self._get_connection_handler()
         if self._connection_handler is None:
             #print "NO CONNECTION HANDLER"
             return RET_CODE_ERROR
         ret_code = self._connection_handler.execute(self._get_cmd(self._path, parameters))
-        if ret_code in self._error_codes:
+        if ret_code == -1:
+            self._ret_code_type = RET_CODE_ERROR
+        elif ret_code in self._error_codes:
             self._ret_code_type = RET_CODE_ERROR
             self._ret_code_description = self._error_codes[ret_code]
         elif ret_code in self._success_codes:
@@ -479,7 +481,7 @@ cdef class Package(BaseVersion):
     def _execute_cmds(self, cmds):
         cdef:
             int status = RET_CODE_SUCCESS
-            unsigned long cmd_ret_code = 0
+            long long cmd_ret_code = -1
             unicode cmd_ret_code_description
             unsigned long cmd_status_code = 0
             unicode cmd_status_code_description
@@ -517,7 +519,9 @@ cdef class Package(BaseVersion):
                 #    status = RET_CODE_ERROR
                 #    continue
                 ret_code_type = cmd.ret_code_type
-                if ret_code_type == RET_CODE_SUCCESS and cmd_ret_code in cmd.success_codes:
+                if cmd_ret_code == -1:
+                    cmd_ret_code_description = u"Execution Error!"
+                elif ret_code_type == RET_CODE_SUCCESS and cmd_ret_code in cmd.success_codes:
                     cmd_ret_code_description = cmd.success_codes[cmd_ret_code]
                 elif ret_code_type == RET_CODE_ERROR and cmd_ret_code in cmd.error_codes:
                     cmd_ret_code_description = cmd.error_codes[cmd_ret_code]

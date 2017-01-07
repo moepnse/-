@@ -52,7 +52,7 @@ cdef class Cmd(BaseCmd):
         public object _ret_code_type
         public object _ret_code_description
 
-    cdef unsigned long _execute(self, object parameters=*) except *
+    cdef long long _execute(self, object parameters=*) except *
 
 
 cdef class BaseVersion:

@@ -2725,9 +2725,9 @@ cdef class LuaCmd(Cmd):
     def ref(self):
         return self._ref
 
-    cdef unsigned long _execute(self, object parameters=[]) except *:
+    cdef long long _execute(self, object parameters=[]) except *:
         cdef:
-            unsigned long ret_code = 0
+            long long ret_code = -1
             const char* err_msg
 
         global lua_log_err

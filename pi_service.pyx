@@ -26,7 +26,7 @@ import traceback
 # application/library imports
 from package_installer import get_config_plugins, installed_list_factory, settings_factory, package_list_factory, profile_list_factory, install_list_factory, connection_list_factory, log_list_factory, host_list_factory, Log, get_ph_plugins, get_log_plugins, get_settings_config_path
 from libs.handlers.status import INSTALLING, UPGRADING, REMOVING, INSTALLED, UPGRADED, REMOVED, FAILED, UNKNOWN, SEND_STATUS, SEND_INFO, SEND_INFO_SUCCESS, SEND_INFO_WARN, SEND_INFO_ERROR, SEND_DONE
-from libs.handlers.config import RETURN_ID, RET_CODE_UNKNOWN, RET_CODE_SUCCESS, RET_CODE_ERROR, RET_CODE_ALREADY_INSTALLED, RET_CODE_ALREADY_REMOVED, RET_CODE_PACKAGE_NOT_FOUND, ChecksumViolation
+from libs.handlers.config import RETURN_ID, RET_CODE_UNKNOWN, RET_CODE_SUCCESS, RET_CODE_ERROR, RET_CODE_ALREADY_INSTALLED, RET_CODE_ALREADY_REMOVED, RET_CODE_PACKAGE_NOT_FOUND, RET_CODE_DEPENDENCY_NOT_SATISFIABLE, ChecksumViolation
 from libs.handlers.protocol import FileNotFound, ConnectionError, AuthenticationError
 import libs.win.commandline
 import libs.win.winreg
@@ -49,7 +49,7 @@ from c_iphlpapi cimport GetAdaptersAddresses
 from c_ws2tcpip cimport getnameinfo
 from c_windows cimport SERVICE_ACCEPT_SHUTDOWN, SERVICE_ACCEPT_STOP, SERVICE_CONTROL_SHUTDOWN, SERVICE_CONTROL_STOP, SERVICE_RUNNING, SERVICE_START_PENDING, SERVICE_STATUS, SERVICE_STATUS_HANDLE, SERVICE_STOPPED, SERVICE_STOP_PENDING, SERVICE_TABLE_ENTRY, SERVICE_TABLE_ENTRYW, SERVICE_WIN32, SERVICE_WIN32_OWN_PROCESS, SERVICE_WIN32_SHARE_PROCESS, SERVICE_INTERACTIVE_PROCESS, SERVICE_TYPE_ALL, LPSERVICE_MAIN_FUNCTIONW, LPSERVICE_MAIN_FUNCTIONW, LPHANDLER_FUNCTION, GetLastError, SetServiceStatus, RegisterServiceCtrlHandlerW,  StartServiceCtrlDispatcherW, CreateNamedPipeW, PIPE_ACCESS_DUPLEX, PIPE_ACCESS_OUTBOUND, PIPE_TYPE_MESSAGE, PIPE_READMODE_MESSAGE, PIPE_TYPE_BYTE, PIPE_WAIT, HANDLE, WriteFile, DisconnectNamedPipe, ConnectNamedPipe, WinExec, INVALID_HANDLE_VALUE, STARTF_USESTDHANDLES, STARTF_USESHOWWINDOW, SW_HIDE, CREATE_NEW_CONSOLE, CreateProcessW, CloseHandle, WaitForSingleObject, GetExitCodeProcess, PROCESS_INFORMATION, STARTUPINFOW, NETRESOURCE, INFINITE, wcscpy, wcslen, wcscpy_s, SecureZeroMemory, CREATE_UNICODE_ENVIRONMENT, WTSQueryUserToken, WTSGetActiveConsoleSessionId, CreateProcessAsUserW, GetVersion, LOBYTE, HIBYTE, LOWORD, HIWORD, CreateEnvironmentBlock, DuplicateTokenEx, TOKEN_ASSIGN_PRIMARY, TOKEN_ALL_ACCESS, _SECURITY_IMPERSONATION_LEVEL, WTS_SESSION_INFOW, WTSActive, WTSConnected, WTSConnectQuery, WTSShadow, WTSDisconnected, WTSIdle, WTSListen, WTSReset, WTSDown, WTSInit, WTS_CONNECTSTATE_CLASS, PWTS_SESSION_INFOW, WTSEnumerateSessionsW, WTS_CURRENT_SERVER_HANDLE, LPSECURITY_ATTRIBUTES, _WTS_CONNECTSTATE_CLASS, _SECURITY_IMPERSONATION_LEVEL, _TOKEN_TYPE, SecurityImpersonation, TokenPrimary, WTSQuerySessionInformationW, WTSFreeMemory, _wcsicmp, WTSUserName, WTSDomainName, ERROR_INVALID_PARAMETER, SetLastError, ERROR_INVALID_PARAMETER, GetUserProfileDirectoryW, DestroyEnvironmentBlock, MAX_PATH, SC_HANDLE, GetModuleFileNameW, OpenSCManagerW, CreateServiceW, SC_MANAGER_CONNECT, SC_MANAGER_CREATE_SERVICE, SERVICE_ERROR_NORMAL, SERVICE_QUERY_STATUS, SERVICE_STOP, DELETE, ControlService, CloseServiceHandle, QueryServiceStatus, DeleteService, Sleep, OpenServiceW, SERVICE_DEMAND_START, SERVICE_AUTO_START, GetModuleBaseNameW, EnumProcesses, EnumProcessModules, OpenProcess, PROCESS_QUERY_INFORMATION, PROCESS_VM_READ, HMODULE, TOKEN_QUERY, TOKEN_IMPERSONATE, TOKEN_DUPLICATE, OpenProcessToken, PROCESS_ALL_ACCESS, TOKEN_ADJUST_PRIVILEGES, TOKEN_QUERY, TOKEN_DUPLICATE, TOKEN_ASSIGN_PRIMARY, TOKEN_ADJUST_SESSIONID, TOKEN_READ, TOKEN_WRITE, TOKEN_PRIVILEGES, LUID, AdjustTokenPrivileges, DuplicateTokenEx, LookupPrivilegeValueW, SE_DEBUG_NAME, SE_PRIVILEGE_ENABLED, MAXIMUM_ALLOWED, SecurityIdentification,  SetTokenInformation, TokenSessionId, PTOKEN_PRIVILEGES, SetEvent, CreateEventW, OVERLAPPED, InitiateSystemShutdownW, AbortSystemShutdownW, GetCurrentProcess, SE_SHUTDOWN_NAME,  CTRL_SHUTDOWN_EVENT, CTRL_C_EVENT, SERVICE_CONTROL_PRESHUTDOWN, SERVICE_ACCEPT_PRESHUTDOWN, ShutdownBlockReasonCreate, QWORD, DSROLE_PRIMARY_DOMAIN_INFO_BASIC, DsRoleGetPrimaryDomainInformation, DsRolePrimaryDomainInfoBasic, ERROR_SUCCESS, BUFSIZ, MAKEWORD
 #from c_windows cimport IsWindowsVistaOrGreater
-from libs.handlers.dependencies cimport handle_dependencies, remove_depending_packages
+from libs.handlers.dependencies cimport handle_dependencies, remove_depending_packages, check_dependencies, add_package_status, check_if_package_is_needed
 
 
 cdef:
@@ -1285,6 +1285,7 @@ cdef class PIService:
         cdef:
             unsigned char status = 0
             unsigned long ret_code = 0
+            dict dict_package
             object package
             object action
             object package_id
@@ -1293,10 +1294,11 @@ cdef class PIService:
             unicode file = u""
             unicode path = u""
             unicode cmd_info = u""
+            dict package_status_mapping = {}
 
-        for package in packages:
-            package_id = package['package_id']
-            action = package['action']
+        for dict_package in packages:
+            package_id = dict_package['package_id']
+            action = dict_package['action']
             self._log.log_debug(u"[pi_service] %s, %s" % (action, package_id))
             cmd_list = []
             try:
@@ -1304,40 +1306,53 @@ cdef class PIService:
                 #action = package['action']
                 self._log.log_info(u"[pi_service] [%d] %s %s" % (libs.common.get_current_line_nr(), package_id, action))
                 if package_id in self._package_list.keys():
+                    package = self._package_list[package_id]
                     if action == 'install':
                         if self._status_gui:
                             self._send_status(INSTALLING, package_id)
-                        ret_code, cmd_list = self._package_list.install(package_id)
-                        self._log.log_info(u"[pi_service] [%d] %s - status %s" % (libs.common.get_current_line_nr(), package_id, ret_code))
-                        if ret_code in (RET_CODE_SUCCESS, RET_CODE_ALREADY_INSTALLED):
-                            status = INSTALLED
-                        elif ret_code == RET_CODE_UNKNOWN:
-                            status = UNKNOWN
+                        if check_dependencies(package_status_mapping, self._package_list[package_id]):
+                            ret_code, cmd_list = self._package_list.install(package_id)
+                            self._log.log_info(u"[pi_service] [%d] %s - status %s" % (libs.common.get_current_line_nr(), package_id, ret_code))
+                            if ret_code in (RET_CODE_SUCCESS, RET_CODE_ALREADY_INSTALLED):
+                                status = INSTALLED
+                            elif ret_code == RET_CODE_UNKNOWN:
+                                status = UNKNOWN
+                            else:
+                                status = FAILED
                         else:
+                            ret_code = RET_CODE_DEPENDENCY_NOT_SATISFIABLE
                             status = FAILED
                     elif action == 'upgrade':
                         if self._status_gui:
                             self._send_status(UPGRADING, package_id)
-                        ret_code, cmd_list = self._package_list.upgrade(package_id)
-                        self._log.log_info(u"[pi_service] [%d] %s - status %s" % (libs.common.get_current_line_nr(), package_id, ret_code))
-                        if ret_code in (RET_CODE_SUCCESS, RET_CODE_ALREADY_INSTALLED):
-                            status = UPGRADED
-                        elif ret_code == RET_CODE_UNKNOWN:
-                            status = UNKNOWN
+                        if check_dependencies(package_status_mapping, self._package_list[package_id]):
+                            ret_code, cmd_list = self._package_list.upgrade(package_id)
+                            self._log.log_info(u"[pi_service] [%d] %s - status %s" % (libs.common.get_current_line_nr(), package_id, ret_code))
+                            if ret_code in (RET_CODE_SUCCESS, RET_CODE_ALREADY_INSTALLED):
+                                status = UPGRADED
+                            elif ret_code == RET_CODE_UNKNOWN:
+                                status = UNKNOWN
+                            else:
+                                status = FAILED
                         else:
+                            ret_code = RET_CODE_DEPENDENCY_NOT_SATISFIABLE
                             status = FAILED
-
                     elif action == 'remove' or action == 'uninstall':
                         if self._status_gui:
                             self._send_status(REMOVING, package_id)
-                        ret_code, cmd_list = self._package_list.uninstall(package_id)
-                        self._log.log_info(u"[pi_service] [%d] %s - status %s" % (libs.common.get_current_line_nr(), package_id, ret_code))
-                        if ret_code in (RET_CODE_SUCCESS, RET_CODE_ALREADY_REMOVED):
-                            status = REMOVED
-                        elif ret_code == RET_CODE_UNKNOWN:
-                            status = UNKNOWN
+                        if not check_if_package_is_needed(package_status_mapping, package, self._package_list):
+                            ret_code, cmd_list = self._package_list.uninstall(package_id)
+                            self._log.log_info(u"[pi_service] [%d] %s - status %s" % (libs.common.get_current_line_nr(), package_id, ret_code))
+                            if ret_code in (RET_CODE_SUCCESS, RET_CODE_ALREADY_REMOVED):
+                                status = REMOVED
+                            elif ret_code == RET_CODE_UNKNOWN:
+                                status = UNKNOWN
+                            else:
+                                status = FAILED
                         else:
+                            ret_code = RET_CODE_DEPENDENCY_NOT_SATISFIABLE
                             status = FAILED
+                        add_package_status(package_status_mapping, package_id, False if status == FAILED else True)
                     else:
                         self._log.log_err(u"[pi_service] [%d] Unknown action %s!" % (libs.common.get_current_line_nr(), action))
                         status = FAILED
@@ -1355,6 +1370,8 @@ cdef class PIService:
                         self._send_info(u"Already removed!", SEND_INFO_SUCCESS)
                     elif ret_code == RET_CODE_PACKAGE_NOT_FOUND:
                         self._send_info(u"Package with id: %s not found!" % package_id, SEND_INFO_ERROR)
+                    elif ret_code == RET_CODE_DEPENDENCY_NOT_SATISFIABLE:
+                        self._send_info(u"Package with id: %s has dependency problems!" % package_id, SEND_INFO_ERROR)
                     else:
                         self._send_info(u'Status Code: %d' % ret_code, SEND_INFO_ERROR)
 

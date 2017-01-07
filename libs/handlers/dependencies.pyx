@@ -115,16 +115,17 @@ cdef bint check_dependencies(dict package_status_mapping, object package):
 
 cdef bint _is_a_dependency(object package1, object package2):
     cdef:
-        list dep
+        dict dep
 
     for dep in package1.dependencies:
-        if dep['package_id'] == package2.package_id:
+        if dep['installed'] and dep['package_id'] == package2.package_id:
             return True
     return False
 
 
-cdef bint _check_if_package_is_needed(dict package_status_mapping, object package, list package_list):
-    for _package in package_list:
+cdef bint _check_if_package_is_needed(dict package_status_mapping, object package, object package_list):
+    for package_id in package_list:
+        _package = package_list[package_id]
         if _is_a_dependency(_package, package):
             if _package.package_id in package_status_mapping and package_status_mapping[_package.package_id]:
                 continue

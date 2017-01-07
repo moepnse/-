@@ -565,7 +565,7 @@ cdef class PIService:
                 self._send_info(u"%s %s" % (err.errno, err.strerror), SEND_INFO_ERROR)
 
         dw_bytes_to_write = <DWORD>len(data)
-        result = WriteFile(self._ph, <char*>data, dw_bytes_to_write, &dw_bytes_written, NULL)
+        ret_val = WriteFile(self._ph, <char*>data, dw_bytes_to_write, &dw_bytes_written, NULL)
         #ret_val = WriteFile(self._ph, data, dw_bytes_to_write, NULL, NULL)
         if ret_val == 0:
             self._log.log_err(u"[pi_service] WriteFile Error: %d" % GetLastError())

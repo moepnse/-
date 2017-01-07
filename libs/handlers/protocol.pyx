@@ -181,7 +181,7 @@ cdef class BaseHandler:
         ELSE:
             return NULL
 
-    cdef unsigned long _execute_as_user(self, unicode cmd):
+    cdef long long _execute_as_user(self, unicode cmd):
         IF UNAME_SYSNAME == "Windows":
             cdef:
                 STARTUPINFOW si
@@ -250,7 +250,7 @@ cdef class BaseHandler:
         ELSE:
             return -1
 
-    cdef unsigned long _execute(self, unicode cmd, DWORD* last_error_code):
+    cdef long long _execute(self, unicode cmd, DWORD* last_error_code):
         IF UNAME_SYSNAME == "Windows":
 
             cdef:
@@ -259,7 +259,8 @@ cdef class BaseHandler:
                 bint ret_val = False
                 DWORD create_flags = 0
                 # ExitCode
-                DWORD ret_code = -1
+                long long ret_code = -1
+                DWORD _ret_code
                 Py_ssize_t length = len(cmd)
                 #wchar_t* w_cmd = <wchar_t*>malloc((length+1) * sizeof(wchar_t)) 32768
                 wchar_t* w_cmd = <wchar_t*>malloc(32768)
@@ -295,9 +296,11 @@ cdef class BaseHandler:
             else:
                 # Wait until child process exits.
                 WaitForSingleObject(pi.hProcess, INFINITE)
-                if not GetExitCodeProcess(pi.hProcess, &ret_code):
+                if not GetExitCodeProcess(pi.hProcess, &_ret_code):
                     error_code = GetLastError()
                     self._log_err(u"[protocol/%s] GetExitCodeProcess failed with error code %d" % error_code)
+                else:
+                    ret_code = _ret_code
             # Close process and thread handles. 
             CloseHandle(pi.hProcess)
             CloseHandle(pi.hThread)
@@ -310,7 +313,7 @@ cdef class BaseHandler:
     def execute(self, unicode cmd):
         IF UNAME_SYSNAME == "Windows":
             cdef:
-                int ret_value = 0
+                long long ret_value = -1
                 DWORD dw_version = 0; 
                 DWORD dw_major_version = 0
                 DWORD dw_minor_version = 0

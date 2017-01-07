@@ -14,6 +14,6 @@ cdef class BaseHandler:
         public bint __log_debug
         public object _plugin_name
 
-        unsigned long _execute(self, unicode cmd, DWORD* last_error_code)
-        unsigned long _execute_as_user(self, unicode cmd)
+        long long _execute(self, unicode cmd, DWORD* last_error_code)
+        long long _execute_as_user(self, unicode cmd)
         HANDLE _get_current_user_token(self)

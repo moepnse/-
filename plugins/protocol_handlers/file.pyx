@@ -54,7 +54,7 @@ cdef class FileHandler(BaseHandler):
 
     def execute(self, unicode cmd):
         cdef:
-            DWORD ret_code = -1
+            long long ret_code = -1
             DWORD last_error_code = 0
             object args
         args = libs.win.commandline.parse(cmd, True)

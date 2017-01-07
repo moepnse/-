@@ -190,7 +190,7 @@ cdef class HTTPHandler(BaseHandler):
     def execute(self, unicode cmd):
         cdef:
             object args
-            DWORD ret_code = -1
+            long long ret_code = -1
             DWORD last_error_code = 0
         args = libs.win.commandline.parse(cmd, True)
         args[0] = self.get_path(args[0].strip("\""))

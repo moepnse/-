@@ -901,7 +901,7 @@ cdef class PIService:
         win_session.h_token = primary_token
         return win_session
 
-    cdef int _execute_as_user(self, unicode cmd):
+    cdef bint _execute_as_user(self, unicode cmd):
         cdef:
             STARTUPINFOW si
             PROCESS_INFORMATION pi
@@ -982,7 +982,7 @@ cdef class PIService:
         free(w_cmd)
         return True
 
-    cdef int _execute(self, unicode cmd):
+    cdef bint _execute(self, unicode cmd):
         cdef:
             STARTUPINFOW si
             PROCESS_INFORMATION pi
@@ -1284,7 +1284,7 @@ cdef class PIService:
     def _install_packages(self, object packages):
         cdef:
             unsigned char status = 0
-            unsigned long ret_code = 0
+            int ret_code = 0
             dict dict_package
             object package
             object action

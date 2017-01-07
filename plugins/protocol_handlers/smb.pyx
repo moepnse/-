@@ -126,7 +126,7 @@ cdef class SMBHandler(BaseHandler):
     def execute(self, unicode cmd):
         cdef:
             object args
-            int ret_value = 0
+            long long ret_value = -1
             DWORD last_error_code = 0
         self.connect()
         args = libs.win.commandline.parse(cmd, True)

@@ -51,7 +51,7 @@ class AtionHandlerThread(threading.Thread):
     def _handle_actions(self):
         cdef:
             unsigned char status = 0
-            unsigned long ret_code = 0
+            int ret_code = 0
             object package
             object action
             object package_id

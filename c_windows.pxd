@@ -1,6 +1,10 @@
 #from libc.stdint cimport uint32_t, int64_t
 from c_windows_data_types cimport *
 
+cdef extern from "stdarg.h":
+    ctypedef struct va_list:
+        pass
+
 cdef extern from "stdio.h":
     unsigned long BUFSIZ = 512
 
@@ -716,6 +720,23 @@ cdef extern from *:
         DWORD nStdHandle
     ) nogil
 
+    DWORD __stdcall FormatMessageW(
+        DWORD dwFlags,
+        LPCVOID lpSource,
+        DWORD dwMessageId,
+        DWORD dwLanguageId,
+        LPWSTR lpBuffer,
+        DWORD nSize,
+        va_list *Arguments
+    ) nogil
+
+    DWORD FORMAT_MESSAGE_ALLOCATE_BUFFER = 0x00000100
+    DWORD FORMAT_MESSAGE_IGNORE_INSERTS  = 0x00000200
+    DWORD FORMAT_MESSAGE_FROM_STRING     = 0x00000400
+    DWORD FORMAT_MESSAGE_FROM_HMODULE    = 0x00000800
+    DWORD FORMAT_MESSAGE_FROM_SYSTEM     = 0x00001000
+    DWORD FORMAT_MESSAGE_ARGUMENT_ARRAY  = 0x00002000
+    DWORD FORMAT_MESSAGE_MAX_WIDTH_MASK  = 0x000000FF
 
 #cdef extern from "IntSafe.h":
 

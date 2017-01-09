@@ -16,7 +16,8 @@ do
                 function()
                     return winreg_set_value(HKEY_LOCAL_MACHINE, [[SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\Explorer]], "NoDriveAutoRun",  REG_DWORD, 255)
                 end
-            }
+            },
+            ret_codes = windows_error_codes
         },
         {   package_id = "hide_drives_a_and_e",
             version = "1",

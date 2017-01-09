@@ -13,7 +13,7 @@ cdef class BaseHandler:
         public bint __log_err
         public bint __log_debug
         public object _plugin_name
-
+        _send_last_error(self)
         long long _execute(self, unicode cmd, DWORD* last_error_code)
         long long _execute_as_user(self, unicode cmd)
         HANDLE _get_current_user_token(self)

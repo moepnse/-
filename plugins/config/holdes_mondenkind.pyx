@@ -2770,7 +2770,7 @@ cdef class LuaCmd(Cmd):
         return self._get_cmd()
 
     def __unicode__(self):
-        return self._get_cmd()
+        return u"Lua"
 
 
 cdef class Package(BasePackage):

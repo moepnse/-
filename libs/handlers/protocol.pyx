@@ -21,7 +21,7 @@ from libc.stdlib cimport malloc, free
 
 # application/library cimports
 from c_windows_data_types cimport DWORD, BOOL, ULONG, LPCWSTR, LPWSTR, LPCTSTR, wchar_t, size_t, LPVOID, HANDLE
-from c_windows cimport CopyFileW, STARTF_USESTDHANDLES, STARTF_USESHOWWINDOW, SW_HIDE, CREATE_NEW_CONSOLE, CreateProcessW, CloseHandle, INFINITE, WaitForSingleObject, GetExitCodeProcess, GetLastError, PROCESS_INFORMATION, STARTUPINFOW, NETRESOURCE, INFINITE, wcscpy, wcslen, wcscpy_s, SecureZeroMemory, CREATE_UNICODE_ENVIRONMENT, CreateEnvironmentBlock, GetUserProfileDirectoryW, CreateProcessAsUserW, PWTS_SESSION_INFOW, WTSQueryUserToken, DuplicateTokenEx,LPSECURITY_ATTRIBUTES, WTSActive, WTS_CURRENT_SERVER_HANDLE,  TOKEN_ASSIGN_PRIMARY, TOKEN_ALL_ACCESS, SecurityImpersonation, TokenPrimary, WTSEnumerateSessionsW, WTS_SESSION_INFOW, LOBYTE, HIBYTE, LOWORD, GetVersion 
+from c_windows cimport CopyFileW, STARTF_USESTDHANDLES, STARTF_USESHOWWINDOW, SW_HIDE, CREATE_NEW_CONSOLE, CreateProcessW, CloseHandle, INFINITE, WaitForSingleObject, GetExitCodeProcess, GetLastError, PROCESS_INFORMATION, STARTUPINFOW, NETRESOURCE, INFINITE, wcscpy, wcslen, wcscpy_s, SecureZeroMemory, CREATE_UNICODE_ENVIRONMENT, CreateEnvironmentBlock, GetUserProfileDirectoryW, CreateProcessAsUserW, PWTS_SESSION_INFOW, WTSQueryUserToken, DuplicateTokenEx,LPSECURITY_ATTRIBUTES, WTSActive, WTS_CURRENT_SERVER_HANDLE,  TOKEN_ASSIGN_PRIMARY, TOKEN_ALL_ACCESS, SecurityImpersonation, TokenPrimary, WTSEnumerateSessionsW, WTS_SESSION_INFOW, LOBYTE, HIBYTE, LOWORD, GetVersion,FormatMessageW, FORMAT_MESSAGE_ALLOCATE_BUFFER, FORMAT_MESSAGE_FROM_SYSTEM, FORMAT_MESSAGE_IGNORE_INSERTS
 from libs.handlers.config cimport STATUS_SOURCE, ss__cmd, ss__connection_handler, ss__protocol, STATUS_TYPES, st__info, st__success, st__warn, st__error
 
 
@@ -29,6 +29,23 @@ url_prefix = "url_prefix://"
 
 URL_PREFIX_REGEX = re.compile('([a-zA-Z0-9]+)://')
 
+
+cdef unicode get_error_message(DWORD error_code):
+    cdef:
+        LPWSTR message_buffer = NULL
+        DWORD length = FormatMessageW(FORMAT_MESSAGE_ALLOCATE_BUFFER | 
+                                        FORMAT_MESSAGE_FROM_SYSTEM | 
+                                        FORMAT_MESSAGE_IGNORE_INSERTS,
+                                        NULL,
+                                        error_code,
+                                        0,
+                                        message_buffer, 
+                                        0, 
+                                        NULL)
+    if length == 0:
+        # FormatMessage failed
+        return u"Unknown."
+    return message_buffer
 
 
 cdef unicode ireplace(unicode text, unicode old, unicode new):
@@ -184,8 +201,10 @@ cdef class BaseHandler:
             return NULL
 
     cdef _send_last_error(self):
+        cdef:
+            DWORD error_code = GetLastError()
         if not self._status_handler is None:
-            status_id = self._status_handler.set_status(ss__connection_handler, st__error, self._plugin_name.decode("utf-8"), 1, u"Windows Error Code: %s" % GetLastError())
+            status_id = self._status_handler.set_status(ss__connection_handler, st__error, self._plugin_name.decode("utf-8"), 1, u"Windows Error Code: %s (%s)." % (error_code, get_error_message(error_code)))
 
     cdef long long _execute_as_user(self, unicode cmd):
         IF UNAME_SYSNAME == "Windows":

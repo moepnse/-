@@ -183,7 +183,7 @@ if "win" in sys.platform:
         sources=[os.path.join(r'libs', 'np_client.pyx')],
         extra_compile_args=compile_args,
         include_dirs = include_dirs,
-        libraries = [],
+        libraries = ['Kernel32.lib'],
         library_dirs = library_dir
     )
     ]

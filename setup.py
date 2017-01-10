@@ -178,7 +178,14 @@ if "win" in sys.platform:
         include_dirs = include_dirs,
         libraries = ["Advapi32", "Mpr"] if "win" in sys.platform else [],
         library_dirs = library_dir
-        )
+        ),
+        Extension('libs.np_client',
+        sources=[os.path.join(r'libs', 'np_client.pyx')],
+        extra_compile_args=compile_args,
+        include_dirs = include_dirs,
+        libraries = [],
+        library_dirs = library_dir
+    )
     ]
 setup(
     name='pi',

@@ -155,7 +155,7 @@ goto:eof
     goto:eof
 
 :build_pi_status_gui
-    call :build pi_status_gui Kernel32.lib
+    call :build pi_status_gui
     goto:eof
 
 :build_http_transmission

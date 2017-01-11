@@ -200,7 +200,7 @@ goto:eof
     IF /I "%1"=="spielwiese" call :build_spielwiese
     IF /I "%1"=="pi_service" call :build_pi_service
     IF /I "%1"=="pi_status_gui" call :build_pi_status_gui
-    IF /I "%1"=="http_transmission" call :http_transmission
+    IF /I "%1"=="http_transmission" call :build_http_transmission
     IF /I "%1"=="host_status" call :build_host_status
     IF /I "%1"=="pi" call :build_pi
     IF /I "%1"=="pi_gui" call :build_pi_gui

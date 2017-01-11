@@ -3,6 +3,8 @@
 # standard library imports
 import os
 import sys
+import time
+import socket
 import httplib
 import urlparse
 
@@ -34,13 +36,18 @@ class NamedPipe(NamedPipeHandler):
         self._status_r = urlparse.urlparse(status_url)
         self._start_r = urlparse.urlparse(start_url)
         self._stop_r = urlparse.urlparse(stop_url)
+        self._hostname = socket.gethostname()
+        self._process_id = int(time.time())
+
 
     def _handle_send_status(self, package_id, package_name, action):
         self._conn = httplib.HTTPConnection(self._status_r.hostname)
         url = "/%s?%s" % (self._status_r.path, self._status_r.query % (
                 {   'package_id': package_id, 
                     'package_name': package_name, 
-                    'action': action
+                    'action': action,
+                    'hostname': self._hostname,
+                    'process_id': self._process_id
                 }
             )
         )
@@ -56,7 +63,13 @@ class NamedPipe(NamedPipeHandler):
 
     def run(self):
         self._conn = httplib.HTTPConnection(self._start_r.hostname)
-        url = "/%s?%s" % (self._start_r.path, self._start_r.query % ({'action': 'start'}))
+        url = "/%s?%s" % (self._start_r.path, self._start_r.query % (
+                {   'action': 'start',
+                    'hostname': self._hostname,
+                    'process_id': self._process_id
+                }
+            )
+        )
         self._conn.request("GET", url)
         r = self._conn.getresponse()
         print r.status, r.reason
@@ -70,7 +83,9 @@ class NamedPipe(NamedPipeHandler):
             self._conn = httplib.HTTPConnection(self._pronounce_steps_r.hostname)
             url = "/%s?%s" % (self._pronounce_steps_r.path, self._pronounce_steps_r.query % (
                     {   'action': 'pronounce_steps', 
-                        'steps': self._steps
+                        'steps': self._steps,
+                        'hostname': self._hostname,
+                        'process_id': self._process_id
                     }
                 )
             )
@@ -80,7 +95,13 @@ class NamedPipe(NamedPipeHandler):
         else:
             pass
         self._conn = httplib.HTTPConnection(self._stop_r.hostname)
-        url = "/%s?%s" % (self._stop_r.path, self._stop_r.query % ({'action': 'stop'}))
+        url = "/%s?%s" % (self._stop_r.path, self._stop_r.query % (
+                {   'action': 'stop',
+                    'hostname': self._hostname,
+                    'process_id': self._process_id
+                }
+            )
+        )
         self._conn.request("GET", url)
         r = self._conn.getresponse()
         print r.status, r.reason

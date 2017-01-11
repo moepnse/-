@@ -1,4 +1,4 @@
-start_url = http://10.19.0.10/rg.php?action=start
-stop_url = http://10.19.0.10/rg.php?action=stop
-pronounce_steps_url = http://10.19.0.10/rg.php?action=pronounce_steps&steps=%(steps)d
-status_url = http://10.19.0.10/rg.php?action=%(action)s&package_id=%(package_id)s
+start_url = http://10.19.0.10/rg.php?action=start&hostname=%(hostname)s&process_id=%(process_id)s
+stop_url = http://10.19.0.10/rg.php?action=stop&hostname=%(hostname)s&process_id=%(process_id)s
+pronounce_steps_url = http://10.19.0.10/rg.php?action=pronounce_steps&steps=%(steps)d&hostname=%(hostname)s&process_id=%(process_id)s
+status_url = http://10.19.0.10/rg.php?action=%(action)s&package_id=%(package_id)s&hostname=%(hostname)s&process_id=%(process_id)s

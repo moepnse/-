@@ -5,20 +5,14 @@ import os
 import sys
 import httplib
 import urlparse
-import struct
-import threading
-import StringIO
 
 # third party imports
-import win32api
-import win32pipe
-import win32file
-import win32event
-import pywintypes
+
 
 # application/library imports
 from libs.common import get_application_path
 from libs.handlers.status import INSTALLING, UPGRADING, REMOVING, INSTALLED, UPGRADED, REMOVED, FAILED, UNKNOWN, SEND_STATUS, SEND_INFO, SEND_INFO_SUCCESS, SEND_INFO_ERROR
+from libs.np_client import NamedPipeHandler
 
 
 class EOF(Exception):
@@ -30,11 +24,10 @@ class EOF(Exception):
         return repr(self._path)
 
 
-class NamedPipe(object):
+class NamedPipe(NamedPipeHandler):
 
     def __init__(self, start_url, pronounce_steps_url, status_url, stop_url):
-        self._pipe_name = r'\\.\pipe\pi_status_gui'
-        self._pipe_wait_timeout = 2000
+        NamedPipeHandler.__init__(self)
         self._pronounce_steps_url = pronounce_steps_url
         self._pronounce_steps_r = urlparse.urlparse(pronounce_steps_url)
         self._status_url = status_url
@@ -42,71 +35,56 @@ class NamedPipe(object):
         self._start_r = urlparse.urlparse(start_url)
         self._stop_r = urlparse.urlparse(stop_url)
 
-    def _get_version(self):
-        result, data = win32file.ReadFile(self._ph, 1)
-        self._version = struct.unpack('!B', data)[0]
-
-    def _get_steps(self):
-        result, data = win32file.ReadFile(self._ph, 1)
-        steps = struct.unpack('!B', data)[0]
-        self._conn = httplib.HTTPConnection(self._pronounce_steps_r.hostname)
-        url = "/%s?%s" % (self._pronounce_steps_r.path, self._pronounce_steps_r.query % ({'action': 'pronounce_steps', 'steps': steps}))
-        print "?", url, "?"
+    def _handle_send_status(self, package_id, package_name, action):
+        self._conn = httplib.HTTPConnection(self._status_r.hostname)
+        url = "/%s?%s" % (self._status_r.path, self._status_r.query % (
+                {   'package_id': package_id, 
+                    'package_name': package_name, 
+                    'action': action
+                }
+            )
+        )
         self._conn.request("GET", url)
         r = self._conn.getresponse()
         print r.status, r.reason
 
-    def _start_status_loop(self):
-        try:
-            while 1:
-                result, data = win32file.ReadFile(self._ph, 1)
-                response_type = struct.unpack('!B', data)[0]
-                if response_type == SEND_STATUS:
-                    result, data = win32file.ReadFile(self._ph, 2)
-                    action, package_id_length = struct.unpack('!BB', data)
-                    result, data = win32file.ReadFile(self._ph, package_id_length)
-                    package_id = struct.unpack('!%ds' % package_id_length, data)[0]
-                    result, data = win32file.ReadFile(self._ph, 1)
-                    package_name_length = struct.unpack('!B', data)[0]
-                    result, data = win32file.ReadFile(self._ph, package_name_length)
-                    package_name = struct.unpack('!%ds' % package_name_length, data)[0]
-                    self._conn = httplib.HTTPConnection(self._status_r.hostname)
-                    url = "/%s?%s" % (self._status_r.path, self._status_r.query % ({'package_id': package_id, 'package_name': package_name, 'action': action}))
-                    print "?", url, "?"
-                    self._conn.request("GET", url)
-                    r = self._conn.getresponse()
-                    print r.status, r.reason
-        except pywintypes.error:
-            pass
-        win32api.CloseHandle(self._ph)
+    def _handle_send_info(self, info_type, info_text):
+        pass
+
+    def _handle_send_done(self):
+        self._log_info(u"done!")
 
     def run(self):
         self._conn = httplib.HTTPConnection(self._start_r.hostname)
         url = "/%s?%s" % (self._start_r.path, self._start_r.query % ({'action': 'start'}))
-        print "?", url, "?"
         self._conn.request("GET", url)
         r = self._conn.getresponse()
         print r.status, r.reason
-        self._ph = win32file.CreateFile(self._pipe_name,
-              win32file.GENERIC_READ,
-              0, 
-              None, # No special security requirements
-              win32file.OPEN_EXISTING,
-              0, # Not creating, so attributes dont matter.
-              None)
+        self.open()
         # Waits until either a time-out interval elapses or an instance of the specified named pipe is available to be connected to
         #win32pipe.WaitNamedPipe(self._pipe_name, self._pipe_wait_timeout)
-        self._get_version()
-        print self._version
+        self._version = self.get_version()
         if self._version == 1:
-            self._get_steps()
-            self._start_status_loop()
+            self._steps = self.get_steps()
+            self._log.log_debug(u"steps: %d" % self._steps)
+            self._conn = httplib.HTTPConnection(self._pronounce_steps_r.hostname)
+            url = "/%s?%s" % (self._pronounce_steps_r.path, self._pronounce_steps_r.query % (
+                    {   'action': 'pronounce_steps', 
+                        'steps': self._steps
+                    }
+                )
+            )
+            self._conn.request("GET", url)
+            r = self._conn.getresponse()
+            print r.status, r.reason
+        else:
+            pass
         self._conn = httplib.HTTPConnection(self._stop_r.hostname)
         url = "/%s?%s" % (self._stop_r.path, self._stop_r.query % ({'action': 'stop'}))
-        print "?", url, "?"
         self._conn.request("GET", url)
         r = self._conn.getresponse()
         print r.status, r.reason
+
 
 if __name__ == '__main__':
 

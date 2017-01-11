@@ -177,7 +177,7 @@ goto:eof
 :build_all_exe
     call :build_pi_service
     call :build_pi_status_gui
-    call :http_transmission
+    call :build_http_transmission
     call :build_host_status
     call :build_pi
     call :build_pi_gui

@@ -115,7 +115,7 @@ if __name__ == '__main__':
     stop_url = ''
     status_url = ''
     pronounce_steps_url = ''
-    fh = open(os.path.join(get_application_path(__file__), 'http_transmission.urls'), 'r')
+    fh = open(os.path.join(get_application_path(), 'http_transmission.urls'), 'r')
     for line in fh:
         tmp = line.split('=', 1)
         tmp = [entry.strip() for entry in tmp]

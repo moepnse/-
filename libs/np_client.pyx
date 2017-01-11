@@ -49,7 +49,7 @@ cdef class NamedPipeHandler(Log):
         self._pipe_wait_timeout = 2000
         #self._open()
 
-    def __init__(self, log):
+    def __init__(self, log=None):
         self._log = log
 
     cpdef open(self):
@@ -124,14 +124,6 @@ cdef class NamedPipeHandler(Log):
         self._version = struct.unpack('!B', data[:1])[0]
         return self._version
 
-
-class NamedPipeThread(Log, threading.Thread):
-
-    def __init__(self, log):
-        threading.Thread.__init__(self)
-        self._nph = NamedPipeHandler(log)
-        self._log = log
-
     def _handle_send_status(self, package_id, package_name, action):
         pass
 
@@ -151,40 +143,40 @@ class NamedPipeThread(Log, threading.Thread):
             unsigned char info_type = 0
             unsigned int info_text_length = 0
         self._log_debug(u"got data!")
-        data = self._nph.read(1)
+        data = self.read(1)
         # get response type
         response_type = struct.unpack('!B', data)[0]
         self._log_debug(u"response type: %d" % response_type)
         if response_type == SEND_STATUS:
             # get action and package id length
-            data = self._nph.read(2)
+            data = self.read(2)
             self._log_debug(u"data length: %d" % len(data))
             action, package_id_length = struct.unpack('!BB', data)
             self._log_debug(u"action: %d" % action)
             # get package id
-            data = self._nph.read(package_id_length)
+            data = self.read(package_id_length)
             self._log_debug(u"package_id_length: %s" % len(data))
             package_id = struct.unpack('!%ds' % package_id_length, data)[0]
             self._log_debug(package_id)
             # get package name length
-            data = self._nph.read(1)
+            data = self.read(1)
             package_name_length = struct.unpack('!B', data)[0]
             # get package name
-            data = self._nph.read(<DWORD>package_name_length)
+            data = self.read(<DWORD>package_name_length)
             self._log_debug(u"%d %d" % (package_name_length, len(data)))
             package_name = struct.unpack('!%ds' % package_name_length, data)[0]
             self._log_debug(u"package_name: %s" % package_name)
             self._handle_send_status(package_id, package_name, action)
         elif response_type == SEND_INFO:
-            data = self._nph.read(5)
+            data = self.read(5)
             info_type, info_text_length = struct.unpack('!BI', data)
             self._log_debug(u"info_text_length: %d" % <DWORD>info_text_length)
-            data = self._nph.read(<DWORD>info_text_length)
+            data = self.read(<DWORD>info_text_length)
             info_text = struct.unpack('!%ds' % info_text_length, data)[0]
             self._handle_send_info(info_type, info_text)
         elif response_type == SEND_DONE:
             self._handle_send_done()
-            self._nph.close()
+            self.close()
             return False
         else:
             self._log_err(u"response type %d unknown" % response_type)
@@ -195,7 +187,7 @@ class NamedPipeThread(Log, threading.Thread):
         try:
             while 1:
                 self._log_debug(u"waiting for data...")
-                rc = self._nph.wfso(15)
+                rc = self.wfso(15)
                 if rc == WAIT_OBJECT_0:
                     if not self.__handle_data():
                         break
@@ -203,12 +195,19 @@ class NamedPipeThread(Log, threading.Thread):
                     pass
         except Exception as e:
             self._log_err(u"Error: %s" % str(e))
-        self._nph.close()
+        self.close()
 
     def run(self):
-        self._nph.open()
-        self._version = self._nph.get_version()
+        self.open()
+        self._version = self.get_version()
         if self._version == 1:
             self._start_status_loop()
         else:
             self._log_err(u"Wrong Protocol Version!")
+
+
+class NamedPipeThread(NamedPipeHandler, threading.Thread):
+
+    def __init__(self, log):
+        threading.Thread.__init__(self)
+        NamedPipeHandler(log).__init__(self)

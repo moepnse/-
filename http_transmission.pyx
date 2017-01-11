@@ -51,6 +51,7 @@ class NamedPipe(NamedPipeHandler):
                 }
             )
         )
+        print url
         self._conn.request("GET", url)
         r = self._conn.getresponse()
         print r.status, r.reason
@@ -62,6 +63,7 @@ class NamedPipe(NamedPipeHandler):
         self._log_info(u"done!")
 
     def run(self):
+        print "connecting to: %s" % self._start_r.hostname
         self._conn = httplib.HTTPConnection(self._start_r.hostname)
         url = "/%s?%s" % (self._start_r.path, self._start_r.query % (
                 {   'action': 'start',
@@ -79,7 +81,7 @@ class NamedPipe(NamedPipeHandler):
         self._version = self.get_version()
         if self._version == 1:
             self._steps = self.get_steps()
-            self._log.log_debug(u"steps: %d" % self._steps)
+            self._log_debug(u"steps: %d" % self._steps)
             self._conn = httplib.HTTPConnection(self._pronounce_steps_r.hostname)
             url = "/%s?%s" % (self._pronounce_steps_r.path, self._pronounce_steps_r.query % (
                     {   'action': 'pronounce_steps', 
@@ -92,6 +94,7 @@ class NamedPipe(NamedPipeHandler):
             self._conn.request("GET", url)
             r = self._conn.getresponse()
             print r.status, r.reason
+            self._start_status_loop()
         else:
             pass
         self._conn = httplib.HTTPConnection(self._stop_r.hostname)
@@ -109,8 +112,8 @@ class NamedPipe(NamedPipeHandler):
 
 if __name__ == '__main__':
 
-    #sys.stdout = open(r"C:\http_transmission.log.out", "a")
-    #sys.stderr = open(r"C:\http_transmission.log.err", "a")
+    sys.stdout = open(r"http_transmission.log.out", "a")
+    sys.stderr = open(r"http_transmission.log.err", "a")
     start_url = ''
     stop_url = ''
     status_url = ''

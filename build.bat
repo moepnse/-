@@ -227,6 +227,8 @@ goto:eof
     xcopy /Y %~dp0file_info.py %~dp0package\%MACHINE%\
     xcopy /Y %~dp0dependencies\lua-5.3.0\src\lua5.3.0.dll %~dp0
     xcopy /Y %~dp0lua5.3.0.dll %~dp0package\%MACHINE%\
+    xcopy /Y %~dp0http_transmission.urls %~dp0package\%MACHINE%\
+    xcopy /Y %~dp0rg.php %~dp0package\%MACHINE%\
     goto:eof
 
 :build

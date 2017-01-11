@@ -16,6 +16,9 @@ from c_windows cimport ReadFile, CreateFileW, CloseHandle, OPEN_EXISTING, GENERI
 
 cdef class Log:
 
+    def __init__(self, log=None):
+        self._log = log
+
     def _log_info(self, msg):
         if self._log is not None:
             self._log.log_info(msg)
@@ -30,7 +33,7 @@ cdef class Log:
 
     def _log_debug(self, msg):
         if self._log is not None:
-            self._log.log_deb(msg)
+            self._log.log_debug(msg)
 
 
 cdef class NamedPipeHandler(Log):
@@ -50,7 +53,7 @@ cdef class NamedPipeHandler(Log):
         #self._open()
 
     def __init__(self, log=None):
-        self._log = log
+        Log.__init__(self, log)
 
     cpdef open(self):
         self._ph = CreateFileW(self._pipe_name,
@@ -208,6 +211,6 @@ cdef class NamedPipeHandler(Log):
 
 class NamedPipeThread(NamedPipeHandler, threading.Thread):
 
-    def __init__(self, log):
+    def __init__(self, log=None):
         threading.Thread.__init__(self)
-        NamedPipeHandler(log).__init__(self)
+        NamedPipeHandler.__init__(self, log)

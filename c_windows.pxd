@@ -1078,6 +1078,14 @@ cdef extern from *:
         DWORD          dwFlags
     ) nogil
 
+    DWORD __stdcall WNetAddConnection3W(
+        HWND          hwndOwner,
+        LPNETRESOURCEW lpNetResource,
+        LPCWSTR       lpPassword,
+        LPCWSTR       lpUserName,
+        DWORD          dwFlags
+    ) nogil
+
     DWORD __stdcall WNetCancelConnection2(
         LPCTSTR lpName,
         DWORD dwFlags,
@@ -1186,6 +1194,8 @@ cdef extern from *:
 
     DWORD RESOURCETYPE_DISK
     DWORD CONNECT_TEMPORARY
+    DWORD CONNECT_INTERACTIVE
+    DWORD CONNECT_PROMPT
 
     DWORD ERROR_BAD_PROFILE
     DWORD ERROR_CANNOT_OPEN_PROFILE

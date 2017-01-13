@@ -203,3 +203,4 @@ cdef class ConnectionList(Base):
         public object _connections
         public object protocol_plugins
         public object _status_handler
+        public object _window_handle

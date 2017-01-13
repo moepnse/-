@@ -918,13 +918,14 @@ cdef class PackageList(Base):
 
 cdef class ConnectionList:
 
-    def __init__(self, connection_list_path, protocol_plugins, log, status_handler):
+    def __init__(self, connection_list_path, protocol_plugins, log, status_handler, window_handle=None):
         self._log = log
         self._connection_list_path = connection_list_path
         self._config_path = connection_list_path
         self._connections = {}
         self.protocol_plugins = protocol_plugins
         self._status_handler = status_handler
+        self._window_handle = window_handle
 
 
 cdef class LogList(BaseVersion):

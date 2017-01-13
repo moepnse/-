@@ -33,15 +33,15 @@ URL_PREFIX_REGEX = re.compile('([a-zA-Z0-9]+)://')
 cdef unicode get_error_message(DWORD error_code):
     cdef:
         LPWSTR message_buffer = NULL
-        DWORD length = FormatMessageW(FORMAT_MESSAGE_ALLOCATE_BUFFER | 
-                                        FORMAT_MESSAGE_FROM_SYSTEM | 
-                                        FORMAT_MESSAGE_IGNORE_INSERTS,
+        DWORD flags = FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS
+        DWORD length = FormatMessageW(  flags,
                                         NULL,
                                         error_code,
                                         0,
-                                        message_buffer, 
+                                        <LPWSTR> &message_buffer, 
                                         0, 
                                         NULL)
+
     if length == 0:
         # FormatMessage failed
         return u"Unknown."

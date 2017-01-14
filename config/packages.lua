@@ -249,6 +249,32 @@ packages = {
         },
         description = "Client to connect to a X2Go Server (Linux Remote Desktop). Its also possible to start only an remote application.",
         ret_codes = windows_error_codes
+    },
+    {   package_id = "smb_interactive_test",
+        name = "SMB Interactive Test",
+        version = "1.0",
+        rev = 0,
+        uninstall_cmds = 
+            {
+            },
+        install_cmds = 
+            {
+                {
+                    cmd = [[smb://\\10.0.19.102\software\test.bat]],
+                    args = {
+
+                    }
+                }
+            },
+        is_installed = false,
+        is_upgrade_available = false,
+        dependencies = {
+        },
+        keywords = {
+            "smb", "interactive", "test"
+        },
+        description = "SMB Interactive Test",
+        ret_codes = windows_error_codes
     }
 }
 

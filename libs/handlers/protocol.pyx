@@ -176,6 +176,7 @@ cdef class BaseHandler:
                 DWORD i = 0
                 WTS_SESSION_INFOW si
                 BOOL b_ret = False
+                DWORD error_code
 
             # Get the list of all terminal sessions
             WTSEnumerateSessionsW(WTS_CURRENT_SERVER_HANDLE, 0, 1, &p_session_info, &dw_count)
@@ -193,22 +194,22 @@ cdef class BaseHandler:
             # Get token of the logged in user by the active session ID
             b_ret = WTSQueryUserToken(dw_session_id, &current_token)
             if b_ret == False:
-                self._log.log_err(u"[protocol/%s] WTSQueryUserToken: %d" % (self._plugin_name, GetLastError()))
-                self._send_last_error()
+                error_code = GetLastError()
+                self._log.log_err(u"[protocol/%s] WTSQueryUserToken: %d" % (self._plugin_name, error_code))
+                self._send_last_error(error_code)
                 return <HANDLE>0
             b_ret = DuplicateTokenEx(current_token, TOKEN_ASSIGN_PRIMARY | TOKEN_ALL_ACCESS, <LPSECURITY_ATTRIBUTES>0, SecurityImpersonation, TokenPrimary, &primary_token)
             if b_ret == False:
+                error_code = GetLastError()
                 self._log.log_err(u"[protocol/%s] Cannot duplicate Token!" % (self._plugin_name))
-                self._log.log_err(u"[protocol/%s] DuplicateTokenEx: %d" % (self._plugin_name, GetLastError()))
-                self._send_last_error()
+                self._log.log_err(u"[protocol/%s] DuplicateTokenEx: %d" % (self._plugin_name, error_code))
+                self._send_last_error(error_code)
                 return <HANDLE>0
             return primary_token
         ELSE:
             return NULL
 
-    cdef _send_last_error(self):
-        cdef:
-            DWORD error_code = GetLastError()
+    cdef _send_last_error(self, DWORD error_code):
         if not self._status_handler is None:
             status_id = self._status_handler.set_status(ss__connection_handler, st__error, self._plugin_name.decode("utf-8"), 1, u"Windows Error Code: %s (%s)." % (error_code, get_error_message(error_code)))
 
@@ -229,11 +230,13 @@ cdef class BaseHandler:
                 wchar_t sz_user_profile_dir[32768]
                 #DWORD cch_user_profile_dir = ARRAYSIZE(sz_user_profile_dir)
                 DWORD cch_user_profile_dir = <DWORD>(32768 / sizeof(wchar_t))
+                DWORD error_code
 
             h_token = self._get_current_user_token()
             if h_token == <HANDLE>0:
                 self._log.log_err(u"[protocol/%s] Invalid Token!" % (self._plugin_name))
-                self._send_last_error()
+                error_code = GetLastError()
+                self._send_last_error(error_code)
                 return -1
             CreateEnvironmentBlock(&lp_environment, h_token, True)
             for key in os.environ:
@@ -250,8 +253,9 @@ cdef class BaseHandler:
             create_flags = CREATE_NEW_CONSOLE | CREATE_UNICODE_ENVIRONMENT
             # Retrieve the path to the root directory of the user's profile.
             if not GetUserProfileDirectoryW(h_token, sz_user_profile_dir, &cch_user_profile_dir):
-                self._log.log_err(u"[protocol/%s] GetUserProfileDirectoryW: %d." % (self._plugin_name, GetLastError()))
-                self._send_last_error()
+                error_code = GetLastError()
+                self._log.log_err(u"[protocol/%s] GetUserProfileDirectoryW: %d." % (self._plugin_name, error_code))
+                self._send_last_error(error_code)
                 return -1
             self._log.log_debug(u"[pi_serivce] User Profile Directory: %s" % (self._plugin_name, sz_user_profile_dir))
             self._log.log_debug(u"[protocol/%s] CreateProcessAsUserW: %s" % (self._plugin_name, cmd))
@@ -268,15 +272,17 @@ cdef class BaseHandler:
                 &si,                    # Pointer to STARTUPINFOW structure
                 &pi)                    # Pointer to PROCESS_INFORMATION structure
             if ret_val == False:
-                self._log.log_err(u"[protocol/%s] CreateProcessAsUserW failed (%d)." % (self._plugin_name, GetLastError()))
-                self._send_last_error()
+                error_code = GetLastError()
+                self._log.log_err(u"[protocol/%s] CreateProcessAsUserW failed (%d)." % (self._plugin_name, error_code))
+                self._send_last_error(error_code)
                 return -1
             # Wait until child process exits.
             WaitForSingleObject(pi.hProcess, INFINITE)
 
             if not GetExitCodeProcess(pi.hProcess, &ret_code):
-                self._log.log_err(u"[protocol/%s] GetExitCodeProcess failed with error %d" % GetLastError())
-                self._send_last_error()
+                error_code = GetLastError()
+                self._log.log_err(u"[protocol/%s] GetExitCodeProcess failed with error %d" % error_code)
+                self._send_last_error(error_code)
             # Close process and thread handles. 
             CloseHandle(pi.hProcess)
             CloseHandle(pi.hThread)
@@ -328,14 +334,14 @@ cdef class BaseHandler:
             if ret_val == False:
                 error_code = GetLastError()
                 self._log_err(u"[protocol/%s] CreateProcess failed (%d)." % (self._plugin_name, error_code))
-                self._send_last_error()
+                self._send_last_error(error_code)
             else:
                 # Wait until child process exits.
                 WaitForSingleObject(pi.hProcess, INFINITE)
                 if not GetExitCodeProcess(pi.hProcess, &_ret_code):
                     error_code = GetLastError()
                     self._log_err(u"[protocol/%s] GetExitCodeProcess failed with error code %d" % error_code)
-                    self._send_last_error()
+                    self._send_last_error(error_code)
                 else:
                     ret_code = _ret_code
             # Close process and thread handles. 

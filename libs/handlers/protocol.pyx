@@ -80,8 +80,9 @@ cdef class BaseHandler:
 
     def __cinit__(self):
         self._url_prefix = url_prefix
+        self._window_handle = NULL
 
-    def __init__(self, object log, object status_handler, object url, object username=None, object password=None, bint log_info=True, bint log_warn=True, bint log_err=True, bint log_debug=False, **kargs):
+    def __init__(self, object log, object status_handler, object url, object username=None, object password=None, bint log_info=True, bint log_warn=True, bint log_err=True, bint log_debug=False, object window_handle=None, **kargs):
         self._log = log
         self._status_handler = status_handler
         self._url = url
@@ -92,6 +93,8 @@ cdef class BaseHandler:
         self.__log_err = log_err
         self.__log_debug = log_debug
         self._plugin_name = self._url_prefix[:-3]
+        if window_handle is not None:
+            self._window_handle = <HWND><long>window_handle
 
     def _log_info(self, unicode msg):
         #if self.__log_info and 'log_info' in self._log:
@@ -126,6 +129,9 @@ cdef class BaseHandler:
             if not self._status_handler is None:
                 status_id = self._status_handler.set_status(ss__connection_handler, st__info, self._plugin_name.decode("utf-8"), 1, u"Plugin \"%s\" is responsible for URL \"%s\"." % (self._plugin_name, url))
         return is_responsible
+
+    def set_window_handle(self, long hwnd):
+        self._window_handle = <HWND>hwnd
 
     def connect(self):
         pass

@@ -1,4 +1,4 @@
-from c_windows_data_types cimport DWORD, HANDLE
+from c_windows_data_types cimport DWORD, HANDLE, HWND
 
 cdef class BaseHandler:
     cdef:
@@ -13,6 +13,7 @@ cdef class BaseHandler:
         public bint __log_err
         public bint __log_debug
         public object _plugin_name
+        HWND _window_handle
         _send_last_error(self)
         long long _execute(self, unicode cmd, DWORD* last_error_code)
         long long _execute_as_user(self, unicode cmd)

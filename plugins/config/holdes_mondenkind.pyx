@@ -4220,8 +4220,8 @@ cdef class ConnectionList(BaseConnectionList):
     cdef:
         lua_State *_l
 
-    def __init__(self, connection_list_path, protocol_plugins, log, status_handler):
-        BaseConnectionList.__init__(self, connection_list_path, protocol_plugins, log, status_handler)
+    def __init__(self, connection_list_path, protocol_plugins, log, status_handler, window_handle=None):
+        BaseConnectionList.__init__(self, connection_list_path, protocol_plugins, log, status_handler, window_handle)
         self._lua()
 
     def _lua(self):
@@ -4333,7 +4333,7 @@ cdef class ConnectionList(BaseConnectionList):
                     else:
                         r = urlparse.urlsplit(url)
                         protocol = r[0]
-                    protocol_handler = self.protocol_plugins[protocol](self._log, self._status_handler, **kwargs)
+                    protocol_handler = self.protocol_plugins[protocol](self._log, self._status_handler, window_handle=self._window_handle, **kwargs)
                     self._connections[url] = {'protocol': protocol, 'protocol_handler': protocol_handler, 'username': username, 'password': password}
             else:
                 print >>lua_log_err, "Error! %s is not allowed as key!" % lua_typename(self._l, lua_type(self._l, -2))

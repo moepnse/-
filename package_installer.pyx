@@ -116,8 +116,8 @@ def host_list_factory(host_list_path, log):
     return get_config_plugin(host_list_path).HostList(host_list_path, log)
 
 
-def connection_list_factory(connection_list_path, plugins, log, status_handler):
-    return get_config_plugin(connection_list_path).ConnectionList(connection_list_path, plugins, log, status_handler)
+def connection_list_factory(connection_list_path, plugins, log, status_handler, window_handle=None):
+    return get_config_plugin(connection_list_path).ConnectionList(connection_list_path, plugins, log, status_handler, window_handle)
 
 
 def package_list_factory(package_list_path, connection_list, installed_list, log, status_handler):

@@ -315,7 +315,7 @@ class MainWindow(wx.Frame):
         log_plugins = get_log_plugins()
         log_targets = log_list_factory(settings.log_list, log_plugins)
         log = Log(log_targets)
-        connection_list = connection_list_factory(settings.connection_list, plugins, log, status_handler)
+        connection_list = connection_list_factory(settings.connection_list, plugins, log, status_handler, window_handle=self.GetHandle())
         installed_list = installed_list_factory(settings.installed_list, log)
         package_list = package_list_factory(settings.package_list, connection_list, installed_list, log, status_handler)
         if settings.target_source == 'install_list':

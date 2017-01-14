@@ -18,8 +18,8 @@ from cpython.ref cimport PyObject
 # application/library cimports
 
 from libs.handlers.protocol cimport BaseHandler
-from c_windows_data_types cimport DWORD, LPWSTR
-from c_windows cimport WNetAddConnection2W, RESOURCETYPE_DISK, CONNECT_TEMPORARY, WNetCancelConnection2W, STARTF_USESTDHANDLES, STARTF_USESHOWWINDOW, SW_HIDE, CREATE_NEW_CONSOLE, CreateProcess, CloseHandle, INFINITE, WaitForSingleObject, GetExitCodeProcess, GetLastError, PROCESS_INFORMATION, STARTUPINFO, NETRESOURCEW
+from c_windows_data_types cimport DWORD, LPWSTR, LPCWSTR
+from c_windows cimport WNetAddConnection2W, WNetAddConnection3W, RESOURCETYPE_DISK, CONNECT_TEMPORARY, CONNECT_INTERACTIVE, CONNECT_PROMPT, WNetCancelConnection2W, STARTF_USESTDHANDLES, STARTF_USESHOWWINDOW, SW_HIDE, CREATE_NEW_CONSOLE, CreateProcess, CloseHandle, INFINITE, WaitForSingleObject, GetExitCodeProcess, GetLastError, PROCESS_INFORMATION, STARTUPINFO, NETRESOURCEW
 from libs.handlers.config cimport STATUS_SOURCE, ss__cmd, ss__connection_handler, ss__protocol, STATUS_TYPES, st__info, st__success, st__warn, st__error
 
 
@@ -33,18 +33,22 @@ cdef class SMBHandler(BaseHandler):
         public object _drive
         public bint _connected
         bint _buffer_data
+        bint _interactive
+        bint _prompt
 
     def __cinit__(self):
         self._url_prefix = url_prefix
         self._drive = None
 
-    def __init__(self, log, status_handler, unicode url, username=None, password=None, log_info=True, log_warn=True, log_err=True, log_debug=False, **kwargs):
+    def __init__(self, log, status_handler, unicode url, username=None, password=None, log_info=True, log_warn=True, log_err=True, log_debug=False, bint interactive=False, bint prompt=False, **kwargs):
         #libs.handlers.protocol.BaseHandler.__init__(self, log, url, username=username, password=password, log_info=log_info, log_warn=log_warn, log_err=log_err, log_debug=log_debug)
         self._url_prefix = url_prefix
         BaseHandler.__init__(self, log, status_handler, url, username=username, password=password, log_info=log_info, log_warn=log_warn, log_err=log_err, log_debug=log_debug, **kwargs)
 
         self._connected = False
         self._buffer_data = kwargs.get("buffer_data", False)
+        self._interactive = interactive
+        self._prompt = prompt
 
     def is_connected(self):
         return self._connected
@@ -52,8 +56,13 @@ cdef class SMBHandler(BaseHandler):
     def connect(self):
         cdef:
             NETRESOURCEW nr
+            DWORD flags
             DWORD ret_val
             object url
+            LPCWSTR username = NULL
+            LPCWSTR password = NULL
+        if self._connected:
+            return
         url = self._strip_url_prefix(self._url)
         nr.dwType = RESOURCETYPE_DISK
         if self._drive is None:
@@ -64,13 +73,27 @@ cdef class SMBHandler(BaseHandler):
         nr.lpRemoteName = <LPWSTR>url
         nr.lpProvider = NULL 
 
+        if self._username is not None:
+            username = self._username
+
+        if self._password is not None:
+            password = self._password
+
         self._log_debug("[smb] [%d] connecting to: %s" % (libs.common.get_current_line_nr(), self._url))
         if self._status_handler is not None:
             status_id = self._status_handler.set_status(ss__connection_handler, st__info, u"smb", 1, u"Connecting to %s..." % self._url)
 
         #win32wnet.WNetAddConnection2(win32netcon.RESOURCETYPE_DISK, self._drive, self._strip_url_prefix(self._url), None, self._username, self._password)
 
-        ret_val = WNetAddConnection2W(&nr, self._password, self._username, CONNECT_TEMPORARY)
+        if self._interactive:
+            flags = CONNECT_TEMPORARY | CONNECT_INTERACTIVE
+            if self._prompt:
+                flags = flags | CONNECT_PROMPT
+            with nogil:
+                ret_val = WNetAddConnection3W(self._window_handle, &nr, password, username, flags)
+            print self._connected, ret_val
+        else:
+            ret_val = WNetAddConnection2W(&nr, password, username, CONNECT_TEMPORARY)
         if ret_val == 0:
             self._connected = True
         elif ret_val == 1219:
@@ -87,6 +110,7 @@ cdef class SMBHandler(BaseHandler):
             raise libs.handlers.protocol.ConnectionError(err_text)
         else:
             self._log_err("[smb] [%d] %s Unknown Error: %s" % (libs.common.get_current_line_nr(), self._url, ret_val))
+            raise libs.handlers.protocol.ConnectionError("Unknown Error Code: %d." % ret_val)
 
     def disconnect(self):
         cdef DWORD ret_val
@@ -129,12 +153,12 @@ cdef class SMBHandler(BaseHandler):
             long long ret_value = -1
             DWORD last_error_code = 0
         self.connect()
-        args = libs.win.commandline.parse(cmd, True)
+        args = libs.win.commandline.parse(cmd)
         if args[0].startswith(self._url_prefix):
-            args[0] = self._strip_url_prefix(args[0])
-        cmd = (u'"%s" %s' if " " in args[0] else u'%s %s') % (args[0], libs.win.commandline.merge(args[1:]))
+            args[0] = args[0][len(self._url_prefix):]
+        cmd = u" ".join(args)
         if self._status_handler is not None:
-            status_id = self._status_handler.set_status(ss__connection_handler, st__info, u"smb", 1, u"Executng file: %s." % cmd)
+            status_id = self._status_handler.set_status(ss__connection_handler, st__info, u"smb", 1, u"Executing file: %s." % cmd)
         self._log_debug("[smb] [%d] executing: %s" % (libs.common.get_current_line_nr(), cmd))
         #ret_code = win32api.WinExec(cmd)
         ret_value = self._execute(cmd, &last_error_code)

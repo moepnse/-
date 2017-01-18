@@ -84,7 +84,7 @@ class NamedPipeThread(BaseNamedPipeThread):
             self._log.log_err(u"Action %d unknown!" % action)
 
     def _handle_send_info(self, info_type, info_text):
-        self._pi_status_gui.add_status(info_type, info_text)
+        self._pi_status_gui.add_info(info_type, info_text)
 
     def _handle_send_done(self):
         self._log.log_info(u"pi_service is done!")

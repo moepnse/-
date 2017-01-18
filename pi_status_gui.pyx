@@ -14,7 +14,7 @@ import wx
 # application/library imports
 from libs.pi_status_gui import PIStatusGUI
 from libs.handlers.status import INSTALLING, UPGRADING, REMOVING, INSTALLED, UPGRADED, REMOVED, FAILED, UNKNOWN, SEND_STATUS, SEND_INFO, SEND_INFO_SUCCESS, SEND_INFO_WARN, SEND_INFO_ERROR, SEND_DONE
-from libs.np_client import NamedPipeThread
+from libs.np_client import NamedPipeThread as BaseNamedPipeThread
 
 
 cdef class Log:
@@ -66,10 +66,10 @@ class StdInThread(threading.Thread):
 
 
 
-class NamedPipeThread(NamedPipeThread):
+class NamedPipeThread(BaseNamedPipeThread):
 
     def __init__(self, pi_status_gui, log, close_when_done = False):
-        NamedPipeThread.__init__(self, log)
+        BaseNamedPipeThread.__init__(self, log)
         self._pi_status_gui = pi_status_gui
         self._close_when_done = close_when_done
 
@@ -89,12 +89,12 @@ class NamedPipeThread(NamedPipeThread):
     def _handle_send_done(self):
         self._log.log_info(u"pi_service is done!")
 
-    def _handle_data(self):
-        NamedPipeThread.handle_data(self)
+    def __handle_data(self):
+        BaseNamedPipeThread.__handle_data(self)
         self._auto_scroll()
 
     def _start_status_loop(self):
-        NamedPipeThread._start_status_loop(self)
+        BaseNamedPipeThread._start_status_loop(self)
         # Does not work!
         #  PyAssertionError: C++ assertion "wxThread::IsMain()" failed at ..\..\src\common\timercmn.cpp(66) in wxTimerBase::Start(): timer can only be started from the main thread
         #self._pi_status_gui._timer_done.Start(10000, wx.TIMER_ONE_SHOT)

@@ -145,6 +145,9 @@ cdef class NamedPipeHandler(Log):
             DWORD dw_bytes_read = 0
             unsigned char info_type = 0
             unsigned int info_text_length = 0
+            #unicode package_id
+            #unicode package_name
+            #unicode info_text
         self._log_debug(u"got data!")
         data = self.read(1)
         # get response type
@@ -176,7 +179,7 @@ cdef class NamedPipeHandler(Log):
             self._log_debug(u"info_text_length: %d" % <DWORD>info_text_length)
             data = self.read(<DWORD>info_text_length)
             info_text = struct.unpack('!%ds' % info_text_length, data)[0]
-            self._handle_send_info(info_type, info_text)
+            self._handle_send_info(info_type, info_text.decode("UTF-8"))
         elif response_type == SEND_DONE:
             self._handle_send_done()
             self.close()

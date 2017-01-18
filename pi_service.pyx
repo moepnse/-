@@ -1410,7 +1410,7 @@ cdef class PIService:
                 print traceback.format_exc()
                 if self._status_gui:
                     self._send_status(FAILED, package_id)
-                    self._send_info(u"%s %s" % (package_id, str(e)), SEND_INFO_ERROR)
+                    self._send_info(u"%s %s" % (package_id, unicode(e)), SEND_INFO_ERROR)
 
     def _install(self):
         cdef:

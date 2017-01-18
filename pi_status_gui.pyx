@@ -116,14 +116,14 @@ class NamedPipeThread(BaseNamedPipeThread):
 
         self._pi_status_gui._lb_packages.Append(("Waiting for NP...",))
         self._pi_status_gui._lb_packages.SetItemColumnImage(self._pi_status_gui._lb_packages.GetItemCount() - 1, 0, self._pi_status_gui._i_img_index)
-        self._nph.open()
+        self.open()
         # Waits until either a time-out interval elapses or an instance of the specified named pipe is available to be connected to
         #win32pipe.WaitNamedPipe(self._pipe_name, self._pipe_wait_timeout)
-        self._version = self._nph.get_version()
+        self._version = self.get_version()
         if self._version == 1:
             self._pi_status_gui._lb_packages.Append(("Protocol Version: %d" % self._version,))
             self._pi_status_gui._lb_packages.SetItemColumnImage(self._pi_status_gui._lb_packages.GetItemCount() - 1, 0, self._pi_status_gui._i_img_index)
-            self._steps = self._nph.get_steps()
+            self._steps = self.get_steps()
             self._log.log_debug(u"steps: %d" % self._steps)
             self._pi_status_gui._pb_status.max = self._steps
             self._pi_status_gui._pb_status.progress = 0

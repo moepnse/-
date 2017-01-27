@@ -23,7 +23,7 @@ import wx.lib.mixins.listctrl as listmix
 from wx.lib.agw import ultimatelistctrl as ULC
 
 # application/library imports
-from package_installer import get_config_plugins, installed_list_factory, settings_factory, package_list_factory, profile_list_factory, install_list_factory, connection_list_factory, log_list_factory, host_list_factory, Log, get_ph_plugins, get_log_plugins, get_settings_config_path
+from package_installer import get_config_plugins, installed_list_factory, settings_factory, package_list_factory, profile_list_factory, install_list_factory, connection_list_factory, log_list_factory, host_list_factory, groups_factory, Log, get_ph_plugins, get_log_plugins, get_settings_config_path
 from libs.pi_status_gui import PIStatusGUI
 from package_installer import get_application_path, settings_factory, install_list_factory, installed_list_factory, package_list_factory, host_list_factory, connection_list_factory, log_list_factory, Log, get_ph_plugins, get_log_plugins
 from libs.handlers.config import RETURN_ID, RET_CODE_UNKNOWN, RET_CODE_SUCCESS, RET_CODE_ERROR, RET_CODE_ALREADY_INSTALLED, RET_CODE_ALREADY_REMOVED, RET_CODE_PACKAGE_NOT_FOUND, RET_CODE_DEPENDENCY_NOT_SATISFIABLE, ChecksumViolation
@@ -189,15 +189,56 @@ class StatusHandler(BaseStatusHandler):
 
 
 class PackageList(ULC.UltimateListCtrl, listmix.ColumnSorterMixin):
-    def __init__(self, parent, columns):
+
+    def __init__(self, parent, package_list, installed_list, lb_actions):
         ULC.UltimateListCtrl.__init__(self, parent, agwStyle=ULC.ULC_REPORT | ULC.ULC_HAS_VARIABLE_ROW_HEIGHT)
         #self.itemDataMap = DATA
-        listmix.ColumnSorterMixin.__init__(self, columns)
+        listmix.ColumnSorterMixin.__init__(self, 7)
+
+        self._package_list = package_list
+        self._installed_list = installed_list
+        self._lb_actions = lb_actions
+
+        self.InsertColumn(0, "Package Name")
+        self.InsertColumn(1, "Version (A)")
+        self.InsertColumn(2, "Revision (A)")
+        self.InsertColumn(3, "Version (I)")
+        self.InsertColumn(4, "Revision (I)")
+        self.InsertColumn(5, "Description")
+        self.InsertColumn(6, "Action")
+
         self.Bind(wx.EVT_LIST_COL_CLICK, self.OnColumn)
 
         self._bmp_install = wx.Bitmap("imgs/icons/16x16/install.png", wx.BITMAP_TYPE_ANY)
         self._bmp_uninstall = wx.Bitmap("imgs/icons/16x16/uninstall.png", wx.BITMAP_TYPE_ANY)
         self._bmp_upgrade = wx.Bitmap("imgs/icons/16x16/upgrade.png", wx.BITMAP_TYPE_ANY)
+
+        self._fill()
+
+    def _fill(self, packages=None):
+        self.DeleteAllItems()
+        self._mapping = []
+        for package_id, package in self._package_list.iteritems():
+            if packages is not None and package_id not in packages:
+                continue
+            if package_id in self._installed_list:
+                installed_package = self._installed_list[package_id]
+                installed_version = installed_package[1]
+                installed_rev = installed_package[2]
+            else:
+                installed_version = ""
+                installed_rev = ""
+            index = self.Append((package_id if len(package.name.strip()) == 0 else package.name, package.version, package.rev, installed_version, installed_rev, package.description))
+            self._mapping.append(package_id)
+            self.SetItemData(index, len(self._mapping) - 1)
+            if index % 2:
+                colour = wx.Colour(255,255,255)
+            else:
+                colour = wx.Colour(214,219, 99)
+            self.SetItemBackgroundColour(index, colour)
+            action_field = ActionField(self, package, self._lb_actions)
+            action_field.SetBackgroundColour(colour)
+            self.SetItemWindow(index, col=6, wnd=action_field, expand=True)
 
     def OnColumn(self, e):
         self.Refresh()
@@ -206,8 +247,12 @@ class PackageList(ULC.UltimateListCtrl, listmix.ColumnSorterMixin):
     def GetListCtrl(self):
         return self
 
+    def show_packages(self, list packages):
+        self._fill(packages)
+
 
 class ActionList(ULC.UltimateListCtrl, listmix.ColumnSorterMixin):
+
     def __init__(self, parent, columns):
         ULC.UltimateListCtrl.__init__(self, parent, agwStyle=ULC.ULC_REPORT | ULC.ULC_HAS_VARIABLE_ROW_HEIGHT)
         #self.itemDataMap = DATA
@@ -227,6 +272,7 @@ class ActionList(ULC.UltimateListCtrl, listmix.ColumnSorterMixin):
 
 
 class ActionField(wx.Panel):
+
     def __init__(self, parent, package, lb_actions):
         wx.Panel.__init__(self, parent)
         afs = ActionFieldSizer()
@@ -259,16 +305,19 @@ class ActionField(wx.Panel):
 
 
 class ActionsSizer(wx.BoxSizer):
+
     def __init__(self):
         wx.BoxSizer.__init__(self, wx.VERTICAL)
 
 
 class ActionFieldSizer(wx.BoxSizer):
+
     def __init__(self):
         wx.BoxSizer.__init__(self, wx.HORIZONTAL)
 
 
 class ActionsHSPanel(wx.Panel):
+
     def __init__(self, parent, package_list, status_handler, package_lists=[]):
 
         self._package_list = package_list
@@ -306,7 +355,62 @@ class ActionsHSPanel(wx.Panel):
         acd.Show()
 
 
+class GroupsTree(wx.TreeCtrl):
+
+    def __init__(self, parent, groups, lb_packages):
+        wx.TreeCtrl.__init__(self, parent)
+        self._root = self.AddRoot('Groups')
+        self._mapping = {}
+        self._handle_group('root', self._root, groups)
+        self._lb_packages = lb_packages
+        self.Bind(wx.EVT_TREE_ITEM_ACTIVATED, self.on_click, self)
+
+    def _handle_group(self, last_id, root, groups):
+        for group in groups:
+            new_id = '_'.join((last_id, group['id']))
+            new_root = self.AppendItem(root, group['name'], data=wx.TreeItemData(new_id))
+            self._mapping[new_id] = group
+            self._handle_group(new_id, new_root, group['groups'])
+
+    def on_click(self, event):
+        self._lb_packages.show_packages(self._mapping[self.GetPyData(event.GetItem())]['packages'])
+
+
+class GroupsPanel(wx.Panel):
+
+    def __init__(self, parent, package_list, installed_list, groups, status_handler):
+        wx.Panel.__init__(self, parent)
+        self._groups = groups
+        self._v_splitter = wx.SplitterWindow(self)
+        self._pl_panel = PackagelistPanel(self._v_splitter, package_list, installed_list, status_handler)
+        self._groups_tree = GroupsTree(self._v_splitter, groups, self._pl_panel._lb_packages)
+        self._v_splitter.SplitVertically(self._groups_tree, self._pl_panel)
+        self._v_splitter.SetSashGravity(0.5)
+        sizer = wx.BoxSizer()
+        sizer.Add(self._v_splitter, 1, wx.EXPAND)
+        self.SetSizer(sizer)
+
+
+class PackagelistPanel(wx.Panel):
+
+    def __init__(self, parent, package_list, installed_list, status_handler):
+        wx.Panel.__init__(self, parent)
+        self._h_splitter = wx.SplitterWindow(self)
+
+        self._actions_hs_panel = ActionsHSPanel(self._h_splitter, package_list, status_handler)
+        self._lb_packages = PackageList(self._h_splitter, package_list, installed_list, self._actions_hs_panel._lb_actions)
+
+        self._h_splitter.SplitHorizontally(self._lb_packages, self._actions_hs_panel)
+        self._h_splitter.SetSashGravity(0.5)
+        sizer = wx.BoxSizer()
+        sizer.Add(self._h_splitter, 1, wx.EXPAND)
+        self.SetSizer(sizer)
+        self._action_list = []
+
+
+
 class MainWindow(wx.Frame):
+
     def __init__(self, *args, **kwargs):
         wx.Frame.__init__(self, title="Package Installer", *args, **kwargs)
         status_handler = StatusHandler()
@@ -322,46 +426,16 @@ class MainWindow(wx.Frame):
             install_list = install_list_factory(settings.install_list, connection_list, log)
         else:
             host_list = host_list_factory(settings.host_list, log) 
-
+        groups = groups_factory(settings.groups, log)
         self._package_list = package_list
-
-        self._h_splitter = wx.SplitterWindow(self)
-
-        self._lb_packages = PackageList(self._h_splitter, 7)
-        self._lb_packages.InsertColumn(0, "Package Name")
-        self._lb_packages.InsertColumn(1, "Version (A)")
-        self._lb_packages.InsertColumn(2, "Revision (A)")
-        self._lb_packages.InsertColumn(3, "Version (I)")
-        self._lb_packages.InsertColumn(4, "Revision (I)")
-        self._lb_packages.InsertColumn(5, "Description")
-        self._lb_packages.InsertColumn(6, "Action")
-
-        self._actions_hs_panel = ActionsHSPanel(self._h_splitter, package_list, status_handler)
-
-        self._h_splitter.SplitHorizontally(self._lb_packages, self._actions_hs_panel)
-        self._h_splitter.SetSashGravity(0.5)
-        self._action_list = []
-        self._mapping = []
-        for package_id, package in package_list.iteritems():
-            if package_id in installed_list:
-                installed_package = installed_list[package_id]
-                installed_version = installed_package[1]
-                installed_rev = installed_package[2]
-            else:
-                installed_version = ""
-                installed_rev = ""
-            index = self._lb_packages.Append((package_id if len(package.name.strip()) == 0 else package.name, package.version, package.rev, installed_version, installed_rev, package.description))
-            self._mapping.append(package_id)
-            self._lb_packages.SetItemData(index, len(self._mapping) - 1)
-            if index % 2:
-                colour = wx.Colour(255,255,255)
-            else:
-                colour = wx.Colour(214,219, 99)
-            self._lb_packages.SetItemBackgroundColour(index, colour)
-            action_field = ActionField(self._lb_packages, package, self._actions_hs_panel._lb_actions)
-            action_field.SetBackgroundColour(colour)
-            self._lb_packages.SetItemWindow(index, col=6, wnd=action_field, expand=True)
-
+        self._nb = wx.Notebook(self)
+        self._plp = PackagelistPanel(self._nb, package_list, installed_list, status_handler)
+        self._groups_panel = GroupsPanel(self._nb, package_list, installed_list, groups, status_handler)
+        self._nb.AddPage(self._plp, "Packages")
+        self._nb.AddPage(self._groups_panel, "Groups")
+        sizer = wx.BoxSizer()
+        sizer.Add(self._nb, 1, wx.EXPAND)
+        self.SetSizer(sizer)
         self.Show()
 
 

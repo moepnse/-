@@ -115,6 +115,7 @@ cdef class Settings(Base):
         public object _profile_list
         public object _host_list
         public object _log_list
+        public object _groups
         public object _target_source
         public object _status_gui_cmd
         public unicode _u_run
@@ -204,3 +205,10 @@ cdef class ConnectionList(Base):
         public object protocol_plugins
         public object _status_handler
         public object _window_handle
+
+
+cdef class Groups:
+    cdef:
+        public unicode _groups_path
+        public object _log
+        public list _groups

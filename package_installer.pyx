@@ -148,6 +148,10 @@ def install_list_factory(install_list_path, connection_list, log):
     return get_config_plugin(install_list_path).InstallList(install_list_path, connection_list, log)
 
 
+def groups_factory(groups_path, log):
+    return get_config_plugin(groups_path).Groups(groups_path, log)
+
+
 def settings_factory(config_path=""):
     if config_path == "":
         config_path = os.path.abspath(get_settings_config_path())

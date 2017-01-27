@@ -661,6 +661,15 @@ cdef class Settings(Base):
         self._log_list = value
 
     @property
+    def groups(self):
+        return self._groups
+
+    @groups.setter
+    def groups(self, value):
+        self._groups = value
+
+
+    @property
     def target_source(self):
         return self._target_source
 
@@ -935,3 +944,33 @@ cdef class LogList(BaseVersion):
         self._config_path = _log_list_path
         self._logs = []
         self.protocol_plugins = protocol_plugins
+
+
+cdef class Groups:
+
+    def __init__(self, groups_path, log):
+        self._groups_path = groups_path
+        self._log = log
+        self._groups = []
+
+    def __len__(self):
+        """List length"""
+        return len(self._groups)
+
+    def __getitem__(self, index):
+        """Get a list item"""
+        return self._groups[index]
+
+    def __delitem__(self, index):
+        """Delete an item"""
+        del self._groups[index]
+
+    def __setitem__(self, index, value):
+        self._groups[index] = value
+
+    def insert(self, index, value):
+        self._groups.insert(index, value)
+
+    def append(self, value):
+        #self.insert(len(self._groups), value)
+        self._groups.append(value)

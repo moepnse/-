@@ -29,7 +29,7 @@ from cpython.long cimport PyLong_AsVoidPtr
 from libc.stdlib cimport malloc, free, calloc
 
 # application/library cimports
-from libs.handlers.config cimport Base, Settings as BaseSettings, ConnectionList as BaseConnectionList, LogList as BaseLogList, InstallList as BaseInstallList, HostList as BaseHostList, Package as BasePackage, PackageList as BasePackageList, ProfileList as BaseProfileList, Cmd, Host, Profile
+from libs.handlers.config cimport Base, Settings as BaseSettings, ConnectionList as BaseConnectionList, LogList as BaseLogList, InstallList as BaseInstallList, HostList as BaseHostList, Package as BasePackage, PackageList as BasePackageList, ProfileList as BaseProfileList, Groups as BaseGroups, Cmd, Host, Profile
 from libs.win.software cimport SoftwareList
 from pi_service cimport ON_START, ON_SHUTDOWN, REPEATEDLY, CURRENT_USER, WINLOGON
 from c_lua cimport lua_State, luaL_newstate, luaL_openlibs, luaL_loadfile, lua_pcall, lua_close, lua_pushcfunction, lua_setglobal, lua_getglobal, lua_tonumber, lua_pushnumber, luaL_checkstring, luaL_checkinteger, lua_toboolean, lua_tointeger, lua_pushlightuserdata, lua_rawlen, lua_pushinteger, lua_pop, lua_rawgeti, luaL_getn, lua_tolstring, lua_tostring, lua_isstring, lua_typename, lua_type, lua_next, lua_pushnil, lua_istable, lua_isinteger, lua_isnumber, lua_isboolean, lua_touserdata, lua_pushboolean, lua_pushcclosure, lua_getmetatable, lua_newuserdata, luaL_getmetatable, lua_setmetatable, lua_pushstring, lua_upvalueindex, luaL_newmetatable, lua_settable, lua_isfunction, lua_gettop, lua_rawseti, lua_setfield, lua_createtable, lua_newtable, luaL_ref, LUA_REGISTRYINDEX, lua_isnil, lua_pushvalue, lua_Integer, lua_getinfo, lua_Debug, lua_getstack, LUA_TSTRING, LUA_TBOOLEAN, LUA_TNUMBER, LUA_MASKLINE, lua_sethook, LUA_ERRFILE
@@ -2896,6 +2896,7 @@ cdef class Settings(BaseSettings):
             int ret_code
             const char* err_msg
             unicode package_list_path
+            unicode groups_path
         global lua_log_err
         # Create Lua state variable
         self._l = luaL_newstate()
@@ -2938,6 +2939,9 @@ cdef class Settings(BaseSettings):
         self._connection_list = get_absolute_config_path(self._settings_path, self._lua_get_string("connection_list"))
         self._log_list = get_absolute_config_path(self._settings_path, self._lua_get_string("log_list"))
         self._profile_list = get_absolute_config_path(self._settings_path, self._lua_get_string("profile_list"))
+        groups_path = self._lua_get_string("groups")
+        if groups_path != u"":
+            self._groups = get_absolute_config_path(self._settings_path, groups_path)
         self._u_run = self._lua_get_string("run").lower()
         if self._u_run in (u"shutdown", u"on_shutdown"):
             self._run = ON_SHUTDOWN
@@ -4433,6 +4437,179 @@ class InstalledList(libs.handlers.config.InstalledList):
         self._c.close()
         self._conn.close()
 
+
+cdef int get_group_packages(lua_State *L, list packages):
+    cdef:
+        unicode key
+
+    # first key
+    lua_pushnil(L)
+    while lua_next(L, -2) != 0:
+        # uses 'key' (at index -2) and 'value' (at index -1)
+        #print ("%s - %s" % (
+        #    lua_typename(L, lua_type(L, -2)),
+        #    lua_typename(L, lua_type(L, -1))))
+        if lua_isstring(L, -1) and  lua_isinteger(L, -2):
+            package_id = lua_string_to_python_unicode(L, -1)
+            packages.append(package_id)
+            lua_pop(L, 1)
+        else:
+            lua_pop(L, 1)
+            return -1
+    return 0
+
+
+cdef int get_group(lua_State *L, PyObject** pp_group):
+    cdef:
+        dict group
+        unicode key
+        unicode id = None
+        unicode name = u""
+        unicode description = u""
+        list packages = []
+        list groups = []
+
+    # first key
+    lua_pushnil(L)
+    while lua_next(L, -2) != 0:
+        # uses 'key' (at index -2) and 'value' (at index -1)
+        #print ("%s - %s" % (
+        #    lua_typename(L, lua_type(L, -2)),
+        #    lua_typename(L, lua_type(L, -1))))
+        if lua_isstring(L, -2):
+            #values = []
+            key = lua_string_to_python_unicode(L, -2)
+            if lua_isstring(L, -1):
+                if key == "id":
+                    id = lua_string_to_python_unicode(L, -1)
+                elif key == "name":
+                    name = lua_string_to_python_unicode(L, -1)
+                elif key == "description":
+                    description = lua_string_to_python_unicode(L, -1)
+            elif lua_istable(L, -1):
+                if key == "groups":
+                    get_groups(L, groups)
+                elif key == "packages":
+                    get_group_packages(L, packages)
+        lua_pop(L, 1)
+
+    if id is None:
+        return -1
+    group = {
+        "id": id,
+        "name": name,
+        "description": description,
+        "packages": packages,
+        "groups": groups
+    }
+    pp_group[0] = <PyObject*>group
+    Py_INCREF(group)
+    return 0
+
+
+cdef int get_groups(lua_State *L, list groups):
+    """
+    groups = {
+        {   id = "network",
+            name = "Network",
+            description = "Network"
+            packages = {},
+            groups = {
+                {
+                    id = "webbrowsers",
+                    name = "Webbrowsers",
+                    description = "Webbrowsers",
+                    packages = {"firefox", "firefox_esr"}
+                },
+                {
+                    id = "remote_desktop",
+                    name = "Remote Desktop",
+                    description = "Remote Desktop",
+                    packages = {"x2goclient"}
+                }
+            }
+        },
+        {
+            id = "file_archiver",
+            name = "file archiver",
+            description = "file archiver",
+            packages = {"winrar", "winzip", "7zip"}
+        },
+        {
+            id = "windows_registry_hacks",
+            name = "windows registry hacks",
+            description = "windows registry hacks",
+            packages = {    "disable_autorun", 
+                            "hide_drives_a_and_e", 
+                            "add_encryption_to_context_menu",
+                            "jump_directly_to_select_a_program_from_a_list_of_installed_programs", 
+                            "disable_autoreboot_after_update",
+                            "disable_default_shutdown_option_when_update_aviable"
+                        }
+        }
+    }
+    """
+
+    cdef:
+        PyObject* ptr_group
+        dict group
+        size_t i = 1
+        size_t n
+
+    #luaL_checktype(L, table, LUA_TTABLE);
+    if not lua_isnil(L, -1):
+        n = lua_rawlen(L, -1)
+        while i <= n:
+            lua_rawgeti(L, -1, i)
+            if lua_istable(L, -1):
+                if get_group(L, &ptr_group) != -1:
+                    group = <object>ptr_group
+                    Py_DECREF(group)
+                    groups.append(group)
+            i += 1
+            lua_pop(L, 1);
+
+    return 0
+
+
+cdef class Groups(BaseGroups):
+
+    cdef:
+        lua_State *_l
+
+    def __init__(self, groups_path, log):
+        BaseGroups.__init__(self, groups_path, log)
+        self._lua()
+
+    def _lua(self):
+
+        global lua_log_err
+
+        # Create Lua state variable
+        self._l = luaL_newstate()
+        # Load Lua libraries
+        luaL_openlibs(self._l)
+        # Load but don't run the Lua script 
+        ret_code = luaL_loadfile(self._l, self._groups_path)
+        if ret_code:
+            err_msg = lua_tostring(self._l, -1)
+            print >>lua_log_err, err_msg
+            if ret_code ==  LUA_ERRFILE:
+                raise IOError(2, "File not found!", self._groups_path)
+            return False
+
+        # Run the lua
+        ret_code = lua_pcall(self._l, 0, 0, 0)
+        if ret_code == 2:
+            err_msg = lua_tostring(self._l, -1)
+            print >>lua_log_err, err_msg
+        if ret_code != 0:
+            return False
+
+        lua_getglobal(self._l, "groups")
+        get_groups(self._l, self._groups)
+        lua_close(self._l)
+        return True
 
 
 def register_handler(plugins):

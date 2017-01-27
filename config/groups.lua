@@ -1,7 +1,7 @@
 groups = {
     {   id = "network",
         name = "Network",
-        description = "Network"
+        description = "Network",
         packages = {},
         groups = {
             {

@@ -1,4 +1,10 @@
 groups = {
+    {   id = "office_suite",
+        name = "Office Suite",
+        description = "Office Suite",
+        package = { "libreoffice"},
+        groups = {}
+    },
     {   id = "network",
         name = "Network",
         description = "Network",
@@ -15,6 +21,12 @@ groups = {
                 name = "Remote Desktop",
                 description = "Remote Desktop",
                 packages = {"x2goclient"}
+            },
+            {
+                id = "instant_messaging",
+                name = "Instant Messaging",
+                description = "Instant Messaging",
+                packages = {"gajim"}
             }
         }
     },

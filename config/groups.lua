@@ -17,6 +17,12 @@ groups = {
                 packages = {"firefox", "firefox_esr"}
             },
             {
+                id = "email_clients",
+                name = "E-Mail Clients",
+                description = "E-Mail Clients",
+                packages = {"thunderbird"}
+            },
+            {
                 id = "remote_desktop",
                 name = "Remote Desktop",
                 description = "Remote Desktop",

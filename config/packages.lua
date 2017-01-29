@@ -280,7 +280,7 @@ packages = {
 
 include({'config', 'windows_registry_hacks.lua'})
 include({'config', 'instant_messaging.lua'})
-include({'config', 'office_suite'})
+include({'config', 'office_suite.lua'})
 
 do
     local installed, version, rev = is_in_installed_list("7zip")

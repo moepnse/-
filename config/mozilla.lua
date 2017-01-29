@@ -202,3 +202,66 @@ do
 end
 
 set_package_check_functions('firefox', 'firefox_is_installed', 'firefox_is_upgrade_avalaible')
+
+do
+    local _packages = {
+        {   package_id = "thunderbird",
+            name = "Thunderbird",
+            version = "45.7.0",
+            rev = 0,
+            uninstall_cmds = 
+                {
+                    {
+                        cmd = [["file://%PROGRAMFILES(X86)%\Mozilla Thunderbird\uninstall\helper.exe"]],
+                        args = {
+                            {   parameter = "/S",
+                                values = {
+                                    {
+                                        "",
+                                        false
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+            install_cmds = 
+                {
+                    {
+                        cmd = "https://download-installer.cdn.mozilla.net/pub/thunderbird/releases/45.7.0/win32/de/Thunderbird%20Setup%2045.7.0.exe",
+                        args = {
+                            {   parameter = "/ms",
+                                values = {
+                                    {
+                                        "",
+                                        false
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+            is_installed = 
+                function()
+                    return is_in_software_list([[^Thunderbird]])
+                end,
+            is_upgrade_available = function()
+                local installed, version, rev = is_in_installed_list("thunderbird")
+                if installed and (version < "45.7.0" or (version == "45.7.8" and rev < "0")) then
+                    return true
+                end
+                return false
+            end,
+            dependencies = {
+            },
+            keywords = {
+                "mail", "e-mail"
+            },
+            description = "Mozilla Thunderbird is a free,open source, cross-platform email, news, RSS, and chat client.",
+            ret_codes = windows_error_codes
+        },
+    }
+    for k,v in ipairs(_packages) do
+      table.insert(packages, v)
+    end
+end

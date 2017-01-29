@@ -2,7 +2,7 @@ groups = {
     {   id = "office_suite",
         name = "Office Suite",
         description = "Office Suite",
-        package = { "libreoffice"},
+        packages = { "libreoffice"},
         groups = {}
     },
     {   id = "network",

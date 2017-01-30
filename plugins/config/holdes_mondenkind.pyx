@@ -2268,24 +2268,14 @@ cdef int l_register_package__positional_args(lua_State *L):
     get_cmds(L, 9, package_list, uninstall_cmds, package_list._status_handler)
     get_table_as_list(L, 11, keywords)
     get_table_as_list(L, 14, dependencies_list, (
-                    None, 
-                    {   DICT: (
+                        {   DICT: (
                                 None,
-                                {   "dependencies":
-                                        {   ARRAY: (
-                                                {   DICT: (
-                                                        None,
-                                                        {   "package_id": { STRING: None},
-                                                            "installed": { BOOLEAN: None}
-                                                        }
-                                                    )
-                                                }, 
-                                                None
-                                            )
-                                        }
+                                {   "package_id": { STRING: None},
+                                    "installed": { BOOLEAN: None}
                                 }
                             )
-                        }
+                        }, 
+                        None
                     )
                 )
 

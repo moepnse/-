@@ -89,6 +89,8 @@ cdef class Package(BaseVersion):
         public unicode name
         public object version
         public object rev
+        public unicode _maintainer
+        public unicode _email
         public object _installed
         public object install_cmds
         public object _upgrade_available

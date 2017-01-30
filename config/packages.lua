@@ -16,7 +16,6 @@ firefox_esr.install = function(l)
     register_package('package_installer', install_cmds, upgrade_cmds, uninstall_cmds)
 end
 
-include({'config', 'mozilla.lua'})
 include({'config', 'microsoft.lua'})
 
 do
@@ -278,9 +277,11 @@ packages = {
     }
 }
 
+include({'config', 'mozilla.lua'})
 include({'config', 'windows_registry_hacks.lua'})
 include({'config', 'instant_messaging.lua'})
 include({'config', 'office_suite.lua'})
+include({'config', 'test.lua'})
 
 do
     local installed, version, rev = is_in_installed_list("7zip")

@@ -2148,7 +2148,100 @@ cdef int get_cmds(lua_State *L, int table, PackageList package_list, object cmds
     return 0
 
 
-cdef int l_register_package (lua_State *L):
+cdef int l_register_package__named_args(lua_State *L):
+    cdef:
+        dict group
+        unicode key
+
+        unicode package_id = u""
+        unicode name = u""
+        bint installed = False
+        bint upgrade_available = False
+        object rev = "0"
+        object version = "0.0.0"
+        unicode maintainer = u""
+        unicode email = u""
+        list install_cmds = []
+        list upgrade_cmds = []
+        list uninstall_cmds = []
+        list keywords = []
+        list dependencies_list = []
+        unicode description = u""
+        unicode icon = u""
+        unicode icon_type = u""
+        PyObject* p_package_list
+        PackageList package_list
+
+    lua_getglobal(L, 'p_package_list')
+    p_package_list = <PyObject*>lua_touserdata (L, -1)
+    package_list = <object>p_package_list
+
+    # Push another reference to the table on top of the stack (so we know
+    # where it is, and this function can work for negative, positive and
+    # pseudo indices
+    lua_pushvalue(L, 1);
+    # stack now contains: -1 => table
+    # first key
+    lua_pushnil(L)
+    while lua_next(L, -2) != 0:
+        # uses 'key' (at index -2) and 'value' (at index -1)
+        #print ("%s - %s" % (
+        #    lua_typename(L, lua_type(L, -2)),
+        #    lua_typename(L, lua_type(L, -1))))
+        if lua_isstring(L, -2):
+            #values = []
+            key = lua_string_to_python_unicode(L, -2)
+            if key == "id" or key == "package_id":
+                package_id = lua_string_to_python_unicode(L, -1)
+            elif key == "name":
+                name = lua_string_to_python_unicode(L, -1)
+            elif key == "description":
+                description = lua_string_to_python_unicode(L, -1)
+            elif key == "icon":
+                icon = lua_string_to_python_unicode(L, -1)
+            elif key == "icon_type":
+                icon = lua_string_to_python_unicode(L, -1)
+            elif key == "maintainer":
+                maintainer = lua_string_to_python_unicode(L, -1)
+            elif key == "email":
+                email = lua_string_to_python_unicode(L, -1)
+            elif key == "installed":
+                installed = lua_toboolean(L, -1)
+            elif key == "upgrade_available":
+               upgrade_available = lua_toboolean(L, -1)
+            elif key == "rev":
+               rev = luaL_checkstring(L, -1)
+            elif key == "version":
+               version = luaL_checkstring(L, -1)
+            elif key == "install_cmds":
+                get_cmds(L, -1, package_list, install_cmds, package_list._status_handler)
+            elif key == "upgrade_cmds":
+                get_cmds(L, -1, package_list, upgrade_cmds, package_list._status_handler)
+            elif key == "uninstall_cmds":
+                get_cmds(L, -1, package_list, uninstall_cmds, package_list._status_handler)
+            elif key == "keywords":
+                get_table_as_list(L, -1, keywords)
+            elif key == "dependencies_list" or key == "dependencies":
+                get_table_as_list(L, -1, dependencies_list, (
+                                        {   DICT: (
+                                                None,
+                                                {   "package_id": { STRING: None},
+                                                    "installed": { BOOLEAN: None}
+                                                }
+                                            )
+                                        },
+                                        None
+                                    )
+
+                            )
+
+        lua_pop(L, 1)
+
+    package_list[package_id] = Package(package_id, name, version, rev, installed, install_cmds, upgrade_available, upgrade_cmds, uninstall_cmds, description, keywords, icon, icon_type, package_list, package_list._connection_list, dependencies_list, package_list._log, package_list._status_handler, maintainer=maintainer, email=email)
+    return 1
+
+
+cdef int l_register_package__positional_args(lua_State *L):
     cdef:
         const char* package_id = luaL_checkstring(L, 1)
         unicode name = lua_string_to_python_unicode(L, 2)
@@ -2198,6 +2291,13 @@ cdef int l_register_package (lua_State *L):
 
     package_list[package_id] = Package(package_id, name, version, rev, installed, install_cmds, upgrade_available, upgrade_cmds, uninstall_cmds, description, keywords, icon, icon_type, package_list, package_list._connection_list, dependencies_list, package_list._log, package_list._status_handler)
     return 1
+
+
+cdef int l_register_package (lua_State *L):
+    if lua_gettop(L) == 1:
+        return l_register_package__named_args(L)
+    else:
+        return l_register_package__positional_args(L)
 
 
 cdef int l_install (lua_State *L):
@@ -2779,10 +2879,10 @@ cdef class Package(BasePackage):
         cmd* _function_is_upgrade_available
         lua_State* _l
 
-    def __init__(self, package_id, name, version, rev, installed, install_cmds, upgrade_available, upgrade_cmds, uninstall_cmds, description, keywords, icon,icon_type, package_list, connection_list, dependencies_list, log, status_handler, l=None, function_is_installed = None, function_is_upgrade_available = None):
-        BasePackage.__init__(self, package_id, name, version, rev, installed, install_cmds, upgrade_available, upgrade_cmds, uninstall_cmds, description, keywords, icon, icon_type, package_list, connection_list, dependencies_list, log, status_handler)
+    def __init__(self, package_id, name, version, rev, installed, install_cmds, upgrade_available, upgrade_cmds, uninstall_cmds, description, keywords, icon,icon_type, package_list, connection_list, dependencies_list, log, status_handler, l=None, function_is_installed=None, function_is_upgrade_available=None, maintainer=u"", email=u""):
+        BasePackage.__init__(self, package_id, name, version, rev, installed, install_cmds, upgrade_available, upgrade_cmds, uninstall_cmds, description, keywords, icon, icon_type, package_list, connection_list, dependencies_list, log, status_handler, maintainer=maintainer, email=email)
 
-    def __cinit__(self, package_id, name, version, rev, installed, install_cmds, upgrade_available, upgrade_cmds, uninstall_cmds, description, keywords, icon, icon_type, package_list, connection_list, dependencies_list, log, status_handler, l=None, function_is_installed = None, function_is_upgrade_available = None):
+    def __cinit__(self, package_id, name, version, rev, installed, install_cmds, upgrade_available, upgrade_cmds, uninstall_cmds, description, keywords, icon, icon_type, package_list, connection_list, dependencies_list, log, status_handler, l=None, function_is_installed=None, function_is_upgrade_available=None, maintainer=u"", email=u""):
         if isinstance(l, int):
             self._l = <lua_State*>PyLong_AsVoidPtr(l)
             if function_is_installed is None:
@@ -3019,6 +3119,8 @@ cdef class PackageList(BasePackageList):
             dict dict_package
             unicode version
             unicode rev
+            unicode maintainer
+            unicode email
             object icon
             dict ret_codes
             list install_cmds
@@ -3377,6 +3479,8 @@ cdef class PackageList(BasePackageList):
                 name = dict_package.get(u'name', u'')
                 version = dict_package.get(u'version', u'')
                 rev = dict_package.get(u'rev', u'')
+                maintainer = dict_package.get(u'maintainer', u'')
+                email = dict_package.get(u'email', u'')
                 ret_codes = dict_package.get(u'ret_codes', dict_package.get(u'return_codes', {}))
                 install_cmds = dict_package.get(u'install_cmds', [])
                 uninstall_cmds = dict_package.get(u'uninstall_cmds', [])
@@ -3421,7 +3525,7 @@ cdef class PackageList(BasePackageList):
                 self.__handle_cmds(uninstall_cmds)
                 self.__handle_cmds(upgrade_cmds)
 
-                self[package_id] = Package(package_id, name, version, rev, installed, install_cmds, upgrade_available, upgrade_cmds, uninstall_cmds, description, keywords, icon, icon_type, self, self._connection_list, dependencies, self._log, self._status_handler, <int>self._l, function_is_installed = <int>p_func_installed, function_is_upgrade_available = <int>p_func_upgrade_available)
+                self[package_id] = Package(package_id, name, version, rev, installed, install_cmds, upgrade_available, upgrade_cmds, uninstall_cmds, description, keywords, icon, icon_type, self, self._connection_list, dependencies, self._log, self._status_handler, <int>self._l, function_is_installed = <int>p_func_installed, function_is_upgrade_available = <int>p_func_upgrade_available, maintainer=maintainer, email=email)
                 #self[package_id] = Package(package_id, name, version, rev, installed, install_cmds, upgrade_available, upgrade_cmds, uninstall_cmds, description, keywords, self._connection_list, dependencies, self._log, function_is_installed = installed_function, function_is_upgrade_available = upgrade_available_function)
 
 

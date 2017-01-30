@@ -209,6 +209,8 @@ do
             name = "Thunderbird",
             version = "45.7.0",
             rev = 0,
+            maintainer = "Richard Lamboj",
+            email = "rl@unicom.ws",
             uninstall_cmds = 
                 {
                     {

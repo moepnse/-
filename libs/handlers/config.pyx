@@ -445,11 +445,13 @@ cdef class Base(BaseVersion):
 
 cdef class Package(BaseVersion):
 
-    def __init__(self, package_id, name, version, rev, installed, install_cmds, upgrade_available, upgrade_cmds, uninstall_cmds, description, keywords, icon, icon_type, package_list, connection_list, dependencies_list, log, object status_handler):
+    def __init__(self, package_id, name, version, rev, installed, install_cmds, upgrade_available, upgrade_cmds, uninstall_cmds, description, keywords, icon, icon_type, package_list, connection_list, dependencies_list, log, object status_handler, unicode maintainer=u"", unicode email=u""):
         self.package_id = package_id
         self.name = name
         self.version = version
         self.rev = rev
+        self._maintainer = maintainer
+        self._email = email
         self._installed = installed
         self.install_cmds = install_cmds
         self._upgrade_available = upgrade_available
@@ -543,6 +545,22 @@ cdef class Package(BaseVersion):
 
     def uninstall(self):
         return self._execute_cmds(self.uninstall_cmds)
+
+    @property
+    def maintainer(self):
+        return self._maintainer
+
+    @maintainer.setter
+    def maintainer(self, value):
+        self._maintainer = value
+
+    @property
+    def email(self):
+        return self._email
+
+    @email.setter
+    def email(self, value):
+        self._email = value
 
     @property
     def installed(self):

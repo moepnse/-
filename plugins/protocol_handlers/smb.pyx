@@ -50,6 +50,13 @@ cdef class SMBHandler(BaseHandler):
         self._interactive = interactive
         self._prompt = prompt
 
+    def is_responsible(self, url):
+        if url.startswith(r'\\'):
+            return True
+        if BaseHandler.is_responsible(url):
+            return True
+        return False
+
     def is_connected(self):
         return self._connected
 

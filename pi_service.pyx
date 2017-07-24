@@ -1406,7 +1406,7 @@ cdef class PIService:
                     #self._send_info(u"%s %s" % (package_id, str(e)), SEND_INFO_ERROR)
                 #print >>stderr, "Error: ", e
             except Exception as e:
-                print str(e)
+                print unicode(e)
                 print traceback.format_exc()
                 if self._status_gui:
                     self._send_status(FAILED, package_id)

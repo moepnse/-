@@ -75,7 +75,7 @@ class SimpleProgressBar(wx.Panel):
 
 
 class PIStatusGUI(wx.Frame):
-    def __init__(self, log):
+    def __init__(self, log=None):
         wx.Frame.__init__(self, None, -1, "Package Installer", style = wx.FRAME_SHAPED | wx.SIMPLE_BORDER)
         self._package_status_mapping = {}
         self._log = log

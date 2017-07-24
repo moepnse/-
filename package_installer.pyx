@@ -105,7 +105,12 @@ def get_log_plugins():
 def get_config_plugin(config_path):
     config_plugins = get_config_plugins()
     file_name, file_extension = os.path.splitext(config_path)
-    return config_plugins[file_extension[1:]]
+    file_extension = file_extension[1:]
+    if file_extension in config_plugins:
+        config_plugin = config_plugins[file_extension]
+    else:
+        pass
+    return config_plugin
 
 
 def log_list_factory(log_list_path, plugins):

@@ -188,12 +188,13 @@ class StatusHandler(BaseStatusHandler):
         pass
 
 
-class PackageList(ULC.UltimateListCtrl, listmix.ColumnSorterMixin):
+class PackageList(ULC.UltimateListCtrl, listmix.ColumnSorterMixin, listmix.ListCtrlAutoWidthMixin):
 
     def __init__(self, parent, package_list, installed_list, lb_actions):
         ULC.UltimateListCtrl.__init__(self, parent, agwStyle=ULC.ULC_REPORT | ULC.ULC_HAS_VARIABLE_ROW_HEIGHT)
         #self.itemDataMap = DATA
         listmix.ColumnSorterMixin.__init__(self, 7)
+        listmix.ListCtrlAutoWidthMixin.__init__(self)
 
         self._package_list = package_list
         self._installed_list = installed_list
@@ -213,7 +214,18 @@ class PackageList(ULC.UltimateListCtrl, listmix.ColumnSorterMixin):
         self._bmp_uninstall = wx.Bitmap("imgs/icons/16x16/uninstall.png", wx.BITMAP_TYPE_ANY)
         self._bmp_upgrade = wx.Bitmap("imgs/icons/16x16/upgrade.png", wx.BITMAP_TYPE_ANY)
 
+        self.setResizeColumn(6)
+
         self._fill()
+
+    def OnSortOrderChanged(self):
+        count = self.GetItemCount()
+        for row in xrange(count):
+            if row % 2:
+                colour = wx.Colour(255,255,255)
+            else:
+                colour = wx.Colour(214,219, 99)
+            self.SetItemBackgroundColour(row, colour)
 
     def _fill(self, packages=None):
         self.DeleteAllItems()
@@ -239,6 +251,8 @@ class PackageList(ULC.UltimateListCtrl, listmix.ColumnSorterMixin):
             action_field = ActionField(self, package, self._lb_actions)
             action_field.SetBackgroundColour(colour)
             self.SetItemWindow(index, col=6, wnd=action_field, expand=True)
+        self.itemDataMap = self._mapping
+
 
     def OnColumn(self, e):
         self.Refresh()
@@ -251,12 +265,14 @@ class PackageList(ULC.UltimateListCtrl, listmix.ColumnSorterMixin):
         self._fill(packages)
 
 
-class ActionList(ULC.UltimateListCtrl, listmix.ColumnSorterMixin):
+class ActionList(ULC.UltimateListCtrl, listmix.ColumnSorterMixin, listmix.ListCtrlAutoWidthMixin):
 
     def __init__(self, parent, columns):
         ULC.UltimateListCtrl.__init__(self, parent, agwStyle=ULC.ULC_REPORT | ULC.ULC_HAS_VARIABLE_ROW_HEIGHT)
         #self.itemDataMap = DATA
         listmix.ColumnSorterMixin.__init__(self, columns)
+        listmix.ListCtrlAutoWidthMixin.__init__(self)
+
         self.Bind(wx.EVT_LIST_COL_CLICK, self.OnColumn)
 
         self._bmp_install = wx.Bitmap("imgs/icons/16x16/install.png", wx.BITMAP_TYPE_ANY)
@@ -310,10 +326,27 @@ class ActionsSizer(wx.BoxSizer):
         wx.BoxSizer.__init__(self, wx.VERTICAL)
 
 
+class ActionsButtonSizer(wx.BoxSizer):
+
+    def __init__(self):
+        wx.BoxSizer.__init__(self, wx.HORIZONTAL)
+
+
 class ActionFieldSizer(wx.BoxSizer):
 
     def __init__(self):
         wx.BoxSizer.__init__(self, wx.HORIZONTAL)
+
+
+class ActionsButtonPanel(wx.Panel):
+
+    def __init__(self, parent):
+        wx.Panel.__init__(self, parent)
+        self._sizer = ActionsButtonSizer()
+        self.SetSizer(self._sizer)
+
+    def add_many(self, blah):
+        self._sizer.AddMany(blah)
 
 
 class ActionsHSPanel(wx.Panel):
@@ -332,13 +365,26 @@ class ActionsHSPanel(wx.Panel):
         self._lb_actions.InsertColumn(2, "Package Name")
         self._lb_actions.InsertColumn(3, "Version")
 
+        self._lb_actions.setResizeColumn(3)
+
         self._bmp_handle_actions = wx.Bitmap("imgs/icons/16x16/h.png", wx.BITMAP_TYPE_ANY)
-        self._cmd_handle_actions = wx.BitmapButton(self, id=wx.ID_ANY,  bitmap=self._bmp_handle_actions)
+        self._bmp_clear_actions = wx.Bitmap("imgs/icons/16x16/x.png", wx.BITMAP_TYPE_ANY)
 
         self._action_sizer = ActionsSizer()
+        self._actions_button_panel = ActionsButtonPanel(self)
+
+        self._cmd_handle_actions = wx.BitmapButton(self._actions_button_panel, id=wx.ID_ANY,  bitmap=self._bmp_handle_actions)
+        self._cmd_clear_actions = wx.BitmapButton(self._actions_button_panel, id=wx.ID_ANY,  bitmap=self._bmp_clear_actions)
+
         self.SetSizer(self._action_sizer)
-        self._action_sizer.AddMany(((self._lb_actions, 1, wx.EXPAND), (self._cmd_handle_actions, 0, wx.EXPAND)))
+        self._action_sizer.AddMany(((self._lb_actions, 1, wx.EXPAND), (self._actions_button_panel, 0, wx.EXPAND)))
+        self._actions_button_panel.add_many(((self._cmd_handle_actions, 1, wx.EXPAND), (self._cmd_clear_actions, 1, wx.EXPAND)))
+
         self.Bind(wx.EVT_BUTTON, self.__cmd_handle_actions_on_button, self._cmd_handle_actions)
+        self.Bind(wx.EVT_BUTTON, self.__cmd_clear_actions_on_button, self._cmd_clear_actions)
+
+    def __cmd_clear_actions_on_button(self, e):
+        self._lb_actions.DeleteAllItems()
 
     def __cmd_handle_actions_on_button(self, e):
         acd = ActionConfirmDialog(None, self._package_list, self._status_handler)
@@ -386,6 +432,8 @@ class GroupsPanel(wx.Panel):
         self._groups_tree = GroupsTree(self._v_splitter, groups, self._pl_panel._lb_packages)
         self._v_splitter.SplitVertically(self._groups_tree, self._pl_panel)
         self._v_splitter.SetSashGravity(0.5)
+        self._v_splitter.SetSashPosition(200)
+        #self._groups_tree.SetSize((200, -1))
         sizer = wx.BoxSizer()
         sizer.Add(self._v_splitter, 1, wx.EXPAND)
         self.SetSizer(sizer)
@@ -408,25 +456,13 @@ class PackagelistPanel(wx.Panel):
         self._action_list = []
 
 
-
 class MainWindow(wx.Frame):
 
-    def __init__(self, *args, **kwargs):
-        wx.Frame.__init__(self, title="Package Installer", *args, **kwargs)
-        status_handler = StatusHandler()
-        settings = settings_factory(get_settings_config_path('pi_settings.path'))
-        plugins = get_ph_plugins()
-        log_plugins = get_log_plugins()
-        log_targets = log_list_factory(settings.log_list, log_plugins)
-        log = Log(log_targets)
-        connection_list = connection_list_factory(settings.connection_list, plugins, log, status_handler, window_handle=self.GetHandle())
-        installed_list = installed_list_factory(settings.installed_list, log)
-        package_list = package_list_factory(settings.package_list, connection_list, installed_list, log, status_handler)
-        if settings.target_source == 'install_list':
-            install_list = install_list_factory(settings.install_list, connection_list, log)
-        else:
-            host_list = host_list_factory(settings.host_list, log) 
-        groups = groups_factory(settings.groups, log)
+    def __init__(self, parent, *args, **kwargs):
+        wx.Frame.__init__(self, parent, title="Package Installer", *args, **kwargs)
+
+    def init(self, package_list, groups, installed_list, status_handler):
+
         self._package_list = package_list
         self._nb = wx.Notebook(self)
         self._plp = PackagelistPanel(self._nb, package_list, installed_list, status_handler)
@@ -436,6 +472,7 @@ class MainWindow(wx.Frame):
         sizer = wx.BoxSizer()
         sizer.Add(self._nb, 1, wx.EXPAND)
         self.SetSizer(sizer)
+        self.SetSize((800, 600))
         self.Show()
 
 
@@ -499,6 +536,71 @@ class ActionConfirmDialog(wx.Frame):
         self._lb_actions.SetItemData(index, package_id)
 
 
+class Loader(threading.Thread):
+
+    def __init__(self, win, pi_status_gui):
+        threading.Thread.__init__(self)
+        self._pi_status_gui = pi_status_gui
+        self._win = win
+
+    def run(self):
+        pi_status_gui = self._pi_status_gui
+
+        status_handler = StatusHandler()
+        pi_status_gui.add_info(SEND_INFO_SUCCESS, u"Loading Settings")
+        settings = settings_factory(get_settings_config_path('pi_settings.path'))
+        pi_status_gui.add_info(SEND_INFO_SUCCESS, u"Loading Protocol-Handlers")
+        plugins = get_ph_plugins()
+        pi_status_gui.add_info(SEND_INFO_SUCCESS, u"Loading Logging Plugins")
+        log_plugins = get_log_plugins()
+        log_targets = log_list_factory(settings.log_list, log_plugins)
+        log = Log(log_targets)
+        pi_status_gui.add_info(SEND_INFO_SUCCESS, u"Loading Connection List")
+        try:
+            connection_list = connection_list_factory(settings.connection_list, plugins, log, status_handler, window_handle=pi_status_gui.GetHandle())
+        except IOError:
+            pi_status_gui.add_info(SEND_INFO_SUCCESS, u"Could not load Connection-List! Please check your configuration!")
+            pi_status_gui.add_info(SEND_INFO_SUCCESS, u"STOPPED!")
+            return False
+        pi_status_gui.add_info(SEND_INFO_SUCCESS, u"Loading Installed List")
+        try:
+            installed_list = installed_list_factory(settings.installed_list, log)
+        except IOError:
+            pi_status_gui.add_info(SEND_INFO_SUCCESS, u"Could not load Installed-List! Please check your configuration!")
+        pi_status_gui.add_info(SEND_INFO_SUCCESS, u"Loading Package List")
+        try:
+            package_list = package_list_factory(settings.package_list, connection_list, installed_list, log, status_handler)
+        except IOError:
+            pi_status_gui.add_info(SEND_INFO_SUCCESS, u"Could not load Installed-List! Please check your configuration!")
+            pi_status_gui.add_info(SEND_INFO_SUCCESS, u"STOPPED!")
+            return False
+        if settings.target_source == 'install_list':
+            pi_status_gui.add_info(SEND_INFO_SUCCESS, u"Loading Install List")
+            try:
+                install_list = install_list_factory(settings.install_list, connection_list, log)
+            except IOError:
+                pi_status_gui.add_info(SEND_INFO_SUCCESS, u"Could not load Install-List! Please check your configuration!")
+        else:
+            pi_status_gui.add_info(SEND_INFO_SUCCESS, u"Loading Host List")
+            try:
+                host_list = host_list_factory(settings.host_list, log)
+            except IOError:
+                pi_status_gui.add_info(SEND_INFO_SUCCESS, u"Could not load Host-List! Please check your configuration!")
+        pi_status_gui.add_info(SEND_INFO_SUCCESS, u"Loading Groups List")
+        try:
+            groups = groups_factory(settings.groups, log)
+        except IOError:
+            pi_status_gui.add_info(SEND_INFO_SUCCESS, u"Could not load Groups-List! Please check your configuration!")
+
+        wx.CallAfter(self._win.init, package_list=package_list, groups=groups, installed_list=installed_list, status_handler=status_handler)
+        wx.CallAfter(pi_status_gui.Close)
+
+
+
 app = wx.App(False)
 win = MainWindow(None)
+pi_status_gui = PIStatusGUI()
+pi_status_gui.Show()
+loader = Loader(win, pi_status_gui)
+loader.start()
 app.MainLoop()

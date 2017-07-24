@@ -22,6 +22,7 @@ url_prefix = "file://"
 cdef class FileHandler(BaseHandler):
 
     _drive_letter_regex = re.compile(r'^[A-Za-z]{1}:\\')
+    _cmd_regex = re.compile(r'^[\w]+(\s|$)')
 
     def __init__(self, log, status_handler, url, username=None, password=None, log_info=True, log_warn=True, log_err=True, log_debug=False, **kwargs):
         #libs.handlers.protocol.BaseHandler.__init__(self, log, url, username=username, password=password, log_info=log_info, log_warn=log_warn, log_err=log_err, log_debug=log_debug)
@@ -43,6 +44,8 @@ cdef class FileHandler(BaseHandler):
             is_responsible = True
             if not self._status_handler is None:
                 status_id = self._status_handler.set_status(ss__connection_handler, st__info, self._plugin_name.decode("utf-8"), 1, u"Plugin \"%s\" is responsible for URL \"%s\"." % (self._plugin_name, url))
+        elif self._cmd_regex.match(url) is not None:
+            is_responsible = True
         elif BaseHandler.is_responsible(self, url):
             is_responsible = True
         self._log_debug(u'[file] [%d] responsible: %s' % (libs.common.get_current_line_nr(), is_responsible))

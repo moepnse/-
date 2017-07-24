@@ -2345,6 +2345,7 @@ cdef bint get_table_as_list(lua_State *L, int table, list l, structure=None):
         object structure2 = None
         object new_structure
         int index = -1
+        bint success = True
     global current_line
     #print "get_table_as_list"
     #print "structure", structure
@@ -2385,10 +2386,12 @@ cdef bint get_table_as_list(lua_State *L, int table, list l, structure=None):
                     if structure1 is not None and not STRING in structure1:
                         print >>lua_log_err, "[%d] [gtal] String (%s) as value is not allowed here!" % (current_line, index)
                         lua_pop(L, 1)
+                        success = False
                         continue
                     if index in structure2 and not STRING in structure2[index]:
                         print >>lua_log_err, "[%d] [gtal] String (%s) as value is not allowed here!" % (current_line, index)
                         lua_pop(L, 1)
+                        success = False
                         continue
                 #print value
                 l.append(value)
@@ -2398,10 +2401,12 @@ cdef bint get_table_as_list(lua_State *L, int table, list l, structure=None):
                     if structure1 is not None and not BOOLEAN in structure1:
                         print >>lua_log_err, "[%d] [gtal] Boolean as value is not allowed here!" % current_line
                         lua_pop(L, 1)
+                        success = False
                         continue
                     if index in structure2 and not BOOLEAN in structure2[index]:
                         print >>lua_log_err, "[%d] [gtal] Boolean as value is not allowed here!" % current_line
                         lua_pop(L, 1)
+                        success = False
                         continue
                 value = lua_toboolean(L, -1)
                 #print value
@@ -2413,10 +2418,12 @@ cdef bint get_table_as_list(lua_State *L, int table, list l, structure=None):
                     if structure1 is not None and not INTEGER in structure1:
                         print >>lua_log_err, "[%d] [gtal] Integer (%s) as value is not allowed here!" % (current_line, index)
                         lua_pop(L, 1)
+                        success = False
                         continue
                     if index in structure2 and not INTEGER in structure2[index]:
                         print >>lua_log_err, "[%d] [gtal] String (%s) as value is not allowed here!" % (current_line, index)
                         lua_pop(L, 1)
+                        success = False
                         continue
 
                 #print value
@@ -2427,10 +2434,12 @@ cdef bint get_table_as_list(lua_State *L, int table, list l, structure=None):
                     if structure1 is not None and not FUNCTION in structure1:
                         print >>lua_log_err, "[%d] [gtal] Function (%s) as value is not allowed here!" % (current_line, index)
                         lua_pop(L, 1)
+                        success = False
                         continue
                     if index in structure2 and not FUNCTION in structure2[index]:
                         print >>lua_log_err, "[%d] [gtal] Function (%s) as value is not allowed here!" % (current_line, index)
                         lua_pop(L, 1)
+                        success = False
                         continue
                 """
                 Creates and returns a reference, in the table at index t, for the object at the top of the stack (and pops the object).
@@ -2457,12 +2466,14 @@ cdef bint get_table_as_list(lua_State *L, int table, list l, structure=None):
                             get_table_as_list(L, -1, new_list, None)
                             print >>lua_log_err, "[%d] [gtal] Array (%s) as value is not allowed here! Not allowed: %s (s: %s, s1: %s, s2: %s)" % (current_line, index, new_list, structure, structure1, structure2)
                             lua_pop(L, 1)
+                            success = False
                             continue
                         if structure2 is not None and index in structure2 and structure2[index] is not None and not ARRAY in structure2[index]:
                             new_list = []
                             get_table_as_list(L, -1, new_list, None)
                             print >>lua_log_err, "[%d] [gtal] Array (%s) as value is not allowed here! Not allowed: %s (s: %s, s1: %s, s2: %s" % (current_line, index, new_list, structure, structure1, structure2)
                             lua_pop(L, 1)
+                            success = False
                             continue
                     new_list = []
                     if structure2 is not None and index in structure2 and structure2[index] is not None and ARRAY in structure2[index]:
@@ -2482,12 +2493,14 @@ cdef bint get_table_as_list(lua_State *L, int table, list l, structure=None):
                             get_table_as_dict(L, -1, new_dict, None)
                             print >>lua_log_err, "[%d] [gtal] Dict (%s) as value is not allowed here!\nNot allowed: %s (s: %s, s1: %s, s2: %s)" % (current_line, index, new_dict, structure, structure1, structure2)
                             lua_pop(L, 1)
+                            success = False
                             continue
                         if structure2 is not None and index in structure2 and structure2[index] is not None and not DICT in structure2[index]:
                             new_dict = {}
                             get_table_as_dict(L, -1, new_dict, None)
                             print >>lua_log_err, "[%d] [gtal] Dict (%s) as value is not allowed here!\nNot allowed: %s (%s, %s, %s)" % (current_line, index, new_dict, structure, structure1, structure2)
                             lua_pop(L, 1)
+                            success = False
                             continue
                     new_dict = {}
                     if structure2 is not None and index in structure2 and structure2[index] is not None and DICT in structure2[index]:
@@ -2506,7 +2519,7 @@ cdef bint get_table_as_list(lua_State *L, int table, list l, structure=None):
     # Pop table
     lua_pop(L, 1)
     # Stack is now the same as it was on entry to this function
-    return True
+    return success
 
 
 cdef bint get_table_as_dict(lua_State *L, int table, dict d, structure=None):

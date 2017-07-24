@@ -7,7 +7,7 @@ do
             uninstall_cmds = 
                 {
                     {
-                        cmd = "msiexec",
+                        cmd = [["file://msiexec"]],
                         args = {
                             {   parameter = "/qn",
                                 values = {
@@ -31,7 +31,7 @@ do
             install_cmds = 
                 {
                     {
-                        cmd = "msiexec",
+                        cmd = [["file://msiexec"]],
                         args = {
                             {   parameter = "/qn",
                                 values = {

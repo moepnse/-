@@ -259,18 +259,19 @@ cdef class BaseHandler:
                 return -1
             self._log.log_debug(u"[pi_serivce] User Profile Directory: %s" % (self._plugin_name, sz_user_profile_dir))
             self._log.log_debug(u"[protocol/%s] CreateProcessAsUserW: %s" % (self._plugin_name, cmd))
-            ret_val = CreateProcessAsUserW(
-                h_token,
-                NULL,                   # No module name (use command line)
-                w_cmd,                  # Command line
-                NULL,                   # Process handle not inheritable
-                NULL,                   # Thread handle not inheritable
-                False,                  # Set handle inheritance to FALSE
-                create_flags,           # creation flags
-                lp_environment,         # environment block
-                sz_user_profile_dir,    # starting directory 
-                &si,                    # Pointer to STARTUPINFOW structure
-                &pi)                    # Pointer to PROCESS_INFORMATION structure
+            with nogil:
+                ret_val = CreateProcessAsUserW(
+                    h_token,
+                    NULL,                   # No module name (use command line)
+                    w_cmd,                  # Command line
+                    NULL,                   # Process handle not inheritable
+                    NULL,                   # Thread handle not inheritable
+                    False,                  # Set handle inheritance to FALSE
+                    create_flags,           # creation flags
+                    lp_environment,         # environment block
+                    sz_user_profile_dir,    # starting directory 
+                    &si,                    # Pointer to STARTUPINFOW structure
+                    &pi)                    # Pointer to PROCESS_INFORMATION structure
             if ret_val == False:
                 error_code = GetLastError()
                 self._log.log_err(u"[protocol/%s] CreateProcessAsUserW failed (%d)." % (self._plugin_name, error_code))
@@ -320,17 +321,18 @@ cdef class BaseHandler:
             si.wShowWindow = SW_HIDE
             si.cb = sizeof(si)
             create_flags = CREATE_NEW_CONSOLE | CREATE_UNICODE_ENVIRONMENT
-            ret_val = CreateProcessW(
-                NULL,           # No module name (use command line)
-                w_cmd,          # Command line
-                NULL,           # Process handle not inheritable
-                NULL,           # Thread handle not inheritable
-                False,          # Set handle inheritance to FALSE
-                create_flags,   # creation flags
-                NULL,           # Use parent's environment block
-                NULL,           # Use parent's starting directory 
-                &si,            # Pointer to STARTUPINFOW structure
-                &pi)            # Pointer to PROCESS_INFORMATION structure
+            with nogil:
+                ret_val = CreateProcessW(
+                    NULL,           # No module name (use command line)
+                    w_cmd,          # Command line
+                    NULL,           # Process handle not inheritable
+                    NULL,           # Thread handle not inheritable
+                    False,          # Set handle inheritance to FALSE
+                    create_flags,   # creation flags
+                    NULL,           # Use parent's environment block
+                    NULL,           # Use parent's starting directory 
+                    &si,            # Pointer to STARTUPINFOW structure
+                    &pi)            # Pointer to PROCESS_INFORMATION structure
             if ret_val == False:
                 error_code = GetLastError()
                 self._log_err(u"[protocol/%s] CreateProcess failed (%d)." % (self._plugin_name, error_code))
